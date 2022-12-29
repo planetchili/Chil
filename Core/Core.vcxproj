@@ -10,6 +10,14 @@
       <Platform>x64</Platform>
     </ProjectConfiguration>
   </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="src\ioc\Container.h" />
+    <ClInclude Include="src\ioc\Singletons.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="src\ioc\Container.cpp" />
+    <ClCompile Include="src\ioc\Singletons.cpp" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
@@ -75,12 +83,6 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
   </ItemDefinitionGroup>
-  <ItemGroup>
-    <ClInclude Include="Core.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="Core.cpp" />
-  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
