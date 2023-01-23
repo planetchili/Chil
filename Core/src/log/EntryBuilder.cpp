@@ -6,7 +6,6 @@ namespace chil::log
 	EntryBuilder::EntryBuilder(const wchar_t* sourceFile, const wchar_t* sourceFunctionName, int sourceLine)
 		:
 		Entry{
-			.level_ = Level::Error,
 			.sourceFile_ = sourceFile,
 			.sourceFunctionName_ = sourceFunctionName,
 			.sourceLine_ = sourceLine,
