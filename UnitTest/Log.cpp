@@ -33,5 +33,14 @@ namespace Infrastructure
 			Assert::IsTrue(log::Level::Info == chan.entry_.level_);
 			Assert::AreEqual(31, chan.entry_.sourceLine_);
 		}
+		// testing simplified level/note
+		TEST_METHOD(SimplifiedLevelNote)
+		{
+			MockChannel chan;
+			chilog.info(L"HI").chan(&chan);
+			Assert::AreEqual(L"HI"s, chan.entry_.note_);
+			Assert::IsTrue(log::Level::Info == chan.entry_.level_);
+			Assert::AreEqual(40, chan.entry_.sourceLine_);
+		}
 	};
 }
