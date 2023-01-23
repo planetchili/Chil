@@ -19,6 +19,13 @@ public:
 	log::Entry entry_;
 };
 
+template<> inline std::wstring __cdecl
+Microsoft::VisualStudio::CppUnitTestFramework::
+	ToString<log::Level>(const log::Level& level)
+{
+	return log::GetLevelName(level);
+}
+
 namespace Infrastructure
 {
 	TEST_CLASS(LogTests)
@@ -30,8 +37,8 @@ namespace Infrastructure
 			MockChannel chan;
 			chilog.level(log::Level::Info).note(L"HI").chan(&chan);
 			Assert::AreEqual(L"HI"s, chan.entry_.note_);
-			Assert::IsTrue(log::Level::Info == chan.entry_.level_);
-			Assert::AreEqual(31, chan.entry_.sourceLine_);
+			Assert::AreEqual(log::Level::Info, chan.entry_.level_);
+			Assert::AreEqual(38, chan.entry_.sourceLine_);
 		}
 		// testing simplified level/note
 		TEST_METHOD(SimplifiedLevelNote)
@@ -39,8 +46,8 @@ namespace Infrastructure
 			MockChannel chan;
 			chilog.info(L"HI").chan(&chan);
 			Assert::AreEqual(L"HI"s, chan.entry_.note_);
-			Assert::IsTrue(log::Level::Info == chan.entry_.level_);
-			Assert::AreEqual(40, chan.entry_.sourceLine_);
+			Assert::AreEqual(log::Level::Info, chan.entry_.level_);
+			Assert::AreEqual(47, chan.entry_.sourceLine_);
 		}
 	};
 }
