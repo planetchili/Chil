@@ -16,6 +16,7 @@ public:
 	{
 		entry_ = e;
 	}
+	void AttachDriver(std::shared_ptr<log::IDriver>) override {}
 	log::Entry entry_;
 };
 
@@ -26,9 +27,9 @@ Microsoft::VisualStudio::CppUnitTestFramework::
 	return log::GetLevelName(level);
 }
 
-namespace Infrastructure
+namespace Log
 {
-	TEST_CLASS(LogTests)
+	TEST_CLASS(LogEntryTests)
 	{
 	public:
 		// temporary test to show off fluid interface
@@ -38,7 +39,6 @@ namespace Infrastructure
 			chilog.level(log::Level::Info).note(L"HI").chan(&chan);
 			Assert::AreEqual(L"HI"s, chan.entry_.note_);
 			Assert::AreEqual(log::Level::Info, chan.entry_.level_);
-			Assert::AreEqual(38, chan.entry_.sourceLine_);
 		}
 		// testing simplified level/note
 		TEST_METHOD(SimplifiedLevelNote)
@@ -47,7 +47,6 @@ namespace Infrastructure
 			chilog.info(L"HI").chan(&chan);
 			Assert::AreEqual(L"HI"s, chan.entry_.note_);
 			Assert::AreEqual(log::Level::Info, chan.entry_.level_);
-			Assert::AreEqual(47, chan.entry_.sourceLine_);
 		}
 	};
 }

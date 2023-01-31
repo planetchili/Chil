@@ -13,16 +13,25 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Source Files\Ioc">
+      <UniqueIdentifier>{bb066468-e770-4199-ab24-c35a03dc11e5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Log">
+      <UniqueIdentifier>{b9066d50-ee5e-4583-955b-57a70a4bb7b6}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Ioc.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="IocContainer.cpp">
+      <Filter>Source Files\Ioc</Filter>
     </ClCompile>
     <ClCompile Include="IocSingleton.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\Ioc</Filter>
     </ClCompile>
-    <ClCompile Include="Log.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="LogEntry.cpp">
+      <Filter>Source Files\Log</Filter>
+    </ClCompile>
+    <ClCompile Include="LogChannel.cpp">
+      <Filter>Source Files\Log</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

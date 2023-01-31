@@ -14,6 +14,7 @@
     <ClInclude Include="src\ioc\Container.h" />
     <ClInclude Include="src\ioc\Singletons.h" />
     <ClInclude Include="src\log\Channel.h" />
+    <ClInclude Include="src\log\Driver.h" />
     <ClInclude Include="src\log\Entry.h" />
     <ClInclude Include="src\log\EntryBuilder.h" />
     <ClInclude Include="src\log\Level.h" />
@@ -21,6 +22,7 @@
   <ItemGroup>
     <ClCompile Include="src\ioc\Container.cpp" />
     <ClCompile Include="src\ioc\Singletons.cpp" />
+    <ClCompile Include="src\log\Channel.cpp" />
     <ClCompile Include="src\log\EntryBuilder.cpp" />
     <ClCompile Include="src\log\Level.cpp" />
   </ItemGroup>

@@ -35,9 +35,9 @@ struct Dependant
 using namespace chil;
 using namespace std::string_literals;
 
-namespace Infrastructure
+namespace Ioc
 {
-	TEST_CLASS(IocTests)
+	TEST_CLASS(IocContainerTests)
 	{
 	public:
 		TEST_METHOD_INITIALIZE(Init)

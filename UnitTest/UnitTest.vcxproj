@@ -87,9 +87,10 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="Ioc.cpp" />
+    <ClCompile Include="IocContainer.cpp" />
     <ClCompile Include="IocSingleton.cpp" />
-    <ClCompile Include="Log.cpp" />
+    <ClCompile Include="LogChannel.cpp" />
+    <ClCompile Include="LogEntry.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Core\Core.vcxproj">

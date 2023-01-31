@@ -33,6 +33,9 @@
     <ClInclude Include="src\log\Channel.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\log\Driver.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\ioc\Container.cpp">
@@ -45,6 +48,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\log\EntryBuilder.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\log\Channel.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
