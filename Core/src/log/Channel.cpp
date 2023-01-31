@@ -13,6 +13,7 @@ namespace chil::log
 		for (auto& pDriver : driverPtrs_) {
 			pDriver->Submit(e);
 		}
+		// TODO: log case when there are no drivers?
 	}
 	void Channel::AttachDriver(std::shared_ptr<IDriver> pDriver)
 	{

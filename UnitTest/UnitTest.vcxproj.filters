@@ -33,6 +33,9 @@
     <ClCompile Include="LogChannel.cpp">
       <Filter>Source Files\Log</Filter>
     </ClCompile>
+    <ClCompile Include="LogTextFormatter.cpp">
+      <Filter>Source Files\Log</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ChilCppUnitTest.h">

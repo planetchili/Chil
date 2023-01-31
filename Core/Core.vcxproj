@@ -18,6 +18,8 @@
     <ClInclude Include="src\log\Entry.h" />
     <ClInclude Include="src\log\EntryBuilder.h" />
     <ClInclude Include="src\log\Level.h" />
+    <ClInclude Include="src\log\MsvcDebugDriver.h" />
+    <ClInclude Include="src\log\TextFormatter.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\ioc\Container.cpp" />
@@ -25,6 +27,8 @@
     <ClCompile Include="src\log\Channel.cpp" />
     <ClCompile Include="src\log\EntryBuilder.cpp" />
     <ClCompile Include="src\log\Level.cpp" />
+    <ClCompile Include="src\log\MsvcDebugDriver.cpp" />
+    <ClCompile Include="src\log\TextFormatter.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
