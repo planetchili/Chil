@@ -9,6 +9,7 @@ namespace chil::log
 			.sourceFile_ = sourceFile,
 			.sourceFunctionName_ = sourceFunctionName,
 			.sourceLine_ = sourceLine,
+			.timestamp_ = std::chrono::system_clock::now(),
 		}
 	{}
 	EntryBuilder& EntryBuilder::note(std::wstring note)
