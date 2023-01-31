@@ -1,6 +1,7 @@
 #pragma once
 #include "Channel.h"
 #include "Driver.h"
+#include "Policy.h"
 
 namespace chil::log
 {
@@ -8,8 +9,15 @@ namespace chil::log
 		:
 		driverPtrs_{ std::move(driverPtrs) }
 	{}
+	Channel::~Channel()
+	{}
 	void Channel::Submit(Entry& e)
 	{
+		for (auto& pPolicy : policyPtrs_) {
+			if (!pPolicy->TransformFilter(e)) {
+				return;
+			}
+		}
 		for (auto& pDriver : driverPtrs_) {
 			pDriver->Submit(e);
 		}
@@ -18,5 +26,9 @@ namespace chil::log
 	void Channel::AttachDriver(std::shared_ptr<IDriver> pDriver)
 	{
 		driverPtrs_.push_back(std::move(pDriver));
+	}
+	void Channel::AttachPolicy(std::unique_ptr<IPolicy> pPolicy)
+	{
+		policyPtrs_.push_back(std::move(pPolicy));
 	}
 }

@@ -3,6 +3,7 @@
 #include <Core/src/log/Channel.h>
 #include <Core/src/log/MsvcDebugDriver.h>
 #include <Core/src/log/TextFormatter.h>
+#include <Core/src/log/SeverityLevelPolicy.h>
 
 
 using namespace chil;
@@ -12,10 +13,15 @@ using namespace std::string_literals;
 
 int main()
 {
-	std::unique_ptr<log::IChannel> pChan = std::make_unique<log::Channel>(std::vector<std::shared_ptr<log::IDriver>>{
-		std::make_shared<log::MsvcDebugDriver>(std::make_unique<log::TextFormatter>())
-	});
+	std::unique_ptr<log::IChannel> pChan = std::make_unique<log::Channel>(
+		std::vector<std::shared_ptr<log::IDriver>>{
+			std::make_shared<log::MsvcDebugDriver>(std::make_unique<log::TextFormatter>())
+		}
+	);
+	pChan->AttachPolicy(std::make_unique<log::SeverityLevelPolicy>(log::Level::Error));
 	chilog.fatal(L"Oh noes!");
+	chilog.warn(L"huh");
+	chilog.error(L"oops!");
 
 	return 0;
 }

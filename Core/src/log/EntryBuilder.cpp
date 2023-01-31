@@ -22,10 +22,10 @@ namespace chil::log
 		level_ = level;
 		return *this;
 	}
-	EntryBuilder& EntryBuilder::trace(std::wstring note)
+	EntryBuilder& EntryBuilder::verbose(std::wstring note)
 	{
 		note_ = std::move(note);
-		level_ = Level::Trace;
+		level_ = Level::Verbose;
 		return *this;
 	}
 	EntryBuilder& EntryBuilder::debug(std::wstring note)

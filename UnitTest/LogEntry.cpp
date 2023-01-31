@@ -1,6 +1,8 @@
 #include "ChilCppUnitTest.h"
 #include <Core/src/log/EntryBuilder.h>
 #include <Core/src/log/Channel.h>
+#include <Core/src/log/Policy.h>
+
 
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 
@@ -18,6 +20,7 @@ public:
 	}
 	void AttachDriver(std::shared_ptr<log::IDriver>) override {}
 	log::Entry entry_;
+	virtual void AttachPolicy(std::unique_ptr<log::IPolicy>) override {}
 };
 
 template<> inline std::wstring __cdecl
