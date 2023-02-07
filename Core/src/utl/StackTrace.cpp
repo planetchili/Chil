@@ -10,12 +10,14 @@
 
 namespace chil::utl
 {
-	StackTrace::StackTrace()
+	StackTrace::StackTrace(size_t skip)
 	{
 		backward::TraceResolver thisIsAWorkaround; // https://github.com/bombela/backward-cpp/issues/206
 		pTrace = std::make_unique<backward::StackTrace>();
 		pTrace->load_here(64);
-		pTrace->skip_n_firsts(6);
+		if (skip != 0) {
+			pTrace->skip_n_firsts(skip);
+		}
 	}
 	StackTrace::StackTrace(const StackTrace& src)
 		:
