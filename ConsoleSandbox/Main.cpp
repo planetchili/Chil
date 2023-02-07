@@ -11,9 +11,16 @@ using namespace std::string_literals;
 
 #define chilog log::EntryBuilder{ __FILEW__, __FUNCTIONW__, __LINE__ }.chan(pChan.get())
 
+std::unique_ptr<log::IChannel> pChan;
+
+void f()
+{
+	chilog.error(L"oops!");
+}
+
 int main()
 {
-	std::unique_ptr<log::IChannel> pChan = std::make_unique<log::Channel>(
+	pChan = std::make_unique<log::Channel>(
 		std::vector<std::shared_ptr<log::IDriver>>{
 			std::make_shared<log::MsvcDebugDriver>(std::make_unique<log::TextFormatter>())
 		}
@@ -21,7 +28,7 @@ int main()
 	pChan->AttachPolicy(std::make_unique<log::SeverityLevelPolicy>(log::Level::Error));
 	chilog.fatal(L"Oh noes!");
 	chilog.warn(L"huh");
-	chilog.error(L"oops!");
+	f();
 
 	return 0;
 }
