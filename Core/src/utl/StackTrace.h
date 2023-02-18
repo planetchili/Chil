@@ -14,7 +14,9 @@ namespace chil::utl
 	public:
 		StackTrace(size_t skip = 0);
 		StackTrace(const StackTrace& src);
+		StackTrace(StackTrace&&) noexcept;
 		StackTrace& operator=(const StackTrace& src);
+		StackTrace& operator=(StackTrace&&) noexcept;
 		~StackTrace();
 		std::wstring Print() const;
 

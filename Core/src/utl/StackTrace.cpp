@@ -21,19 +21,35 @@ namespace chil::utl
 	}
 	StackTrace::StackTrace(const StackTrace& src)
 		:
-		pTrace{ std::make_unique<backward::StackTrace>(*src.pTrace) }
+		pTrace{ src.pTrace ? std::make_unique<backward::StackTrace>(*src.pTrace) : std::unique_ptr<backward::StackTrace>{} }
+	{}
+	StackTrace::StackTrace(StackTrace&& donor) noexcept
+		:
+		pTrace{ std::move(donor.pTrace) }
 	{}
 	StackTrace& StackTrace::operator=(const StackTrace& src)
 	{
-		pTrace = std::make_unique<backward::StackTrace>(*src.pTrace);
+		pTrace = src.pTrace ? std::make_unique<backward::StackTrace>(*src.pTrace) : std::unique_ptr<backward::StackTrace>{};
+		return *this;
+	}
+	StackTrace& StackTrace::operator=(StackTrace&& donor) noexcept
+	{
+		if (&donor != this) {
+			pTrace = std::move(donor.pTrace);
+		}
 		return *this;
 	}
 	StackTrace::~StackTrace() {}
 	std::wstring StackTrace::Print() const
 	{
-		std::ostringstream oss;
-		backward::Printer printer;
-		printer.print(*pTrace, oss);
-		return utl::ToWide(oss.str());
+		if (pTrace) {
+			std::ostringstream oss;
+			backward::Printer printer;
+			printer.print(*pTrace, oss);
+			return utl::ToWide(oss.str());
+		}
+		else {
+			return L"== EMPTY TRACE ==";
+		}
 	}
 }
