@@ -22,6 +22,7 @@
     <ClInclude Include="src\log\MsvcDebugDriver.h" />
     <ClInclude Include="src\log\Policy.h" />
     <ClInclude Include="src\log\SeverityLevelPolicy.h" />
+    <ClInclude Include="src\log\SimpleFileDriver.h" />
     <ClInclude Include="src\log\TextFormatter.h" />
     <ClInclude Include="src\utl\StackTrace.h" />
     <ClInclude Include="src\utl\String.h" />
@@ -36,6 +37,7 @@
     <ClCompile Include="src\log\Log.cpp" />
     <ClCompile Include="src\log\MsvcDebugDriver.cpp" />
     <ClCompile Include="src\log\SeverityLevelPolicy.cpp" />
+    <ClCompile Include="src\log\SimpleFileDriver.cpp" />
     <ClCompile Include="src\log\TextFormatter.cpp" />
     <ClCompile Include="src\utl\StackTrace.cpp" />
     <ClCompile Include="src\utl\String.cpp" />

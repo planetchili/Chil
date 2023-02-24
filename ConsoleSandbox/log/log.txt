@@ -1,0 +1,55 @@
+@Fatal {2023-02-24 18:15:32.7219059 GMT+9} Oh noes!
+  >> at main
+     C:\Users\Chili\Desktop\cpp\Chil\ConsoleSandbox\Main.cpp(28)
+Stack trace (most recent call last):
+#5    Object "", at 00007FFD5A667614, in BaseThreadInitThunk
+#4 
+   D:\a\_work\1\s\src\vctools\crt\vcstartup\src\startup\exe_main.cpp(17): mainCRTStartup
+#3 
+   D:\a\_work\1\s\src\vctools\crt\vcstartup\src\startup\exe_common.inl(331): __scrt_common_main
+#2 
+   D:\a\_work\1\s\src\vctools\crt\vcstartup\src\startup\exe_common.inl(288): __scrt_common_main_seh
+#1 
+   D:\a\_work\1\s\src\vctools\crt\vcstartup\src\startup\exe_common.inl(79): invoke_main
+#0 
+   C:\Users\Chili\Desktop\cpp\Chil\ConsoleSandbox\Main.cpp(29): main
+         26: 	Boot();
+         27: 
+         28: 	chilog.fatal(L"Oh noes!");
+      >  29: 	chilog.warn(L"huh");
+         30: 	f();
+         31: 
+         32: 	utl::StackTrace st;
+
+@Error {2023-02-24 18:15:32.7761267 GMT+9} oops!
+  >> at f
+     C:\Users\Chili\Desktop\cpp\Chil\ConsoleSandbox\Main.cpp(21)
+Stack trace (most recent call last):
+#6    Object "", at 00007FFD5A667614, in BaseThreadInitThunk
+#5 
+   D:\a\_work\1\s\src\vctools\crt\vcstartup\src\startup\exe_main.cpp(17): mainCRTStartup
+#4 
+   D:\a\_work\1\s\src\vctools\crt\vcstartup\src\startup\exe_common.inl(331): __scrt_common_main
+#3 
+   D:\a\_work\1\s\src\vctools\crt\vcstartup\src\startup\exe_common.inl(288): __scrt_common_main_seh
+#2 
+   D:\a\_work\1\s\src\vctools\crt\vcstartup\src\startup\exe_common.inl(79): invoke_main
+#1 
+   C:\Users\Chili\Desktop\cpp\Chil\ConsoleSandbox\Main.cpp(32): main
+         29: 	chilog.warn(L"huh");
+         30: 	f();
+         31: 
+      >  32: 	utl::StackTrace st;
+         33: 	auto st2 = std::move(st);
+         34: 
+         35: 	std::wcout << st2.Print() << std::endl;
+#0 
+   C:\Users\Chili\Desktop\cpp\Chil\ConsoleSandbox\Main.cpp(22): f
+         19: void f()
+         20: {
+         21: 	chilog.error(L"oops!");
+      >  22: }
+         23: 
+         24: int main()
+         25: {
+
