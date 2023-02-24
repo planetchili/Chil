@@ -6,6 +6,7 @@
 #include <memory>
 #include <stdexcept>
 #include <format>
+#include "Container.h"
 
 namespace chil::ioc
 {
@@ -20,6 +21,11 @@ namespace chil::ioc
 		void Register(Generator<T> gen)
 		{
 			serviceMap_[typeid(T)] = gen;
+		}
+		template<class T>
+		void RegisterPassthru()
+		{
+			Register<T>([] { return ioc::Get().Resolve<T>(); });
 		}
 		template<class T>
 		std::shared_ptr<T> Resolve()

@@ -18,6 +18,7 @@
     <ClInclude Include="src\log\Entry.h" />
     <ClInclude Include="src\log\EntryBuilder.h" />
     <ClInclude Include="src\log\Level.h" />
+    <ClInclude Include="src\log\Log.h" />
     <ClInclude Include="src\log\MsvcDebugDriver.h" />
     <ClInclude Include="src\log\Policy.h" />
     <ClInclude Include="src\log\SeverityLevelPolicy.h" />
@@ -32,6 +33,7 @@
     <ClCompile Include="src\log\Channel.cpp" />
     <ClCompile Include="src\log\EntryBuilder.cpp" />
     <ClCompile Include="src\log\Level.cpp" />
+    <ClCompile Include="src\log\Log.cpp" />
     <ClCompile Include="src\log\MsvcDebugDriver.cpp" />
     <ClCompile Include="src\log\SeverityLevelPolicy.cpp" />
     <ClCompile Include="src\log\TextFormatter.cpp" />

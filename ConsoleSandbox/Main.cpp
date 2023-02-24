@@ -4,14 +4,17 @@
 #include <Core/src/log/MsvcDebugDriver.h>
 #include <Core/src/log/TextFormatter.h>
 #include <Core/src/log/SeverityLevelPolicy.h>
+#include <Core/src/log/Log.h>
 
 
 using namespace chil;
 using namespace std::string_literals;
 
-#define chilog log::EntryBuilder{ __FILEW__, __FUNCTIONW__, __LINE__ }.chan(pChan.get())
+void Boot()
+{
+	log::Boot();
+}
 
-std::unique_ptr<log::IChannel> pChan;
 
 void f()
 {
@@ -20,12 +23,8 @@ void f()
 
 int main()
 {
-	pChan = std::make_unique<log::Channel>(
-		std::vector<std::shared_ptr<log::IDriver>>{
-			std::make_shared<log::MsvcDebugDriver>(std::make_unique<log::TextFormatter>())
-		}
-	);
-	pChan->AttachPolicy(std::make_unique<log::SeverityLevelPolicy>(log::Level::Error));
+	Boot();
+
 	chilog.fatal(L"Oh noes!");
 	chilog.warn(L"huh");
 	f();

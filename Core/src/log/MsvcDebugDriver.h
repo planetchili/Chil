@@ -7,10 +7,10 @@ namespace chil::log
 	class MsvcDebugDriver : public ITextDriver
 	{
 	public:
-		MsvcDebugDriver(std::unique_ptr<ITextFormatter> pFormatter = {});
+		MsvcDebugDriver(std::shared_ptr<ITextFormatter> pFormatter = {});
 		void Submit(const Entry&) override;
-		void SetFormatter(std::unique_ptr<ITextFormatter> pFormatter) override;
+		void SetFormatter(std::shared_ptr<ITextFormatter> pFormatter) override;
 	private:
-		std::unique_ptr<ITextFormatter> pFormatter_;
+		std::shared_ptr<ITextFormatter> pFormatter_;
 	};
 }
