@@ -1,10 +1,7 @@
 #include <iostream>
-#include <Core/src/log/EntryBuilder.h>
-#include <Core/src/log/Channel.h>
-#include <Core/src/log/MsvcDebugDriver.h>
-#include <Core/src/log/TextFormatter.h>
-#include <Core/src/log/SeverityLevelPolicy.h>
 #include <Core/src/log/Log.h>
+#include <Core/src/ioc/Container.h>
+#include <Core/src/log/SeverityLevelPolicy.h>
 
 
 using namespace chil;
@@ -13,6 +10,10 @@ using namespace std::string_literals;
 void Boot()
 {
 	log::Boot();
+
+	ioc::Get().Register<log::ISeverityLevelPolicy>([] {
+		return std::make_shared<log::SeverityLevelPolicy>(log::Level::Warn);
+	});
 }
 
 
