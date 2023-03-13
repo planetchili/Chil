@@ -25,6 +25,7 @@
     <ClInclude Include="src\log\SimpleFileDriver.h" />
     <ClInclude Include="src\log\TextFormatter.h" />
     <ClInclude Include="src\utl\Assert.h" />
+    <ClInclude Include="src\utl\Exception.h" />
     <ClInclude Include="src\utl\Macro.h" />
     <ClInclude Include="src\utl\StackTrace.h" />
     <ClInclude Include="src\utl\String.h" />
@@ -42,6 +43,7 @@
     <ClCompile Include="src\log\SimpleFileDriver.cpp" />
     <ClCompile Include="src\log\TextFormatter.cpp" />
     <ClCompile Include="src\utl\Assert.cpp" />
+    <ClCompile Include="src\utl\Exception.cpp" />
     <ClCompile Include="src\utl\StackTrace.cpp" />
     <ClCompile Include="src\utl\String.cpp" />
   </ItemGroup>

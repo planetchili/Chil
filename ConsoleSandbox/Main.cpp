@@ -42,5 +42,12 @@ int main()
 
 	chilchk(x > y);
 
+	try {
+		chilchk(x > y).ass_watch(x).ex();
+	}
+	catch (const std::exception& e) {
+		std::cout << e.what() << std::endl;
+	}
+
 	return 0;
 }

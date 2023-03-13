@@ -28,4 +28,9 @@ namespace chil::utl
 		stream_ << L"  Msg: " << message << L"\n";
 		return *this;
 	}
+	void Assertion::ex()
+	{
+		consequence_ = Consequence::Exception;
+		throw FailedAssertion{};
+	}
 }

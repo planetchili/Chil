@@ -5,9 +5,12 @@
 #include "StackTrace.h"  
 #include <format>  
 #include "Macro.h"  
+#include "Exception.h"
 
 namespace chil::utl
 {
+	ZC_EX_DEF(FailedAssertion);
+
 	class Assertion
 	{
 	public:
@@ -16,6 +19,7 @@ namespace chil::utl
 		{
 			Log,
 			Terminate,
+			Exception,
 		};
 		// functions
 		Assertion(std::wstring expression, const wchar_t* file, const wchar_t* function, int line, Consequence consequence = Consequence::Terminate);
@@ -27,6 +31,7 @@ namespace chil::utl
 			stream_ << L"   " << name << L" => " << std::forward<T>(val) << L"\n";
 			return *this;
 		}
+		void ex();
 	private:
 		const wchar_t* file_;
 		const wchar_t* function_;
