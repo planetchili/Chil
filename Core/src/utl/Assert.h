@@ -31,6 +31,7 @@ namespace chil::utl
 			stream_ << L"   " << name << L" => " << std::forward<T>(val) << L"\n";
 			return *this;
 		}
+		[[noreturn]]
 		void ex();
 	private:
 		const wchar_t* file_;

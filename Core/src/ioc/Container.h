@@ -8,6 +8,9 @@
 #include <format>
 #include <tuple>
 #include <stdexcept>
+#include "Exception.h"
+#include <Core/src/utl/Assert.h>
+#include <Core/src/utl/String.h>
 
 
 namespace chil::ioc
@@ -61,16 +64,16 @@ namespace chil::ioc
 					return std::any_cast<G>(entry)(std::forward<Ps>(arg)...);
 				}
 				catch (const std::bad_any_cast&) {
-					// TODO: make this an assert
-					throw std::logic_error{ std::format(
-						"Could not resolve IoC mapped type\nfrom: [{}]\n  to: [{}]\n",
-						entry.type().name(), typeid(G).name()
-					) };
+					chilass(false).msg(std::format(
+						L"Could not resolve IoC mapped type\nfrom: [{}]\n  to: [{}]\n",
+						utl::ToWide(entry.type().name()), utl::ToWide(typeid(G).name())
+					)).ex();
+					return {};
 				}
 			}
 			else
 			{
-				throw std::runtime_error{ std::format("Could not find generator for type [{}] in IoC container", typeid(T).name()) };
+				throw ServiceNotFound{ std::format("Could not find generator for type [{}] in IoC container", typeid(T).name()) };
 			}
 		}
 		// data
