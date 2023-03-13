@@ -38,6 +38,7 @@ namespace chil::utl
 		const wchar_t* file_;
 		const wchar_t* function_;
 		int line_ = -1;
+		int skip_depth_ = 0;
 		Consequence consequence_;
 		std::wostringstream stream_;
 	};

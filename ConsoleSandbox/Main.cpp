@@ -31,12 +31,6 @@ int main()
 	chilog.warn(L"huh");
 	f();
 
-	utl::StackTrace st;
-	auto st2 = std::move(st);
-
-	std::wcout << st2.Print() << std::endl;
-	std::wcout << st.Print() << std::endl;
-
 	int x = 0, y = 1;
 	chilass(x > y).msg(L"butts").ass_watch(x, y, rand());
 
