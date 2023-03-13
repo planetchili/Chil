@@ -38,7 +38,7 @@ int main()
 	std::wcout << st.Print() << std::endl;
 
 	int x = 0, y = 1;
-	chilass(x > y).msg(L"butts").ass_watch(x).ass_watch(y);
+	chilass(x > y).msg(L"butts").ass_watch(x, y, rand());
 
 	chilchk(x > y);
 
