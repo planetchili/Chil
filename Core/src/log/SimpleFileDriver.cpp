@@ -23,4 +23,8 @@ namespace chil::log
 	{
 		pFormatter_ = std::move(pFormatter);
 	}
+	void SimpleFileDriver::Flush()
+	{
+		file_.flush();
+	}
 }

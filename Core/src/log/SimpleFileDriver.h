@@ -14,6 +14,7 @@ namespace chil::log
 		SimpleFileDriver(std::filesystem::path path, std::shared_ptr<ITextFormatter> pFormatter = {});
 		void Submit(const Entry&) override;
 		void SetFormatter(std::shared_ptr<ITextFormatter> pFormatter) override;
+		void Flush() override;
 	private:
 		std::wofstream file_;
 		std::shared_ptr<ITextFormatter> pFormatter_;

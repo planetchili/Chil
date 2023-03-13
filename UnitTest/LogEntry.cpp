@@ -19,8 +19,9 @@ public:
 		entry_ = e;
 	}
 	void AttachDriver(std::shared_ptr<log::IDriver>) override {}
+	void Flush() override {}
+	void AttachPolicy(std::shared_ptr<log::IPolicy>) override {}
 	log::Entry entry_;
-	virtual void AttachPolicy(std::shared_ptr<log::IPolicy>) override {}
 };
 
 template<> inline std::wstring __cdecl

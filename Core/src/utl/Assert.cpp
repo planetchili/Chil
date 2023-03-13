@@ -20,6 +20,7 @@ namespace chil::utl
 			.level(consequence_ == Consequence::Terminate ? log::Level::Fatal : log::Level::Error)
 			.note(stream_.str());
 		if (consequence_ == Consequence::Terminate) {
+			log::GetDefaultChannel()->Flush();
 			std::terminate();
 		}
 	}
