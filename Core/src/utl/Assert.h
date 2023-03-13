@@ -6,6 +6,7 @@
 #include <format>  
 #include "Macro.h"  
 #include "Exception.h"
+#include "NoReturn.h"
 
 namespace chil::utl
 {

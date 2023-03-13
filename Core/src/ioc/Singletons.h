@@ -52,7 +52,8 @@ namespace chil::ioc
 						L"Could not resolve Singleton mapped type\nfrom: [{}]\n  to: [{}]\n",
 						utl::ToWide(entry.type().name()), utl::ToWide(typeid(Generator<T>).name())
 					)).ex();
-					return {};
+
+					no_return;
 				}
 			}
 			else

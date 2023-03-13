@@ -68,7 +68,8 @@ namespace chil::ioc
 						L"Could not resolve IoC mapped type\nfrom: [{}]\n  to: [{}]\n",
 						utl::ToWide(entry.type().name()), utl::ToWide(typeid(G).name())
 					)).ex();
-					return {};
+
+					no_return;
 				}
 			}
 			else

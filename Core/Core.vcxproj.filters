@@ -75,6 +75,9 @@
     <ClInclude Include="src\ioc\Exception.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\utl\NoReturn.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\ioc\Container.cpp">
@@ -117,6 +120,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\utl\Exception.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\utl\NoReturn.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
