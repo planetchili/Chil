@@ -3,11 +3,12 @@
 
 namespace chil::utl
 {
-	Assertion::Assertion(std::wstring expression, const wchar_t* file, const wchar_t* function, int line)
+	Assertion::Assertion(std::wstring expression, const wchar_t* file, const wchar_t* function, int line, Consequence consequence)
 		:
 		file_{ file },
 		function_{ function },
-		line_{ line }
+		line_{ line },
+		consequence_{ consequence }
 	{
 		stream_ << L"Assertion Failed! " << expression << "\n";
 	}
@@ -16,8 +17,11 @@ namespace chil::utl
 		log::EntryBuilder{ file_, function_, line_ }
 			.trace_skip(7)
 			.chan(log::GetDefaultChannel())
-			.fatal(stream_.str());
-		std::terminate();
+			.level(consequence_ == Consequence::Terminate ? log::Level::Fatal : log::Level::Error)
+			.note(stream_.str());
+		if (consequence_ == Consequence::Terminate) {
+			std::terminate();
+		}
 	}
 	Assertion& Assertion::msg(const std::wstring& message)
 	{

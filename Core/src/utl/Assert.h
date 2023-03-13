@@ -11,7 +11,14 @@ namespace chil::utl
 	class Assertion
 	{
 	public:
-		Assertion(std::wstring expression, const wchar_t* file, const wchar_t* function, int line);
+		// types
+		enum class Consequence
+		{
+			Log,
+			Terminate,
+		};
+		// functions
+		Assertion(std::wstring expression, const wchar_t* file, const wchar_t* function, int line, Consequence consequence = Consequence::Terminate);
 		~Assertion();
 		Assertion& msg(const std::wstring& message);
 		template<typename T>
@@ -24,6 +31,7 @@ namespace chil::utl
 		const wchar_t* file_;
 		const wchar_t* function_;
 		int line_ = -1;
+		Consequence consequence_;
 		std::wostringstream stream_;
 	};
 }
@@ -39,3 +47,5 @@ namespace chil::utl
 #define chilass(expr) (!ZC_CHILASS_ACTIVE || bool(expr)) ? void(0) : (void)utl::Assertion{ ZC_WSTR(expr), __FILEW__, __FUNCTIONW__, __LINE__ }  
 
 #define ass_watch(expr) watch((expr), ZC_WSTR(expr))
+
+#define chilchk(expr) bool(expr) ? void(0) : (void)utl::Assertion{ ZC_WSTR(expr), __FILEW__, __FUNCTIONW__, __LINE__, ZC_CHILASS_ACTIVE ? utl::Assertion::Consequence::Terminate : utl::Assertion::Consequence::Log }  
