@@ -2,6 +2,7 @@
 #include <Core/src/log/Log.h>
 #include <Core/src/ioc/Container.h>
 #include <Core/src/log/SeverityLevelPolicy.h>
+#include <Core/src/utl/Assert.h>
 
 
 using namespace chil;
@@ -35,6 +36,9 @@ int main()
 
 	std::wcout << st2.Print() << std::endl;
 	std::wcout << st.Print() << std::endl;
+
+	int x = 0, y = 1;
+	chilass(x > y).msg(L"butts").ass_watch(x).ass_watch(y);
 
 	return 0;
 }
