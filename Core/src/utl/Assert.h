@@ -51,9 +51,9 @@ namespace chil::utl
 #endif  
 #endif  
 
-#define chilass(expr) (!ZC_CHILASS_ACTIVE || bool(expr)) ? void(0) : (void)utl::Assertion{ ZC_WSTR(expr), __FILEW__, __FUNCTIONW__, __LINE__ }  
+#define chilass(expr) (!ZC_CHILASS_ACTIVE || bool(expr)) ? void(0) : (void)chil::utl::Assertion{ ZC_WSTR(expr), __FILEW__, __FUNCTIONW__, __LINE__ }  
 
-#define chilchk(expr) bool(expr) ? void(0) : (void)utl::Assertion{ ZC_WSTR(expr), __FILEW__, __FUNCTIONW__, __LINE__, ZC_CHILASS_ACTIVE ? utl::Assertion::Consequence::Terminate : utl::Assertion::Consequence::Log }  
+#define chilchk(expr) bool(expr) ? void(0) : (void)chil::utl::Assertion{ ZC_WSTR(expr), __FILEW__, __FUNCTIONW__, __LINE__, ZC_CHILASS_ACTIVE ? chil::utl::Assertion::Consequence::Terminate : chil::utl::Assertion::Consequence::Log }  
 
 #define ass_watch(...) ZC_DISPATCH_VA(ZZ_AW_, __VA_ARGS__) 
 #define ZZ_AW_(expr) watch((expr), ZC_WSTR(expr)) 
