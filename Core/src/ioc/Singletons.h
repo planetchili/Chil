@@ -48,12 +48,10 @@ namespace chil::ioc
 					return pInstance;
 				}
 				catch (const std::bad_any_cast&) {
-					chilass(false).msg(std::format(
+					chilchk_fail.msg(std::format(
 						L"Could not resolve Singleton mapped type\nfrom: [{}]\n  to: [{}]\n",
 						utl::ToWide(entry.type().name()), utl::ToWide(typeid(Generator<T>).name())
 					)).ex();
-
-					no_return;
 				}
 			}
 			else

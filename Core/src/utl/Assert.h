@@ -56,6 +56,8 @@ namespace chil::utl
 
 #define chilchk(expr) bool(expr) ? void(0) : (void)chil::utl::Assertion{ ZC_WSTR(expr), __FILEW__, __FUNCTIONW__, __LINE__, ZC_CHILASS_ACTIVE ? chil::utl::Assertion::Consequence::Terminate : chil::utl::Assertion::Consequence::Log }  
 
+#define chilchk_fail (void)chil::utl::Assertion{ L"[Always Fail]", __FILEW__, __FUNCTIONW__, __LINE__, ZC_CHILASS_ACTIVE ? chil::utl::Assertion::Consequence::Terminate : chil::utl::Assertion::Consequence::Log }  
+
 #define ass_watch(...) ZC_DISPATCH_VA(ZZ_AW_, __VA_ARGS__) 
 #define ZZ_AW_(expr) watch((expr), ZC_WSTR(expr)) 
 #define ZZ_AW_1_(z) ZZ_AW_(z) 

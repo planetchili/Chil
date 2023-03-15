@@ -64,12 +64,10 @@ namespace chil::ioc
 					return std::any_cast<G>(entry)(std::forward<Ps>(arg)...);
 				}
 				catch (const std::bad_any_cast&) {
-					chilass(false).msg(std::format(
+					chilchk_fail.msg(std::format(
 						L"Could not resolve IoC mapped type\nfrom: [{}]\n  to: [{}]\n",
 						utl::ToWide(entry.type().name()), utl::ToWide(typeid(G).name())
 					)).ex();
-
-					no_return;
 				}
 			}
 			else
