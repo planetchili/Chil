@@ -78,6 +78,15 @@
     <ClInclude Include="src\utl\NoReturn.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\win\ChilWin.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\win\WindowClass.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\win\IWindow.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\ioc\Container.cpp">
@@ -123,6 +132,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\utl\NoReturn.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\win\WindowClass.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

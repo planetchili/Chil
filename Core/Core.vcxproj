@@ -31,6 +31,9 @@
     <ClInclude Include="src\utl\NoReturn.h" />
     <ClInclude Include="src\utl\StackTrace.h" />
     <ClInclude Include="src\utl\String.h" />
+    <ClInclude Include="src\win\ChilWin.h" />
+    <ClInclude Include="src\win\IWindow.h" />
+    <ClInclude Include="src\win\WindowClass.h" />
     <ClInclude Include="third\backward.hpp" />
   </ItemGroup>
   <ItemGroup>
@@ -49,6 +52,7 @@
     <ClCompile Include="src\utl\NoReturn.cpp" />
     <ClCompile Include="src\utl\StackTrace.cpp" />
     <ClCompile Include="src\utl\String.cpp" />
+    <ClCompile Include="src\win\WindowClass.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>

@@ -3,6 +3,7 @@
 #include <Core/src/ioc/Container.h>
 #include <Core/src/log/SeverityLevelPolicy.h>
 #include <Core/src/utl/Assert.h>
+#include <Core/src/win/WindowClass.h>
 
 
 using namespace chil;
@@ -26,6 +27,8 @@ void f()
 int main()
 {
 	Boot();
+
+	auto pWinClass = std::make_shared<win::WindowClass>();
 
 	chilog.fatal(L"Oh noes!");
 	chilog.warn(L"huh");
