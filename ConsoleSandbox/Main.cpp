@@ -28,16 +28,16 @@ int main()
 {
 	Boot();
 
-	auto pWinClass = std::make_shared<win::WindowClass>();
+	auto pWinClass = std::make_shared<win::WindowClass>(L"");
 
-	chilog.fatal(L"Oh noes!");
-	chilog.warn(L"huh");
-	f();
+	//chilog.fatal(L"Oh noes!");
+	//chilog.warn(L"huh");
+	//f();
 
 	int x = 0, y = 1;
-	chilass(x > y).msg(L"butts").ass_watch(x, y, rand());
+	//chilass(x > y).msg(L"butts").ass_watch(x, y, rand());
 
-	chilchk(x > y);
+	//chilchk(x > y);
 
 	try {
 		chilchk(x > y).ass_watch(x).ex();

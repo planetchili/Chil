@@ -1,6 +1,11 @@
 #include "EntryBuilder.h"
 #include "Channel.h"
+#include <Core/src/win/ChilWin.h> 
 
+#pragma warning(push) 
+#pragma warning(disable: 26815) 
+// there seems to be a bug in the static analysis that causes a false 
+// positive on some functions returning *this (not consistent or clear or correct) 
 namespace chil::log
 {
 	EntryBuilder::EntryBuilder(const wchar_t* sourceFile, const wchar_t* sourceFunctionName, int sourceLine)
@@ -68,6 +73,16 @@ namespace chil::log
 		traceSkipDepth = depth;
 		return *this;
 	}
+	EntryBuilder& EntryBuilder::hr()
+	{
+		hResult_ = GetLastError();
+		return *this;
+	}
+	EntryBuilder& EntryBuilder::hr(unsigned int hr)
+	{
+		hResult_ = hr;
+		return *this;
+	}
 	EntryBuilder::~EntryBuilder()
 	{
 		if (pDest_) {
@@ -78,3 +93,4 @@ namespace chil::log
 		}
 	}
 }
+#pragma warning(pop)

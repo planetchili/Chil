@@ -19,6 +19,8 @@ namespace chil::log
 		EntryBuilder& fatal(std::wstring note = L"");
 		EntryBuilder& chan(IChannel*);
 		EntryBuilder& trace_skip(int depth);
+		EntryBuilder& hr();
+		EntryBuilder& hr(unsigned int);
 		~EntryBuilder();
 	private:
 		IChannel* pDest_ = nullptr;

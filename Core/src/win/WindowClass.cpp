@@ -1,5 +1,8 @@
 #include "WindowClass.h" 
 #include "IWindow.h"
+#include "Exception.h" 
+#include <Core/src/log/Log.h> 
+#include <Core/src/utl/Assert.h>
 
 namespace chil::win
 {
@@ -27,6 +30,10 @@ namespace chil::win
 			.hIconSm = nullptr,
 		};
 		atom_ = RegisterClassExW(&wc);
+		if (!atom_) {
+			chilog.error().hr();
+			throw WindowException{};
+		}
 	}
 	ATOM WindowClass::GetAtom() const
 	{
@@ -38,7 +45,9 @@ namespace chil::win
 	}
 	WindowClass::~WindowClass()
 	{
-		UnregisterClass(MAKEINTATOM(atom_), hInstance_);
+		if (!UnregisterClass(MAKEINTATOM(atom_), hInstance_)) {
+			chilog.warn().hr();
+		}
 	}
 	LRESULT WindowClass::HandleMessageSetup_(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) noexcept
 	{
@@ -48,10 +57,19 @@ namespace chil::win
 			// extract ptr to window class from creation data 
 			const CREATESTRUCTW* const pCreate = reinterpret_cast<CREATESTRUCTW*>(lParam);
 			IWindow* const pWnd = static_cast<IWindow*>(pCreate->lpCreateParams);
+			chilchk(pWnd);
 			// set WinAPI-managed user data to store ptr to window instance 
+			SetLastError(0);
 			SetWindowLongPtrW(hWnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(pWnd));
+			if (auto hr = GetLastError()) {
+				chilog.warn().hr(hr);
+			}
 			// set message proc to normal (non-setup) handler now that setup is finished 
+			SetLastError(0);
 			SetWindowLongPtrW(hWnd, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(&WindowClass::HandleMessageThunk_));
+			if (auto hr = GetLastError()) {
+				chilog.warn().hr(hr);
+			}
 			// forward message to window instance handler 
 			return ForwardMessage_(pWnd, hWnd, msg, wParam, lParam);
 		}
@@ -62,6 +80,7 @@ namespace chil::win
 	{
 		// retrieve ptr to window instance 
 		IWindow* const pWnd = reinterpret_cast<IWindow*>(GetWindowLongPtrW(hWnd, GWLP_USERDATA));
+		chilass(pWnd);
 		// forward message to window instance handler 
 		return ForwardMessage_(pWnd, hWnd, msg, wParam, lParam);
 	}

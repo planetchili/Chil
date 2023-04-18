@@ -3,6 +3,7 @@
 #include "Entry.h"
 #include <format>
 #include <sstream>
+#include <Core/src/win/Utilities.h>
 
 namespace chil::log
 {
@@ -17,6 +18,10 @@ namespace chil::log
 			e.sourceFile_,
 			e.sourceLine_
 		);
+		if (e.hResult_) {
+			oss << std::format(L"  !HRESULT [{:#010x}]: {}\n", *e.hResult_,
+				win::GetErrorDescription(*e.hResult_));
+		}
 		if (e.trace_) {
 			oss << e.trace_->Print() << std::endl;
 		}

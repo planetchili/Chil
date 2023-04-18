@@ -15,5 +15,6 @@ namespace chil::log
 		int sourceLine_ = -1;
 		std::chrono::system_clock::time_point timestamp_;
 		std::optional<utl::StackTrace> trace_;
+		std::optional<unsigned int> hResult_;
 	};
 }
