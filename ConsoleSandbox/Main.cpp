@@ -14,7 +14,7 @@ void Boot()
 	log::Boot();
 
 	ioc::Get().Register<log::ISeverityLevelPolicy>([] {
-		return std::make_shared<log::SeverityLevelPolicy>(log::Level::Warn);
+		return std::make_shared<log::SeverityLevelPolicy>(log::Level::Info);
 	});
 }
 
@@ -28,7 +28,10 @@ int main()
 {
 	Boot();
 
-	auto pWinClass = std::make_shared<win::WindowClass>(L"");
+	auto pWinClass = std::make_shared<win::WindowClass>();
+
+	chilog.error(L"look ma, no trace").no_trace().no_line();
+	chilog.info().trace();
 
 	//chilog.fatal(L"Oh noes!");
 	//chilog.warn(L"huh");

@@ -70,7 +70,27 @@ namespace chil::log
 	}
 	EntryBuilder& EntryBuilder::trace_skip(int depth)
 	{
-		traceSkipDepth = depth;
+		traceSkipDepth_ = depth;
+		return *this;
+	}
+	EntryBuilder& EntryBuilder::no_trace()
+	{
+		captureTrace_ = false;
+		return *this;
+	}
+	EntryBuilder& EntryBuilder::trace()
+	{
+		captureTrace_ = true;
+		return *this;
+	}
+	EntryBuilder& EntryBuilder::no_line()
+	{
+		showSourceLine_ = false;
+		return *this;
+	}
+	EntryBuilder& EntryBuilder::line()
+	{
+		showSourceLine_ = true;
 		return *this;
 	}
 	EntryBuilder& EntryBuilder::hr()
@@ -86,8 +106,8 @@ namespace chil::log
 	EntryBuilder::~EntryBuilder()
 	{
 		if (pDest_) {
-			if ((int)level_ <= (int)Level::Error) {
-				trace_.emplace(traceSkipDepth);
+			if (captureTrace_.value_or((int)level_ <= (int)Level::Error)) {
+				trace_.emplace(traceSkipDepth_);
 			}
 			pDest_->Submit(*this);
 		}

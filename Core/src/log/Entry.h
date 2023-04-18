@@ -8,6 +8,7 @@ namespace chil::log
 {
 	struct Entry
 	{
+		// data fields 
 		Level level_ = Level::Error;
 		std::wstring note_;
 		const wchar_t* sourceFile_ = nullptr;
@@ -16,5 +17,8 @@ namespace chil::log
 		std::chrono::system_clock::time_point timestamp_;
 		std::optional<utl::StackTrace> trace_;
 		std::optional<unsigned int> hResult_;
+		// behavior override flags 
+		std::optional<bool> captureTrace_;
+		std::optional<bool> showSourceLine_;
 	};
 }
