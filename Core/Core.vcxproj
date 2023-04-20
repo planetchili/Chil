@@ -25,6 +25,9 @@
     <ClInclude Include="src\log\SeverityLevelPolicy.h" />
     <ClInclude Include="src\log\SimpleFileDriver.h" />
     <ClInclude Include="src\log\TextFormatter.h" />
+    <ClInclude Include="src\spa\Dimensions.h" />
+    <ClInclude Include="src\spa\Rect.h" />
+    <ClInclude Include="src\spa\Vec2.h" />
     <ClInclude Include="src\utl\Assert.h" />
     <ClInclude Include="src\utl\Exception.h" />
     <ClInclude Include="src\utl\Macro.h" />
