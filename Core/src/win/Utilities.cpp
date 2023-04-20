@@ -1,5 +1,6 @@
 #include "Utilities.h" 
 #include <Core/src/log/Log.h>
+#include "Exception.h"
 
 namespace chil::win
 {
@@ -26,5 +27,36 @@ namespace chil::win
 			}
 		}
 		return description;
+	}
+
+	RECT ToWinRect(const spa::RectI& rSpa)
+	{
+		return {
+			.left = rSpa.left,
+			.top = rSpa.top,
+			.right = rSpa.right,
+			.bottom = rSpa.bottom,
+		};
+	}
+
+	spa::RectI ToSpaRect(const RECT& rWin)
+	{
+		return {
+			.left = rWin.left,
+			.top = rWin.top,
+			.right = rWin.right,
+			.bottom = rWin.bottom,
+		};
+	}
+
+	spa::DimensionsI ClientToWindowDimensions(const spa::DimensionsI& dims, DWORD styles)
+	{
+		using namespace spa;
+		auto rect = ToWinRect(RectI::FromPointAndDimensions({ 0, 0 }, dims));
+		if (AdjustWindowRect(&rect, styles, FALSE) == FALSE) {
+			chilog.error(L"Failed to adjust window rect").hr();
+			throw WindowException{};
+		}
+		return ToSpaRect(rect).GetDimensions();
 	}
 }
