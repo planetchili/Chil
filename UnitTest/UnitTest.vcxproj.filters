@@ -19,10 +19,10 @@
     <Filter Include="Source Files\Log">
       <UniqueIdentifier>{b9066d50-ee5e-4583-955b-57a70a4bb7b6}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\spa">
+    <Filter Include="Source Files\Spa">
       <UniqueIdentifier>{c51a16fc-1910-41dc-b6d0-d33b4941d2f7}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\ccr">
+    <Filter Include="Source Files\Ccr">
       <UniqueIdentifier>{5397221d-7e37-4c50-b2c6-df291df668e2}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
@@ -43,16 +43,16 @@
       <Filter>Source Files\Log</Filter>
     </ClCompile>
     <ClCompile Include="SpaRect.cpp">
-      <Filter>Source Files\spa</Filter>
+      <Filter>Source Files\Spa</Filter>
     </ClCompile>
     <ClCompile Include="SpaVec2.cpp">
-      <Filter>Source Files\spa</Filter>
+      <Filter>Source Files\Spa</Filter>
     </ClCompile>
     <ClCompile Include="SpaDimensions.cpp">
-      <Filter>Source Files\spa</Filter>
+      <Filter>Source Files\Spa</Filter>
     </ClCompile>
     <ClCompile Include="CcrGenericTaskQueue.cpp">
-      <Filter>Source Files\ccr</Filter>
+      <Filter>Source Files\Ccr</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -60,7 +60,7 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="SpaToString.h">
-      <Filter>Source Files\spa</Filter>
+      <Filter>Source Files\Spa</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

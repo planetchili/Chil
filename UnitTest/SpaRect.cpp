@@ -114,5 +114,17 @@ namespace Spa
 			// Assert
 			Assert::AreEqual(dims, result);
 		}
+
+		TEST_METHOD(ContainsRect)
+		{
+			// Arrange
+			Vec2T<int> topLeft{ 0, 0 };
+			DimensionsT<int> dims{ 5, 10 };
+			RectT<int> rect = RectT<int>::FromPointAndDimensions(topLeft, dims);
+			// Act
+			bool result = rect.Contains(RectT<int>::FromPointAndDimensions(Vec2T<int>(1, 2), DimensionsT<int>(2, 3)));
+			// Assert
+			Assert::IsTrue(result);
+		}
 	};
 }

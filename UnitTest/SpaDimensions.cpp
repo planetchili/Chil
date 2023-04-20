@@ -10,7 +10,7 @@ using namespace std::string_literals;
 
 namespace Spa
 {
-	TEST_CLASS(SpaDimensions)
+	TEST_CLASS(SpaDimensionsTests)
 	{
 	public:
 		TEST_METHOD(GetArea)
