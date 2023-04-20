@@ -34,6 +34,7 @@
     <ClInclude Include="src\utl\NoReturn.h" />
     <ClInclude Include="src\utl\StackTrace.h" />
     <ClInclude Include="src\utl\String.h" />
+    <ClInclude Include="src\win\Boot.h" />
     <ClInclude Include="src\win\ChilWin.h" />
     <ClInclude Include="src\win\Exception.h" />
     <ClInclude Include="src\win\IWindow.h" />
@@ -57,6 +58,7 @@
     <ClCompile Include="src\utl\NoReturn.cpp" />
     <ClCompile Include="src\utl\StackTrace.cpp" />
     <ClCompile Include="src\utl\String.cpp" />
+    <ClCompile Include="src\win\Boot.cpp" />
     <ClCompile Include="src\win\Utilities.cpp" />
     <ClCompile Include="src\win\WindowClass.cpp" />
   </ItemGroup>

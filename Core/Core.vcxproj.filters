@@ -102,6 +102,9 @@
     <ClInclude Include="src\spa\Rect.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\win\Boot.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\ioc\Container.cpp">
@@ -153,6 +156,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\win\Utilities.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\win\Boot.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
