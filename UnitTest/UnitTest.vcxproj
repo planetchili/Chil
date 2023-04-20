@@ -87,6 +87,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="CcrGenericTaskQueue.cpp" />
     <ClCompile Include="IocContainer.cpp" />
     <ClCompile Include="IocSingleton.cpp" />
     <ClCompile Include="LogChannel.cpp" />

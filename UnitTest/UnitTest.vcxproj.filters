@@ -22,6 +22,9 @@
     <Filter Include="Source Files\spa">
       <UniqueIdentifier>{c51a16fc-1910-41dc-b6d0-d33b4941d2f7}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\ccr">
+      <UniqueIdentifier>{5397221d-7e37-4c50-b2c6-df291df668e2}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="IocContainer.cpp">
@@ -47,6 +50,9 @@
     </ClCompile>
     <ClCompile Include="SpaDimensions.cpp">
       <Filter>Source Files\spa</Filter>
+    </ClCompile>
+    <ClCompile Include="CcrGenericTaskQueue.cpp">
+      <Filter>Source Files\ccr</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
