@@ -11,6 +11,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\ccr\GenericTaskQueue.h" />
     <ClInclude Include="src\ioc\Container.h" />
     <ClInclude Include="src\ioc\Exception.h" />
     <ClInclude Include="src\ioc\Singletons.h" />
@@ -43,6 +44,7 @@
     <ClInclude Include="third\backward.hpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\ccr\GenericTaskQueue.cpp" />
     <ClCompile Include="src\ioc\Container.cpp" />
     <ClCompile Include="src\ioc\Singletons.cpp" />
     <ClCompile Include="src\log\Channel.cpp" />
