@@ -4,6 +4,7 @@
 #include <Core/src/log/SeverityLevelPolicy.h>
 #include <Core/src/utl/Assert.h>
 #include <Core/src/win/WindowClass.h>
+#include <Core/src/ccr/GenericTaskQueue.h>
 
 
 using namespace chil;
@@ -32,6 +33,9 @@ int main()
 
 	chilog.error(L"look ma, no trace").no_trace().no_line();
 	chilog.info().trace();
+
+	ccr::GenericTaskQueue q;
+	q.Push([] {});
 
 	//chilog.fatal(L"Oh noes!");
 	//chilog.warn(L"huh");

@@ -9,7 +9,7 @@ namespace chil::ccr
 	{
 		using Task = std::move_only_function<void()>;
 	public:
-		template<class F>
+		template<std::invocable F>
 		auto Push(F&& function)
 		{
 			using T = std::invoke_result_t<F>;
