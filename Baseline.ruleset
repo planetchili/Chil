@@ -101,7 +101,6 @@
     <Rule Id="C28245" Action="Warning" />
     <Rule Id="C28246" Action="Warning" />
     <Rule Id="C28250" Action="Warning" />
-    <Rule Id="C28251" Action="Warning" />
     <Rule Id="C28252" Action="Warning" />
     <Rule Id="C28253" Action="Warning" />
     <Rule Id="C28254" Action="Warning" />
