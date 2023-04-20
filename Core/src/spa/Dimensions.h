@@ -10,6 +10,10 @@ namespace chil::spa
         {
             return width * height;
         }
+        bool operator==(const DimensionsT& rhs) const
+        {
+			return width == rhs.width && height == rhs.height;
+		}
         // data 
         T width, height;
     };

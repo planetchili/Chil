@@ -36,6 +36,10 @@ namespace chil::spa
         {
             return Vec2T{ *this } *rhs;
         }
+        bool operator==(const Vec2T& rhs) const
+        {
+            return x == rhs.x && y == rhs.y;
+        }
         // data 
         T x, y;
     };

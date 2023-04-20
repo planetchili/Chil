@@ -92,6 +92,9 @@
     <ClCompile Include="LogChannel.cpp" />
     <ClCompile Include="LogEntry.cpp" />
     <ClCompile Include="LogTextFormatter.cpp" />
+    <ClCompile Include="SpaDimensions.cpp" />
+    <ClCompile Include="SpaRect.cpp" />
+    <ClCompile Include="SpaVec2.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Core\Core.vcxproj">
@@ -100,6 +103,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ChilCppUnitTest.h" />
+    <ClInclude Include="SpaToString.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

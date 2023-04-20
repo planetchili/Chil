@@ -19,6 +19,9 @@
     <Filter Include="Source Files\Log">
       <UniqueIdentifier>{b9066d50-ee5e-4583-955b-57a70a4bb7b6}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\spa">
+      <UniqueIdentifier>{c51a16fc-1910-41dc-b6d0-d33b4941d2f7}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="IocContainer.cpp">
@@ -36,10 +39,22 @@
     <ClCompile Include="LogTextFormatter.cpp">
       <Filter>Source Files\Log</Filter>
     </ClCompile>
+    <ClCompile Include="SpaRect.cpp">
+      <Filter>Source Files\spa</Filter>
+    </ClCompile>
+    <ClCompile Include="SpaVec2.cpp">
+      <Filter>Source Files\spa</Filter>
+    </ClCompile>
+    <ClCompile Include="SpaDimensions.cpp">
+      <Filter>Source Files\spa</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ChilCppUnitTest.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SpaToString.h">
+      <Filter>Source Files\spa</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
