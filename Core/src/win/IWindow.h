@@ -2,6 +2,9 @@
 #include "ChilWin.h"
 #include <future>
 #include <string>
+#include <optional>
+#include <Core/src/spa/Dimensions.h>
+#include <Core/src/spa/Vec2.h>
 
 namespace chil::win
 {
@@ -10,6 +13,15 @@ namespace chil::win
 		// allow WindowClasses access to the message handling function 
 		friend class IWindowClass;
 	public:
+		// types 
+		struct IocParams
+		{
+			std::shared_ptr<IWindowClass> pClass;
+			std::optional<std::wstring> name;
+			std::optional<spa::DimensionsI> size;
+			std::optional<spa::Vec2I> position;
+		};
+		// functions 
 		virtual ~IWindow() = default;
 		virtual HWND GetHandle() const = 0;
 		virtual bool IsClosing() const = 0;
