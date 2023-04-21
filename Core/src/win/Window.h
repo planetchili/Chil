@@ -35,7 +35,8 @@ namespace chil::win
 			return future;
 		}
 		void NotifyTaskDispatch_();
-		// data 
+		// data
+		std::shared_ptr<IWindowClass> pWindowClass_;
 		mutable ccr::GenericTaskQueue tasks_;
 		std::binary_semaphore startSignal_{ 0 };
 		std::thread kernelThread_;

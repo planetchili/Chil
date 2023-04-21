@@ -10,6 +10,7 @@ namespace chil::win
 	Window::Window(std::shared_ptr<IWindowClass> pWindowClass, std::wstring title,
 		spa::DimensionsI clientAreaSize, std::optional<spa::Vec2I> position)
 		:
+		pWindowClass_{ std::move(pWindowClass) },
 		kernelThread_{ &Window::MessageKernel_, this }
 	{
 		auto future = tasks_.Push([=, this] {
@@ -23,7 +24,7 @@ namespace chil::win
 			}
 			hWnd_ = CreateWindowExW(
 				exStyles,
-				MAKEINTATOM(pWindowClass->GetAtom()),
+				MAKEINTATOM(pWindowClass_->GetAtom()),
 				title.c_str(),
 				styles,
 				position.transform([](auto v){return v.x;}).value_or(CW_USEDEFAULT),
