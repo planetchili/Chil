@@ -1,24 +1,21 @@
 #pragma once
 #include <string>
+#include <format>
 #include <Core/src/spa/Vec2.h>
 #include <Core/src/spa/Dimensions.h>
-#include <sstream>
 
-namespace Microsoft::VisualStudio::CppUnitTestFramework
+namespace chil::spa
 {
-    template<> inline std::wstring __cdecl
-    ToString<chil::spa::Vec2I>(const chil::spa::Vec2I& vec)
+    template<typename T>
+    std::wstring ToString(const Vec2T<T>& vec)
     {
-        std::wstringstream stream;
-        stream << L"Vec2(" << vec.x << L", " << vec.y << L")";
-        return stream.str();
+        return std::format(L"Vec2({}, {})", vec.x, vec.y);
     }
-
-    template<> inline std::wstring __cdecl
-    ToString<chil::spa::DimensionsI>(const chil::spa::DimensionsI& dims)
+    template<typename T>
+    std::wstring ToString(const DimensionsT<T>& dims)
     {
-        std::wstringstream stream;
-        stream << L"Dimensions(" << dims.width << L", " << dims.height << L")";
-        return stream.str();
+        return std::format(L"Dimensions({}, {})", dims.width, dims.height);
     }
 }
+
+using chil::spa::ToString;

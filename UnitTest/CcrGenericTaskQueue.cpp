@@ -1,5 +1,6 @@
 #include "ChilCppUnitTest.h"
 #include <Core/src/ccr/GenericTaskQueue.h>
+#include <atomic>
 
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 
@@ -38,12 +39,12 @@ namespace Ccr
 			GenericTaskQueue taskQueue;
 
 			// Push tasks from multiple threads
-			int x = 0;
+			std::atomic<int> x{ 0 };
 			std::vector<std::future<void>> futures;
 			for (int i = 0; i < 10; i++)
 			{
 				auto future = std::async(std::launch::async, [&taskQueue, &x]() {
-					taskQueue.Push([&x]() { x += 1; });
+					taskQueue.Push([&x]() { x++; });
 				});
 				futures.push_back(std::move(future));
 			}
@@ -69,7 +70,7 @@ namespace Ccr
 			}
 
 			// Check result of x
-			Assert::AreEqual(10, x);
+			Assert::AreEqual(10, x.load());
 		}
 	};
 }
