@@ -5,6 +5,7 @@
 #include <Core/src/win/Boot.h>
 #include <Core/src/log/Log.h> 
 #include <Core/src/win/Window.h>
+#include <format>
 
 using namespace chil;
 using namespace std::chrono_literals;
@@ -28,8 +29,12 @@ int WINAPI wWinMain(
 	Boot();
 
 	win::Window window{ ioc::Sing().Resolve<win::IWindowClass>(), L"And he morbed all over them", { 800, 600 } };
+
+	int x = 0;
 	while (!window.IsClosing()) {
 		std::this_thread::sleep_for(100ms);
+		window.SetTitle(std::format(L"Happy Window [{:*<{}}]", L'*', x + 1));
+		x = (x + 1) % 20;
 	}
 
 	return 0;

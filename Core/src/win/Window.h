@@ -19,6 +19,7 @@ namespace chil::win
 			spa::DimensionsI clientAreaSize, std::optional<spa::Vec2I> position = {});
 		HWND GetHandle() const override;
 		bool IsClosing() const override;
+		std::future<void> SetTitle(std::wstring title) override;
 		~Window() override;
 	protected:
 		// constants 

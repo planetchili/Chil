@@ -48,6 +48,14 @@ namespace chil::win
 	{
 		return closing_;
 	}
+	std::future<void> Window::SetTitle(std::wstring title)
+	{
+		return Dispatch_([=, this] {
+			if (!SetWindowTextW(hWnd_, title.c_str())) {
+				chilog.warn().hr();
+			}
+		});
+	}
 	Window::~Window()
 	{
 		Dispatch_([this] {
