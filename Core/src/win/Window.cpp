@@ -53,7 +53,7 @@ namespace chil::win
 	{
 		return Dispatch_([=, this] {
 			if (!SetWindowTextW(hWnd_, title.c_str())) {
-				chilog.warn().hr();
+				chilog.warn(L"Failed setting window title").hr();
 			}
 		});
 	}
@@ -93,7 +93,7 @@ namespace chil::win
 		}
 		return DefWindowProcW(hWnd, msg, wParam, lParam);
 	}
-	void Window::NotifyTaskDispatch_()
+	void Window::NotifyTaskDispatch_() const
 	{
 		if (!PostMessageW(hWnd_, CustomTaskMessageId, 0, 0)) {
 			chilog.error().hr();

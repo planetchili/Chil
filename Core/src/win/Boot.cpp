@@ -10,10 +10,10 @@ template<class T>
 auto operator|(std::shared_ptr<T> lhs, std::shared_ptr<T> rhs)
 {
 	if (bool(lhs)) {
-		return std::forward<std::shared_ptr<T>>(lhs);
+		return std::move(lhs);
 	}
 	else {
-		return std::forward<std::shared_ptr<T>>(rhs);
+		return std::move(rhs);
 	}
 }
 

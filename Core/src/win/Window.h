@@ -27,14 +27,14 @@ namespace chil::win
 		// functions
 		virtual void MessageKernel_() noexcept;
 		LRESULT HandleMessage_(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) noexcept override;
-		template<class F>
-		auto Dispatch_(F&& f)
+		template<std::invocable F>
+		auto Dispatch_(F&& f) const
 		{
 			auto future = tasks_.Push(std::forward<F>(f));
 			NotifyTaskDispatch_();
 			return future;
 		}
-		void NotifyTaskDispatch_();
+		void NotifyTaskDispatch_() const;
 		// data
 		std::shared_ptr<IWindowClass> pWindowClass_;
 		mutable ccr::GenericTaskQueue tasks_;
