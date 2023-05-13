@@ -18,17 +18,18 @@ namespace Log
 			const log::Entry e{
 				.level_ = log::Level::Info,
 				.note_ = L"Heya",
-				.sourceFile_ = __FILEW__,
+				.sourceFile_ = L"C:\\Users\\Chili\\Desktop\\cpp\\Chil\\UnitTest\\LogTextFormatter.cpp",
 				.sourceFunctionName_ = __FUNCTIONW__,
 				.sourceLine_ = __LINE__,
 				.timestamp_ = std::chrono::system_clock::time_point{
 					std::chrono::days{ 10'000 }
 				}
 			};
-			Assert::AreEqual(
-				L"@Info {1997-05-19 09:00:00.0000000 GMT+9} Heya\n  >> at Log::LogTextFormatterTests::TestFormat\n     C:\\Users\\Chili\\Desktop\\cpp\\Chil\\UnitTest\\LogTextFormatter.cpp(23)\n"s,
-				log::TextFormatter{}.Format(e)
-			);
+
+			std::wstring expectedText = std::format(L"@Info {{{0}}} Heya\n  >> at Log::LogTextFormatterTests::TestFormat\n     {1}({2})\n",
+				std::chrono::zoned_time{ std::chrono::current_zone(), e.timestamp_ }, e.sourceFile_, e.sourceLine_);
+
+			Assert::AreEqual(expectedText, log::TextFormatter{}.Format(e));
 		}
 	};
 }
