@@ -1,5 +1,6 @@
 #include "Device.h"
 #include <Core/src/utl/HrChecker.h>
+#include <Core/src/log/Log.h>
 
 namespace chil::gfx::d11
 {
@@ -7,6 +8,8 @@ namespace chil::gfx::d11
 	using Microsoft::WRL::ComPtr;
 
 	Device::Device()
+		:
+		commandListExecutor_{ &Device::CommandListExecutorKernel_, this }
 	{
 		UINT createFlags = D3D11_CREATE_DEVICE_BGRA_SUPPORT;
 #ifndef NDEBUG
@@ -25,9 +28,24 @@ namespace chil::gfx::d11
 		) >> chk;
 	}
 
+	void Device::CommandListExecutorKernel_()
+	{
+		auto st = commandListExecutor_.get_stop_token();
+		std::unique_lock lk{ commandListMutex_ };
+		while (commandListCondition_.wait(lk, st, [this] {return !commandListQueue_.empty(); })) {
+			auto pCommands = std::move(commandListQueue_.front());
+			commandListQueue_.pop_front();
+			pImmediateContext_->ExecuteCommandList(pCommands.Get(), FALSE);
+		}
+	}
+
 	void Device::Execute(ComPtr<ID3D11CommandList> pCommandList)
 	{
-		pImmediateContext_->ExecuteCommandList(pCommandList.Get(), FALSE);
+		{
+			std::lock_guard lk{ commandListMutex_ };
+			commandListQueue_.push_back(std::move(pCommandList));
+		}
+		commandListCondition_.notify_one();
 	}
 
 	ComPtr<ID3D11DeviceContext> Device::CreateDeferredContext()
@@ -80,5 +98,10 @@ namespace chil::gfx::d11
 		ComPtr<ID3D11RenderTargetView> pRenderTargetView;
 		pDevice_->CreateRenderTargetView(pResource, pDesc, &pRenderTargetView) >> chk;
 		return pRenderTargetView;
+	}
+
+	std::unique_lock<std::mutex> Device::LockMeDaddy()
+	{
+		return std::unique_lock{ commandListMutex_ };
 	}
 }

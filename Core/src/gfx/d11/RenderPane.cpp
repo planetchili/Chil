@@ -30,6 +30,8 @@ namespace chil::gfx::d11
 		ComPtr<ID3D11CommandList> pCommandList;
 		pDeferredContext_->FinishCommandList(FALSE, &pCommandList) >> chk;
 		pDevice_->Execute(std::move(pCommandList));
+		// https://learn.microsoft.com/en-us/windows/win32/direct3d11/overviews-direct3d-11-render-multi-thread-intro
+		auto lk = pDevice_->LockMeDaddy();
 		pSwapChain_->Present(1, 0);
 	}
 
