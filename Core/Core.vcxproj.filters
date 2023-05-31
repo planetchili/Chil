@@ -111,6 +111,21 @@
     <ClInclude Include="src\win\Window.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\gfx\IDevice.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\gfx\IRenderPane.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\gfx\d11\Device.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\utl\HrChecker.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\gfx\d11\RenderPane.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\ioc\Container.cpp">
@@ -171,6 +186,15 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\win\Window.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\gfx\d11\Device.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\utl\HrChecker.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\gfx\d11\RenderPane.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

@@ -12,6 +12,10 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ccr\GenericTaskQueue.h" />
+    <ClInclude Include="src\gfx\d11\Device.h" />
+    <ClInclude Include="src\gfx\d11\RenderPane.h" />
+    <ClInclude Include="src\gfx\IDevice.h" />
+    <ClInclude Include="src\gfx\IRenderPane.h" />
     <ClInclude Include="src\ioc\Container.h" />
     <ClInclude Include="src\ioc\Exception.h" />
     <ClInclude Include="src\ioc\Singletons.h" />
@@ -31,6 +35,7 @@
     <ClInclude Include="src\spa\Vec2.h" />
     <ClInclude Include="src\utl\Assert.h" />
     <ClInclude Include="src\utl\Exception.h" />
+    <ClInclude Include="src\utl\HrChecker.h" />
     <ClInclude Include="src\utl\Macro.h" />
     <ClInclude Include="src\utl\NoReturn.h" />
     <ClInclude Include="src\utl\StackTrace.h" />
@@ -46,6 +51,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\ccr\GenericTaskQueue.cpp" />
+    <ClCompile Include="src\gfx\d11\Device.cpp" />
+    <ClCompile Include="src\gfx\d11\RenderPane.cpp" />
     <ClCompile Include="src\ioc\Container.cpp" />
     <ClCompile Include="src\ioc\Singletons.cpp" />
     <ClCompile Include="src\log\Channel.cpp" />
@@ -58,6 +65,7 @@
     <ClCompile Include="src\log\TextFormatter.cpp" />
     <ClCompile Include="src\utl\Assert.cpp" />
     <ClCompile Include="src\utl\Exception.cpp" />
+    <ClCompile Include="src\utl\HrChecker.cpp" />
     <ClCompile Include="src\utl\NoReturn.cpp" />
     <ClCompile Include="src\utl\StackTrace.cpp" />
     <ClCompile Include="src\utl\String.cpp" />
@@ -113,6 +121,9 @@
       </SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
+    <Lib>
+      <AdditionalDependencies>d3d11.lib; dxgi.lib; %(AdditionalDependencies)</AdditionalDependencies>
+    </Lib>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -130,6 +141,9 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
+    <Lib>
+      <AdditionalDependencies>d3d11.lib; dxgi.lib; %(AdditionalDependencies)</AdditionalDependencies>
+    </Lib>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

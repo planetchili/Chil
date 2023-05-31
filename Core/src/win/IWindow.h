@@ -8,10 +8,12 @@
 
 namespace chil::win
 {
+	class IWindowClass;
+
 	class IWindow
 	{
 		// allow WindowClasses access to the message handling function 
-		friend class IWindowClass;
+		friend IWindowClass;
 	public:
 		// types 
 		struct IocParams
