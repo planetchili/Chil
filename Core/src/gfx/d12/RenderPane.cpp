@@ -1,7 +1,7 @@
 #include "RenderPane.h"
 #include <Core/src/utl/HrChecker.h>
 
-namespace chil::gfx::d11
+namespace chil::gfx::d12
 {
 	using utl::chk;
 	using Microsoft::WRL::ComPtr;

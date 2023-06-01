@@ -2,7 +2,7 @@
 #include <Core/src/utl/HrChecker.h>
 #include <Core/src/log/Log.h>
 
-namespace chil::gfx::d11
+namespace chil::gfx::d12
 {
 	using utl::chk;
 	using Microsoft::WRL::ComPtr;

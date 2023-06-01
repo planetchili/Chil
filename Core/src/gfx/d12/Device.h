@@ -9,7 +9,7 @@
 #pragma warning(pop)
 #include <wrl/client.h>
 
-namespace chil::gfx::d11
+namespace chil::gfx::d12
 {
 	class IDevice : public gfx::IDevice
 	{

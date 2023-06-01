@@ -117,16 +117,16 @@
     <ClInclude Include="src\gfx\IRenderPane.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\gfx\d11\Device.h">
+    <ClInclude Include="src\gfx\d12\Device.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\utl\HrChecker.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\gfx\d11\RenderPane.h">
+    <ClInclude Include="src\gfx\d12\RenderPane.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\gfx\d11\d3dx12.h">
+    <ClInclude Include="src\gfx\d12\d3dx12.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -191,13 +191,13 @@
     <ClCompile Include="src\win\Window.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\gfx\d11\Device.cpp">
+    <ClCompile Include="src\gfx\d12\Device.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\utl\HrChecker.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\gfx\d11\RenderPane.cpp">
+    <ClCompile Include="src\gfx\d12\RenderPane.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

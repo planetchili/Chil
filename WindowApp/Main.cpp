@@ -4,8 +4,8 @@
 #include <Core/src/win/Boot.h>
 #include <Core/src/log/Log.h> 
 #include <Core/src/win/IWindow.h>
-#include <Core/src/gfx/d11/Device.h>
-#include <Core/src/gfx/d11/RenderPane.h>
+#include <Core/src/gfx/d12/Device.h>
+#include <Core/src/gfx/d12/RenderPane.h>
 #include <format>
 #include <ranges> 
 #include <semaphore>
@@ -37,7 +37,7 @@ int WINAPI wWinMain(
 	class ActiveWindow
 	{
 	public:
-		ActiveWindow(std::shared_ptr<gfx::d11::Device> pDevice)
+		ActiveWindow(std::shared_ptr<gfx::d12::Device> pDevice)
 			:
 			thread_{ &ActiveWindow::Kernel_, this, std::move(pDevice) }
 		{
@@ -48,11 +48,11 @@ int WINAPI wWinMain(
 			return isLive;
 		}
 	private:
-		void Kernel_(std::shared_ptr<gfx::d11::Device> pDevice)
+		void Kernel_(std::shared_ptr<gfx::d12::Device> pDevice)
 		{
 			// do construction
 			std::shared_ptr<win::IWindow> pWindow_ = ioc::Get().Resolve<win::IWindow>();
-			std::shared_ptr<gfx::d11::IRenderPane> pPane_ = std::make_shared<gfx::d11::RenderPane>(
+			std::shared_ptr<gfx::d12::IRenderPane> pPane_ = std::make_shared<gfx::d12::RenderPane>(
 				pWindow_->GetHandle(),
 				spa::DimensionsI{ 1280, 720 },
 				std::move(pDevice)
@@ -81,7 +81,7 @@ int WINAPI wWinMain(
 		std::jthread thread_;
 	};
 
-	auto pDevice = std::make_shared<gfx::d11::Device>();
+	auto pDevice = std::make_shared<gfx::d12::Device>();
 
 	std::vector<std::unique_ptr<ActiveWindow>> windows;
 	for (size_t i = 0; i < 10; i++) {

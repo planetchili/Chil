@@ -4,7 +4,7 @@
 #include <Core/src/win/IWindow.h>
 #include <array>
 
-namespace chil::gfx::d11
+namespace chil::gfx::d12
 {
 	class IRenderPane : public gfx::IRenderPane
 	{
