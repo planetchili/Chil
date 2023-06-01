@@ -11,9 +11,10 @@ namespace chil::gfx::d12
 	{
 		// enable the software debug layer for d3d12 
 		{
-			ComPtr<ID3D12Debug> debugController;
+			ComPtr<ID3D12Debug1> debugController;
 			D3D12GetDebugInterface(IID_PPV_ARGS(&debugController)) >> chk;
 			debugController->EnableDebugLayer();
+			debugController->SetEnableGPUBasedValidation(true);
 		}
 		CreateDXGIFactory2(DXGI_CREATE_FACTORY_DEBUG, IID_PPV_ARGS(&pDxgiFactory_)) >> chk;
 		D3D12CreateDevice(nullptr, D3D_FEATURE_LEVEL_12_0, IID_PPV_ARGS(&pDevice_)) >> chk;

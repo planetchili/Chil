@@ -84,7 +84,7 @@ int WINAPI wWinMain(
 	auto pDevice = std::make_shared<gfx::d12::Device>();
 
 	std::vector<std::unique_ptr<ActiveWindow>> windows;
-	for (size_t i = 0; i < 10; i++) {
+	for (size_t i = 0; i < 2; i++) {
 		windows.push_back(std::make_unique<ActiveWindow>(pDevice));
 	}
 
