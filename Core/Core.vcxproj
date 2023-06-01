@@ -12,6 +12,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ccr\GenericTaskQueue.h" />
+    <ClInclude Include="src\gfx\d11\d3dx12.h" />
     <ClInclude Include="src\gfx\d11\Device.h" />
     <ClInclude Include="src\gfx\d11\RenderPane.h" />
     <ClInclude Include="src\gfx\IDevice.h" />
@@ -122,7 +123,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
     <Lib>
-      <AdditionalDependencies>d3d11.lib; dxgi.lib; %(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>d3d12.lib; dxgi.lib; %(AdditionalDependencies)</AdditionalDependencies>
     </Lib>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -142,7 +143,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
     <Lib>
-      <AdditionalDependencies>d3d11.lib; dxgi.lib; %(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>d3d12.lib; dxgi.lib; %(AdditionalDependencies)</AdditionalDependencies>
     </Lib>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
