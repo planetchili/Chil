@@ -77,7 +77,7 @@ namespace chil::gfx::d12
 	RenderPane::~RenderPane()
 	{
 		// wait for queue to become completely empty
-		pCommandQueue_->Signal(pFence_.Get(), fenceValue_) >> chk;
+		pCommandQueue_->Signal(pFence_.Get(), ++fenceValue_) >> chk;
 		pFence_->SetEventOnCompletion(fenceValue_, nullptr) >> chk;
 	}
 
@@ -108,11 +108,11 @@ namespace chil::gfx::d12
 			pCommandQueue_->ExecuteCommandLists((UINT)std::size(commandLists), commandLists);
 		}
 		// insert fence to mark command list completion 
-		pCommandQueue_->Signal(pFence_.Get(), fenceValue_++) >> chk;
+		pCommandQueue_->Signal(pFence_.Get(), ++fenceValue_) >> chk;
 		// present frame 
 		pSwapChain_->Present(1, 0) >> chk;
 		// wait for command list / allocator to become free 
-		pFence_->SetEventOnCompletion(fenceValue_ - 1, nullptr) >> chk;
+		pFence_->SetEventOnCompletion(fenceValue_, nullptr) >> chk;
 	}
 
 	void RenderPane::Clear(const std::array<float, 4>& color)
