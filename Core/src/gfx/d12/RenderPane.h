@@ -23,6 +23,7 @@ namespace chil::gfx::d12
 		void EndFrame() override;
 		void Clear(const std::array<float, 4>& color) override;
 	private:
+		// data
 		std::shared_ptr<IDevice> pDevice_;
 		Microsoft::WRL::ComPtr<ID3D12CommandQueue> pCommandQueue_;
 		Microsoft::WRL::ComPtr<ID3D12CommandAllocator> pCommandAllocator_;

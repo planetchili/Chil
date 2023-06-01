@@ -10,7 +10,9 @@ namespace chil::gfx::d12
 		:
 		pDevice_{ std::move(pDevice) }
 	{
-		auto device = pDevice_->GetD3D12DeviceInterface();
+		// cache device interface
+		auto pDeviceInterface = pDevice_->GetD3D12DeviceInterface();
+		// create command queue
 		{
 			const D3D12_COMMAND_QUEUE_DESC desc = {
 				.Type = D3D12_COMMAND_LIST_TYPE_DIRECT,
@@ -18,15 +20,19 @@ namespace chil::gfx::d12
 				.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE,
 				.NodeMask = 0,
 			};
-			device->CreateCommandQueue(&desc, IID_PPV_ARGS(&pCommandQueue_)) >> chk;
+			pDeviceInterface->CreateCommandQueue(&desc, IID_PPV_ARGS(&pCommandQueue_)) >> chk;
 		}
-		device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT,
+		// create command allocator
+		pDeviceInterface->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT,
 			IID_PPV_ARGS(&pCommandAllocator_)) >> chk;
-		device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT,
+		// create command list
+		pDeviceInterface->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT,
 			pCommandAllocator_.Get(), nullptr, IID_PPV_ARGS(&pCommandList_)) >> chk;
 		// initially close the command list so it can be reset at top of draw loop 
 		pCommandList_->Close() >> chk;
-		device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&pFence_)) >> chk;
+		// create fence
+		pDeviceInterface->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&pFence_)) >> chk;
+		// create swap chain
 		{
 			const DXGI_SWAP_CHAIN_DESC1 swapChainDesc = {
 				.Width = (UINT)dims.width,
@@ -54,21 +60,24 @@ namespace chil::gfx::d12
 				&swapChain1) >> chk;
 			swapChain1.As(&pSwapChain_) >> chk;
 		}
+		// create descriptor heap
 		{
 			const D3D12_DESCRIPTOR_HEAP_DESC desc = {
 				.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV,
 				.NumDescriptors = bufferCount_,
 			};
-			device->CreateDescriptorHeap(&desc, IID_PPV_ARGS(&pRtvDescriptorHeap_)) >> chk;
+			pDeviceInterface->CreateDescriptorHeap(&desc, IID_PPV_ARGS(&pRtvDescriptorHeap_)) >> chk;
 		}
-		rtvDescriptorSize_ = device->GetDescriptorHandleIncrementSize(
+		// cache descriptor size
+		rtvDescriptorSize_ = pDeviceInterface->GetDescriptorHandleIncrementSize(
 			D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+		// create rtvs and get resource handles for each buffer in the swap chain
 		{
 			CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(
 				pRtvDescriptorHeap_->GetCPUDescriptorHandleForHeapStart());
 			for (int i = 0; i < bufferCount_; i++) {
 				pSwapChain_->GetBuffer(i, IID_PPV_ARGS(&backBuffers_[i])) >> chk;
-				device->CreateRenderTargetView(backBuffers_[i].Get(), nullptr, rtvHandle);
+				pDeviceInterface->CreateRenderTargetView(backBuffers_[i].Get(), nullptr, rtvHandle);
 				rtvHandle.Offset(rtvDescriptorSize_);
 			}
 		}
@@ -83,10 +92,17 @@ namespace chil::gfx::d12
 
 	void RenderPane::BeginFrame()
 	{
+		// set index of swap chain buffer for this frame
 		curBackBufferIndex_ = pSwapChain_->GetCurrentBackBufferIndex();
 		// reset command list and allocator 
 		pCommandAllocator_->Reset() >> chk;
 		pCommandList_->Reset(pCommandAllocator_.Get(), nullptr) >> chk;
+		// transition buffer resource to render target state 
+		auto& backBuffer = backBuffers_[curBackBufferIndex_];
+		const auto barrier = CD3DX12_RESOURCE_BARRIER::Transition(
+			backBuffer.Get(),
+			D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
+		pCommandList_->ResourceBarrier(1, &barrier);
 	}
 
 	void RenderPane::EndFrame()
@@ -118,12 +134,6 @@ namespace chil::gfx::d12
 	void RenderPane::Clear(const std::array<float, 4>& color)
 	{
 		auto& backBuffer = backBuffers_[curBackBufferIndex_];
-		// transition buffer resource to render target state 
-		const auto barrier = CD3DX12_RESOURCE_BARRIER::Transition(
-			backBuffer.Get(),
-			D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
-		pCommandList_->ResourceBarrier(1, &barrier);
-		// clear rtv 
 		const CD3DX12_CPU_DESCRIPTOR_HANDLE rtv{
 			pRtvDescriptorHeap_->GetCPUDescriptorHandleForHeapStart(),
 			(INT)curBackBufferIndex_, rtvDescriptorSize_ };
