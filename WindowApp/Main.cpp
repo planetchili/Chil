@@ -6,6 +6,7 @@
 #include <Core/src/win/IWindow.h>
 #include <Core/src/gfx/d12/Device.h>
 #include <Core/src/gfx/d12/RenderPane.h>
+#include <Core/src/gfx/d12/CommandQueue.h>
 #include <format>
 #include <ranges> 
 #include <semaphore>
@@ -55,7 +56,8 @@ int WINAPI wWinMain(
 			std::shared_ptr<gfx::d12::IRenderPane> pPane_ = std::make_shared<gfx::d12::RenderPane>(
 				pWindow_->GetHandle(),
 				spa::DimensionsI{ 1280, 720 },
-				std::move(pDevice)
+				pDevice,
+				std::make_shared<gfx::d12::CommandQueue>(pDevice)
 			);
 			constructionSemaphore_.release();
 

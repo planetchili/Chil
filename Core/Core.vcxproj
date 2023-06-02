@@ -12,6 +12,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ccr\GenericTaskQueue.h" />
+    <ClInclude Include="src\gfx\d12\CommandQueue.h" />
     <ClInclude Include="src\gfx\d12\d3dx12.h" />
     <ClInclude Include="src\gfx\d12\Device.h" />
     <ClInclude Include="src\gfx\d12\RenderPane.h" />
@@ -52,6 +53,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\ccr\GenericTaskQueue.cpp" />
+    <ClCompile Include="src\gfx\d12\CommandQueue.cpp" />
     <ClCompile Include="src\gfx\d12\Device.cpp" />
     <ClCompile Include="src\gfx\d12\RenderPane.cpp" />
     <ClCompile Include="src\ioc\Container.cpp" />

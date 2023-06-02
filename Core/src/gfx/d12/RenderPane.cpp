@@ -1,37 +1,23 @@
 #include "RenderPane.h"
 #include <Core/src/utl/HrChecker.h>
+#pragma warning(push)
+#pragma warning(disable : 26495)
+#include "d3dx12.h"
+#pragma warning(pop)
 
 namespace chil::gfx::d12
 {
 	using utl::chk;
 	using Microsoft::WRL::ComPtr;
 
-	RenderPane::RenderPane(HWND hWnd, const spa::DimensionsI& dims, std::shared_ptr<IDevice> pDevice)
+	RenderPane::RenderPane(HWND hWnd, const spa::DimensionsI& dims, std::shared_ptr<IDevice> pDevice,
+		std::shared_ptr<ICommandQueue> pCommandQueue)
 		:
-		pDevice_{ std::move(pDevice) }
+		pDevice_{ std::move(pDevice) },
+		pCommandQueue_{ std::move(pCommandQueue) }
 	{
 		// cache device interface
 		auto pDeviceInterface = pDevice_->GetD3D12DeviceInterface();
-		// create command queue
-		{
-			const D3D12_COMMAND_QUEUE_DESC desc = {
-				.Type = D3D12_COMMAND_LIST_TYPE_DIRECT,
-				.Priority = D3D12_COMMAND_QUEUE_PRIORITY_NORMAL,
-				.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE,
-				.NodeMask = 0,
-			};
-			pDeviceInterface->CreateCommandQueue(&desc, IID_PPV_ARGS(&pCommandQueue_)) >> chk;
-		}
-		// create command allocator
-		pDeviceInterface->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT,
-			IID_PPV_ARGS(&pCommandAllocator_)) >> chk;
-		// create command list
-		pDeviceInterface->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT,
-			pCommandAllocator_.Get(), nullptr, IID_PPV_ARGS(&pCommandList_)) >> chk;
-		// initially close the command list so it can be reset at top of draw loop 
-		pCommandList_->Close() >> chk;
-		// create fence
-		pDeviceInterface->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&pFence_)) >> chk;
 		// create swap chain
 		{
 			const DXGI_SWAP_CHAIN_DESC1 swapChainDesc = {
@@ -52,7 +38,7 @@ namespace chil::gfx::d12
 			};
 			ComPtr<IDXGISwapChain1> swapChain1;
 			pDevice_->GetDXGIFactoryInterface()->CreateSwapChainForHwnd(
-				pCommandQueue_.Get(),
+				pCommandQueue_->GetD3D12CommandQueue().Get(),
 				hWnd,
 				&swapChainDesc,
 				nullptr,
@@ -86,23 +72,23 @@ namespace chil::gfx::d12
 	RenderPane::~RenderPane()
 	{
 		// wait for queue to become completely empty
-		pCommandQueue_->Signal(pFence_.Get(), ++fenceValue_) >> chk;
-		pFence_->SetEventOnCompletion(fenceValue_, nullptr) >> chk;
+		pCommandQueue_->Flush();
 	}
 
 	void RenderPane::BeginFrame()
 	{
 		// set index of swap chain buffer for this frame
 		curBackBufferIndex_ = pSwapChain_->GetCurrentBackBufferIndex();
-		// reset command list and allocator 
-		pCommandAllocator_->Reset() >> chk;
-		pCommandList_->Reset(pCommandAllocator_.Get(), nullptr) >> chk;
+		// wait for this back buffer to become free
+		pCommandQueue_->WaitForFenceValue(bufferFenceValues_[curBackBufferIndex_]);
+		// acquire command list
+		commandListPair_ = pCommandQueue_->GetCommandListPair();
 		// transition buffer resource to render target state 
 		auto& backBuffer = backBuffers_[curBackBufferIndex_];
 		const auto barrier = CD3DX12_RESOURCE_BARRIER::Transition(
 			backBuffer.Get(),
 			D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
-		pCommandList_->ResourceBarrier(1, &barrier);
+		commandListPair_.pCommandList->ResourceBarrier(1, &barrier);
 	}
 
 	void RenderPane::EndFrame()
@@ -113,22 +99,14 @@ namespace chil::gfx::d12
 			const auto barrier = CD3DX12_RESOURCE_BARRIER::Transition(
 				backBuffer.Get(),
 				D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
-			pCommandList_->ResourceBarrier(1, &barrier);
+			commandListPair_.pCommandList->ResourceBarrier(1, &barrier);
 		}
 		// submit command list 
-		{
-			// close command list 
-			pCommandList_->Close() >> chk;
-			// submit command list to queue as array with single element
-			ID3D12CommandList* const commandLists[] = { pCommandList_.Get() };
-			pCommandQueue_->ExecuteCommandLists((UINT)std::size(commandLists), commandLists);
-		}
-		// insert fence to mark command list completion 
-		pCommandQueue_->Signal(pFence_.Get(), ++fenceValue_) >> chk;
+		pCommandQueue_->ExecuteCommandList(std::move(commandListPair_));
 		// present frame 
 		pSwapChain_->Present(1, 0) >> chk;
-		// wait for command list / allocator to become free 
-		pFence_->SetEventOnCompletion(fenceValue_, nullptr) >> chk;
+		// insert a fence so we know when the buffer is free
+		bufferFenceValues_[curBackBufferIndex_] = pCommandQueue_->SignalFence();
 	}
 
 	void RenderPane::Clear(const std::array<float, 4>& color)
@@ -137,6 +115,6 @@ namespace chil::gfx::d12
 		const CD3DX12_CPU_DESCRIPTOR_HANDLE rtv{
 			pRtvDescriptorHeap_->GetCPUDescriptorHandleForHeapStart(),
 			(INT)curBackBufferIndex_, rtvDescriptorSize_ };
-		pCommandList_->ClearRenderTargetView(rtv, color.data(), 0, nullptr);
+		commandListPair_.pCommandList->ClearRenderTargetView(rtv, color.data(), 0, nullptr);
 	}
 }

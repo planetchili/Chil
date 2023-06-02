@@ -1,5 +1,6 @@
 #pragma once
 #include "../IRenderPane.h"
+#include "CommandQueue.h"
 #include "Device.h"
 #include <Core/src/win/IWindow.h>
 #include <array>
@@ -17,7 +18,8 @@ namespace chil::gfx::d12
 	class RenderPane : public IRenderPane
 	{
 	public:
-		RenderPane(HWND hWnd, const spa::DimensionsI& dims, std::shared_ptr<IDevice> pDevice);
+		RenderPane(HWND hWnd, const spa::DimensionsI& dims, std::shared_ptr<IDevice> pDevice,
+			std::shared_ptr<ICommandQueue> pCommandQueue);
 		~RenderPane();
 		void BeginFrame() override;
 		void EndFrame() override;
@@ -25,16 +27,14 @@ namespace chil::gfx::d12
 	private:
 		// data
 		std::shared_ptr<IDevice> pDevice_;
-		Microsoft::WRL::ComPtr<ID3D12CommandQueue> pCommandQueue_;
-		Microsoft::WRL::ComPtr<ID3D12CommandAllocator> pCommandAllocator_;
-		Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList> pCommandList_;
-		uint64_t fenceValue_ = 0;
-		Microsoft::WRL::ComPtr<ID3D12Fence> pFence_;
+		std::shared_ptr<ICommandQueue> pCommandQueue_;
+		CommandListPair commandListPair_;
 		static constexpr UINT bufferCount_ = 2;
 		Microsoft::WRL::ComPtr<IDXGISwapChain4> pSwapChain_;
 		Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> pRtvDescriptorHeap_;
 		UINT rtvDescriptorSize_;
 		Microsoft::WRL::ComPtr<ID3D12Resource> backBuffers_[bufferCount_];
 		UINT curBackBufferIndex_ = 0;
+		uint64_t bufferFenceValues_[bufferCount_]{};
 	};
 }

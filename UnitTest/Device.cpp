@@ -3,6 +3,7 @@
 #include <Core/src/win/WindowClass.h>
 #include <Core/src/gfx/d12/Device.h>
 #include <Core/src/gfx/d12/RenderPane.h>
+#include <Core/src/gfx/d12/CommandQueue.h>
 
 
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
@@ -20,7 +21,8 @@ namespace Gfx
 		{
 			win::Window window{ std::make_shared<win::WindowClass>(), L"Gfx Device Test Window", { 800, 600 } };
 			auto pDevice = std::make_shared<gfx::d12::Device>();
-			gfx::d12::RenderPane pane{ window.GetHandle(), { 800, 600 }, pDevice };
+			auto pCommandQueue = std::make_shared<gfx::d12::CommandQueue>(pDevice);
+			gfx::d12::RenderPane pane{ window.GetHandle(), { 800, 600 }, pDevice, std::move(pCommandQueue) };
 			Assert::IsTrue(true);
 		}
 	};

@@ -2,11 +2,7 @@
 #include "../IDevice.h"
 #include <Core/src/win/IWindow.h>
 #include <d3d12.h> 
-#include <dxgi1_6.h> 
-#pragma warning(push)
-#pragma warning(disable : 26495)
-#include "d3dx12.h"
-#pragma warning(pop)
+#include <dxgi1_6.h>
 #include <wrl/client.h>
 
 namespace chil::gfx::d12
