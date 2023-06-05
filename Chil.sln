@@ -11,6 +11,12 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "UnitTest", "UnitTest\UnitTe
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "WindowApp", "WindowApp\WindowApp.vcxproj", "{A9D6EB69-A3E6-45A3-9F75-C7BE8F8AB771}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{F38257F3-281A-4D2E-9A0E-E073593DB6DF}"
+	ProjectSection(SolutionItems) = preProject
+		.gitignore = .gitignore
+		vcpkg.json = vcpkg.json
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64

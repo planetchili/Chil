@@ -5,6 +5,7 @@
 #pragma warning(disable : 26495)
 #include "d3dx12.h"
 #pragma warning(pop)
+#include "Texture.h"
 
 namespace chil::gfx::d12
 {
@@ -34,5 +35,16 @@ namespace chil::gfx::d12
 	ComPtr<IDXGIFactory4> Device::GetDXGIFactoryInterface()
 	{
 		return pDxgiFactory_;
+	}
+
+	std::future<std::shared_ptr<ITexture>> Device::LoadTexture(std::wstring path)
+	{
+		auto cmd = pResourceQueue_->GetCommandListPair();
+		auto pTexture = std::make_shared<Texture>(pDevice_, cmd, std::move(path));
+		const auto signal = pResourceQueue_->ExecuteCommandList(std::move(cmd));
+		return std::async(std::launch::deferred, [=] {
+			pResourceQueue_->WaitForFenceValue(signal);
+			return std::static_pointer_cast<ITexture>(pTexture);
+		});
 	}
 }

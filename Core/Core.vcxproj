@@ -12,10 +12,13 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ccr\GenericTaskQueue.h" />
+    <ClInclude Include="src\gfx\d12\CommandListPair.h" />
     <ClInclude Include="src\gfx\d12\CommandQueue.h" />
     <ClInclude Include="src\gfx\d12\d3dx12.h" />
     <ClInclude Include="src\gfx\d12\Device.h" />
+    <ClInclude Include="src\gfx\d12\ICommandQueue.h" />
     <ClInclude Include="src\gfx\d12\RenderPane.h" />
+    <ClInclude Include="src\gfx\d12\Texture.h" />
     <ClInclude Include="src\gfx\IDevice.h" />
     <ClInclude Include="src\gfx\IRenderPane.h" />
     <ClInclude Include="src\ioc\Container.h" />
@@ -56,6 +59,7 @@
     <ClCompile Include="src\gfx\d12\CommandQueue.cpp" />
     <ClCompile Include="src\gfx\d12\Device.cpp" />
     <ClCompile Include="src\gfx\d12\RenderPane.cpp" />
+    <ClCompile Include="src\gfx\d12\Texture.cpp" />
     <ClCompile Include="src\ioc\Container.cpp" />
     <ClCompile Include="src\ioc\Singletons.cpp" />
     <ClCompile Include="src\log\Channel.cpp" />
@@ -112,6 +116,9 @@
     <Import Project="..\Baseline.props" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Label="Vcpkg">
+    <VcpkgEnableManifest>true</VcpkgEnableManifest>
+  </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>

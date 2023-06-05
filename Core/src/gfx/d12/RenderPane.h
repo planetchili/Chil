@@ -4,6 +4,7 @@
 #include "Device.h"
 #include <Core/src/win/IWindow.h>
 #include <array>
+#include "Texture.h"
 
 namespace chil::gfx::d12
 {
@@ -36,5 +37,6 @@ namespace chil::gfx::d12
 		Microsoft::WRL::ComPtr<ID3D12Resource> backBuffers_[bufferCount_];
 		UINT curBackBufferIndex_ = 0;
 		uint64_t bufferFenceValues_[bufferCount_]{};
+		std::shared_ptr<ITexture> pTexture_;
 	};
 }
