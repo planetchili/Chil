@@ -1,0 +1,10 @@
+{
+  "FileVersion": 2,
+  "Id": "a86c283f-3417-4465-8b87-f9503e3ba2fc",
+  "Items": [
+    {
+      "Id": "9e509330-e629-4bce-96ed-2aff42bdf00e",
+      "Command": "--run-as-client"
+    }
+  ]
+}

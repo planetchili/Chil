@@ -20,9 +20,6 @@ namespace chil::gfx::d12
 
 	Texture::Texture(ComPtr<ID3D12Device2> pDevice, CommandListPair cmd, std::wstring path)
 	{
-		// create the cube texture
-		ComPtr<ID3D12Resource> cubeFaceTexture;
-
 		// load image data from disk
 		DirectX::ScratchImage image;
 		DirectX::LoadFromWICFile(path.c_str(), DirectX::WIC_FLAGS_NONE, nullptr, image) >> chk;
@@ -52,7 +49,7 @@ namespace chil::gfx::d12
 				&texDesc,
 				D3D12_RESOURCE_STATE_COPY_DEST,
 				nullptr,
-				IID_PPV_ARGS(&cubeFaceTexture)
+				IID_PPV_ARGS(&pResource_)
 			) >> chk;
 		}
 
@@ -69,11 +66,10 @@ namespace chil::gfx::d12
 			rn::to<std::vector>();
 
 		// create the intermediate upload buffer
-		ComPtr<ID3D12Resource> uploadBuffer;
 		{
 			const CD3DX12_HEAP_PROPERTIES heapProps{ D3D12_HEAP_TYPE_UPLOAD };
 			const auto uploadBufferSize = GetRequiredIntermediateSize(
-				cubeFaceTexture.Get(), 0, (UINT)subresourceData.size()
+				pResource_.Get(), 0, (UINT)subresourceData.size()
 			);
 			const auto resourceDesc = CD3DX12_RESOURCE_DESC::Buffer(uploadBufferSize);
 			pDevice->CreateCommittedResource(
@@ -82,15 +78,15 @@ namespace chil::gfx::d12
 				&resourceDesc,
 				D3D12_RESOURCE_STATE_GENERIC_READ,
 				nullptr,
-				IID_PPV_ARGS(&uploadBuffer)
+				IID_PPV_ARGS(&pIntermediate_)
 			) >> chk;
 		}
 
 		// write commands to copy data to upload texture (copying each subresource)
 		UpdateSubresources(
 			cmd.pCommandList.Get(),
-			cubeFaceTexture.Get(),
-			uploadBuffer.Get(),
+			pResource_.Get(),
+			pIntermediate_.Get(),
 			0, 0,
 			(UINT)subresourceData.size(),
 			subresourceData.data()
@@ -98,7 +94,7 @@ namespace chil::gfx::d12
 		// write command to transition texture to texture state 
 		{
 			const auto barrier = CD3DX12_RESOURCE_BARRIER::Transition(
-				cubeFaceTexture.Get(),
+				pResource_.Get(),
 				D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 			cmd.pCommandList->ResourceBarrier(1, &barrier);
 		}

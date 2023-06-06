@@ -7,6 +7,7 @@
 #include <Core/src/gfx/d12/Device.h>
 #include <Core/src/gfx/d12/RenderPane.h>
 #include <Core/src/gfx/d12/CommandQueue.h>
+#include <Core/src/gfx/d12/ResourceLoader.h>
 #include <format>
 #include <ranges> 
 #include <semaphore>
@@ -34,6 +35,9 @@ int WINAPI wWinMain(
 	int nCmdShow)
 {
 	Boot();
+
+	// init COM
+	CoInitializeEx(nullptr, COINIT_MULTITHREADED);
 
 	class ActiveWindow
 	{
@@ -83,17 +87,25 @@ int WINAPI wWinMain(
 		std::jthread thread_;
 	};
 
-	auto pDevice = std::make_shared<gfx::d12::Device>();
+	try {
+		auto pDevice = std::make_shared<gfx::d12::Device>();
+		gfx::d12::ResourceLoader loader{ pDevice };
+		auto pTexture = loader.LoadTexture(L"sprote-shiet.png").get();
 
-	std::vector<std::unique_ptr<ActiveWindow>> windows;
-	for (size_t i = 0; i < 2; i++) {
-		windows.push_back(std::make_unique<ActiveWindow>(pDevice));
+		std::vector<std::unique_ptr<ActiveWindow>> windows;
+		for (size_t i = 0; i < 2; i++) {
+			windows.push_back(std::make_unique<ActiveWindow>(pDevice));
+		}
+
+		float c = 0;
+		while (!windows.empty()) {
+			std::erase_if(windows, [](auto& p) {return !p->IsLive(); });
+			std::this_thread::sleep_for(50ms);
+		}
 	}
-
-	float c = 0;
-	while (!windows.empty()) {
-		std::erase_if(windows, [](auto& p) {return !p->IsLive(); });
-		std::this_thread::sleep_for(50ms);
+	catch (const std::exception& e) {
+		chilog.error(utl::ToWide(e.what())).no_trace();
+		return -1;
 	}
 
 	return 0;

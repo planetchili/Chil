@@ -18,8 +18,10 @@ namespace chil::gfx::d12
 	{
 	public:
 		Texture(Microsoft::WRL::ComPtr<ID3D12Device2> pDevice, CommandListPair cmd, std::wstring path);
+		void ClearIntermediate() { pIntermediate_.Reset(); }
 		~Texture() override;
 	private:
 		Microsoft::WRL::ComPtr<ID3D12Resource> pResource_;
+		Microsoft::WRL::ComPtr<ID3D12Resource> pIntermediate_;
 	};
 }
