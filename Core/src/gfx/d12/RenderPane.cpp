@@ -129,7 +129,7 @@ namespace chil::gfx::d12
 				D3D12_ROOT_SIGNATURE_FLAG_DENY_DOMAIN_SHADER_ROOT_ACCESS |
 				D3D12_ROOT_SIGNATURE_FLAG_DENY_GEOMETRY_SHADER_ROOT_ACCESS;
 			// define static sampler
-			const CD3DX12_STATIC_SAMPLER_DESC staticSampler{ 0, D3D12_FILTER_MIN_MAG_MIP_LINEAR };
+			const CD3DX12_STATIC_SAMPLER_DESC staticSampler{ 0, D3D12_FILTER_MIN_MAG_MIP_POINT };
 			// define root signature with transformation matrix
 			CD3DX12_ROOT_SIGNATURE_DESC rootSignatureDesc;
 			rootSignatureDesc.Init(
@@ -232,9 +232,10 @@ namespace chil::gfx::d12
 		// $$$$ sprote funsies $$$$
 		// ### copy verts to buffer
 		const Vertex verts[]{
-			{ { 0.f, 0.5f, 0.f },    { 0.f, 0.f }  },
-			{ { 0.5f, -0.5f, 0.f },  { 1.f, 1.f }  },
-			{ { -0.5f, -0.5f, 0.f }, { 0.f, 1.f }  },
+			{ { -0.6f, 0.4f, 0.f },    { 0.f, 0.f }  },
+			{ { -0.4f, 0.4f, 0.f },  { 1.f / 8.f, 0.f }  },
+			{ { -0.6f, 0.0f, 0.f }, { 0.f, 1.f / 4.f }  },
+			{ { -0.4f, 0.0f, 0.f }, { 1.f / 8.f, 1.f / 4.f }  },
 		};
 		{
 			Vertex* pDest = nullptr;
@@ -250,7 +251,7 @@ namespace chil::gfx::d12
 		commandListPair_.pCommandList->SetPipelineState(pPipelineState_.Get());
 		commandListPair_.pCommandList->SetGraphicsRootSignature(pRootSignature_.Get());
 		// configure IA 
-		commandListPair_.pCommandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+		commandListPair_.pCommandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
 		commandListPair_.pCommandList->IASetVertexBuffers(0, 1, &vertexBufferView_);
 		// configure RS 
 		commandListPair_.pCommandList->RSSetViewports(1, &viewport_);
@@ -262,7 +263,7 @@ namespace chil::gfx::d12
 		// bind the descriptor table containing the texture descriptor
 		commandListPair_.pCommandList->SetGraphicsRootDescriptorTable(0, pSrvHeap_->GetGPUDescriptorHandleForHeapStart());
 		// ### draw me daddy
-		commandListPair_.pCommandList->DrawInstanced(3, 1, 0, 0);
+		commandListPair_.pCommandList->DrawInstanced(4, 1, 0, 0);
 
 		// prepare buffer for presentation by transitioning to present state
 		{
