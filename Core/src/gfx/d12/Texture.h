@@ -12,6 +12,7 @@ namespace chil::gfx::d12
 	{
 	public:
 		virtual ~ITexture() = default;
+		virtual void WriteDescriptor(ID3D12Device* pDevice, D3D12_CPU_DESCRIPTOR_HANDLE handle) const = 0;
 	};
 
 	class Texture : public ITexture
@@ -19,6 +20,7 @@ namespace chil::gfx::d12
 	public:
 		Texture(Microsoft::WRL::ComPtr<ID3D12Device2> pDevice, CommandListPair cmd, std::wstring path);
 		void ClearIntermediate() { pIntermediate_.Reset(); }
+		void WriteDescriptor(ID3D12Device* pDevice, D3D12_CPU_DESCRIPTOR_HANDLE handle) const override;
 		~Texture() override;
 	private:
 		Microsoft::WRL::ComPtr<ID3D12Resource> pResource_;

@@ -99,5 +99,15 @@ namespace chil::gfx::d12
 			cmd.pCommandList->ResourceBarrier(1, &barrier);
 		}
 	}
+	void Texture::WriteDescriptor(ID3D12Device* pDevice, D3D12_CPU_DESCRIPTOR_HANDLE handle) const
+	{
+		const D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{
+			.Format = pResource_->GetDesc().Format,
+			.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D,
+			.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING,
+			.Texture2D{.MipLevels = pResource_->GetDesc().MipLevels },
+		};
+		pDevice->CreateShaderResourceView(pResource_.Get(), &srvDesc, handle);
+	}
 	Texture::~Texture() = default;
 }
