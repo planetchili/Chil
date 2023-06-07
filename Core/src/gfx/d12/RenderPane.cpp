@@ -8,11 +8,13 @@
 #pragma warning(pop)
 #include "ResourceLoader.h"
 #include <d3dcompiler.h>
+#include <ranges>
 
 namespace chil::gfx::d12
 {
 	using utl::chk;
 	using Microsoft::WRL::ComPtr;
+	namespace rn = std::ranges;
 
 	RenderPane::RenderPane(HWND hWnd, const spa::DimensionsI& dims, std::shared_ptr<IDevice> pDevice,
 		std::shared_ptr<ICommandQueue> pCommandQueue)
@@ -226,6 +228,42 @@ namespace chil::gfx::d12
 	void RenderPane::EndFrame()
 	{
 		auto& backBuffer = backBuffers_[curBackBufferIndex_];
+
+		// $$$$ sprote funsies $$$$
+		// ### copy verts to buffer
+		const Vertex verts[]{
+			{ { 0.f, 0.5f, 0.f },    { 0.f, 0.f }  },
+			{ { 0.5f, -0.5f, 0.f },  { 1.f, 1.f }  },
+			{ { -0.5f, -0.5f, 0.f }, { 0.f, 1.f }  },
+		};
+		{
+			Vertex* pDest = nullptr;
+			pVertexBuffer_->Map(0, nullptr, reinterpret_cast<void**>(&pDest)) >> chk;
+			rn::copy(verts, pDest);
+			pVertexBuffer_->Unmap(0, nullptr);
+		}
+		// ### bind all the things
+		const CD3DX12_CPU_DESCRIPTOR_HANDLE rtv{
+			pRtvDescriptorHeap_->GetCPUDescriptorHandleForHeapStart(),
+			(INT)curBackBufferIndex_, rtvDescriptorSize_ };
+		// set pipeline state 
+		commandListPair_.pCommandList->SetPipelineState(pPipelineState_.Get());
+		commandListPair_.pCommandList->SetGraphicsRootSignature(pRootSignature_.Get());
+		// configure IA 
+		commandListPair_.pCommandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+		commandListPair_.pCommandList->IASetVertexBuffers(0, 1, &vertexBufferView_);
+		// configure RS 
+		commandListPair_.pCommandList->RSSetViewports(1, &viewport_);
+		commandListPair_.pCommandList->RSSetScissorRects(1, &scissorRect_);
+		// bind render target and depth
+		commandListPair_.pCommandList->OMSetRenderTargets(1, &rtv, TRUE, nullptr);
+		// bind the heap containing the texture descriptor
+		commandListPair_.pCommandList->SetDescriptorHeaps(1, pSrvHeap_.GetAddressOf());
+		// bind the descriptor table containing the texture descriptor
+		commandListPair_.pCommandList->SetGraphicsRootDescriptorTable(0, pSrvHeap_->GetGPUDescriptorHandleForHeapStart());
+		// ### draw me daddy
+		commandListPair_.pCommandList->DrawInstanced(3, 1, 0, 0);
+
 		// prepare buffer for presentation by transitioning to present state
 		{
 			const auto barrier = CD3DX12_RESOURCE_BARRIER::Transition(
@@ -237,6 +275,10 @@ namespace chil::gfx::d12
 		pCommandQueue_->ExecuteCommandList(std::move(commandListPair_));
 		// present frame 
 		pSwapChain_->Present(1, 0) >> chk;
+
+		// $$ making sure we don't use vertex buffer before it's done with
+		pCommandQueue_->Flush();
+
 		// insert a fence so we know when the buffer is free
 		bufferFenceValues_[curBackBufferIndex_] = pCommandQueue_->SignalFence();
 	}

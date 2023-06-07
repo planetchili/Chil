@@ -46,7 +46,6 @@ namespace chil::gfx::d12
 		uint64_t bufferFenceValues_[bufferCount_]{};
 		// spritey
 		Microsoft::WRL::ComPtr<ID3D12Resource> pVertexBuffer_;
-		UINT nVertices_ = 0;
 		static constexpr UINT maxVertices_ = 4 * 1000;
 		D3D12_VERTEX_BUFFER_VIEW vertexBufferView_;
 		Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> pSrvHeap_;
