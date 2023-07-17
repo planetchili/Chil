@@ -139,36 +139,36 @@ namespace chil::gfx::d12
 	void SpriteBatcher::Draw(const spa::RectF& src, const spa::RectF& dest)
 	{
 		chilass(nVertices_ + 5 <= maxVertices_);
-		//pVertexUpload_[nVertices_++] = Vertex_{
-		//	DirectX::XMFLOAT3{ src.left, src.top, 0.f },
-		//	DirectX::XMFLOAT2{ dest.left, dest.top },
-		//};
-		//pVertexUpload_[nVertices_++] = Vertex_{
-		//	DirectX::XMFLOAT3{ src.right, src.top, 0.f },
-		//	DirectX::XMFLOAT2{ dest.right, dest.top },
-		//};
-		//pVertexUpload_[nVertices_++] = Vertex_{
-		//	DirectX::XMFLOAT3{ src.left, src.bottom, 0.f },
-		//	DirectX::XMFLOAT2{ dest.left, dest.bottom },
-		//};
-		//pVertexUpload_[nVertices_++] = Vertex_{
-		//	DirectX::XMFLOAT3{ src.right, src.bottom, 0.f },
-		//	DirectX::XMFLOAT2{ dest.right, dest.bottom },
-		//};
-		//// degenerate to "end" quad strip
-		//pVertexUpload_[nVertices_++] = Vertex_{
-		//	DirectX::XMFLOAT3{ src.right, src.bottom, 0.f },
-		//	DirectX::XMFLOAT2{ dest.right, dest.bottom },
-		//};
-		const Vertex_ verts[]{
-			{ { -0.6f, 0.4f, 0.f },    { 0.f, 0.f }  },
-			{ { -0.4f, 0.4f, 0.f },  { 1.f / 8.f, 0.f }  },
-			{ { -0.6f, 0.0f, 0.f }, { 0.f, 1.f / 4.f }  },
-			{ { -0.4f, 0.0f, 0.f }, { 1.f / 8.f, 1.f / 4.f }  },
-			{ { -0.4f, 0.0f, 0.f }, { 1.f / 8.f, 1.f / 4.f }  },
+		pVertexUpload_[nVertices_++] = Vertex_{
+			DirectX::XMFLOAT3{ dest.left, dest.top, 0.f },
+			DirectX::XMFLOAT2{ src.left, src.top },
 		};
-		std::ranges::copy(verts, pVertexUpload_);
-		nVertices_ = 5;
+		pVertexUpload_[nVertices_++] = Vertex_{
+			DirectX::XMFLOAT3{ dest.right, dest.top, 0.f },
+			DirectX::XMFLOAT2{ src.right, src.top },
+		};
+		pVertexUpload_[nVertices_++] = Vertex_{
+			DirectX::XMFLOAT3{ dest.left, dest.bottom, 0.f },
+			DirectX::XMFLOAT2{ src.left, src.bottom },
+		};
+		pVertexUpload_[nVertices_++] = Vertex_{
+			DirectX::XMFLOAT3{ dest.right, dest.bottom, 0.f },
+			DirectX::XMFLOAT2{ src.right, src.bottom },
+		};
+		// degenerate to "end" quad strip
+		pVertexUpload_[nVertices_++] = Vertex_{
+			DirectX::XMFLOAT3{ dest.right, dest.bottom, 0.f },
+			DirectX::XMFLOAT2{ src.right, src.bottom },
+		};
+		//const Vertex_ verts[]{
+		//	{ { -0.6f, 0.4f, 0.f },    { 0.f, 0.f }  },
+		//	{ { -0.4f, 0.4f, 0.f },  { 1.f / 8.f, 0.f }  },
+		//	{ { -0.6f, 0.0f, 0.f }, { 0.f, 1.f / 4.f }  },
+		//	{ { -0.4f, 0.0f, 0.f }, { 1.f / 8.f, 1.f / 4.f }  },
+		//	{ { -0.4f, 0.0f, 0.f }, { 1.f / 8.f, 1.f / 4.f }  },
+		//};
+		//std::ranges::copy(verts, pVertexUpload_);
+		//nVertices_ = 5;
 	}
 	CommandListPair SpriteBatcher::EndBatch()
 	{
