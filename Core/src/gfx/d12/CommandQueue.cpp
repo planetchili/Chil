@@ -19,10 +19,12 @@ namespace chil::gfx::d12
 		auto pDeviceInterface = pDevice_->GetD3D12DeviceInterface();
 		const D3D12_COMMAND_QUEUE_DESC desc{ .Type = commandListType_ };
 		pDeviceInterface->CreateCommandQueue(&desc, IID_PPV_ARGS(&pCommandQueue_)) >> chk;
-		pDeviceInterface->CreateFence(fenceValue_, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&pFence_)) >> chk;
+		pDeviceInterface->CreateFence(currentFenceValue_, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&pFence_)) >> chk;
 	}
 	CommandListPair CommandQueue::GetCommandListPair()
 	{
+		std::lock_guard lk{ mutex_ };
+
 		CommandListPair pair;
 
 		// if command allocator at front of queue is free, use it
@@ -54,8 +56,29 @@ namespace chil::gfx::d12
 		// return the matched pair of command list and allocator
 		return pair;
 	}
-	uint64_t CommandQueue::ExecuteCommandList(CommandListPair commandListPair)
+	void CommandQueue::ExecuteCommandList(CommandListPair commandListPair)
 	{
+		std::lock_guard lk{ mutex_ };
+
+		// close the command list
+		commandListPair.pCommandList->Close() >> chk;
+		// execute the list
+		{
+			ID3D12CommandList* const ppCommandLists[]{
+				commandListPair.pCommandList.Get()
+			};
+			pCommandQueue_->ExecuteCommandLists(1, ppCommandLists);
+		}
+		// queue allocator to the queue for eventual re-use
+		// specific fence value not requested/returned so just manage at frame granularity
+		commandAllocatorQueue_.push_back({ frameFenceValue_, std::move(commandListPair.pCommandAllocator) });
+		// return command list to pool
+		commandListPool_.push_back(std::move(commandListPair.pCommandList));
+	}
+	uint64_t CommandQueue::ExecuteCommandListWithFence(CommandListPair commandListPair)
+	{
+		std::lock_guard lk{ mutex_ };
+
 		// close the command list
 		commandListPair.pCommandList->Close() >> chk;
 		// execute the list
@@ -66,7 +89,8 @@ namespace chil::gfx::d12
 			pCommandQueue_->ExecuteCommandLists(1, ppCommandLists);
 		}
 		// insert signal into queue after list completion
-		const auto fenceValue = SignalFence();
+		pCommandQueue_->Signal(pFence_.Get(), ++currentFenceValue_) >> chk;
+		const auto fenceValue = currentFenceValue_.load();
 		// queue allocator to the queue for eventual re-use
 		commandAllocatorQueue_.push_back({ fenceValue, std::move(commandListPair.pCommandAllocator) });
 		// return command list to pool
@@ -76,8 +100,19 @@ namespace chil::gfx::d12
 	}
 	uint64_t CommandQueue::SignalFence()
 	{
-		pCommandQueue_->Signal(pFence_.Get(), ++fenceValue_) >> chk;
-		return fenceValue_;
+		std::lock_guard lk{ mutex_ };
+
+		pCommandQueue_->Signal(pFence_.Get(), ++currentFenceValue_) >> chk;
+		return currentFenceValue_;
+	}
+	uint64_t CommandQueue::SignalFrameFence()
+	{
+		std::lock_guard lk{ mutex_ };
+
+		currentFenceValue_ = frameFenceValue_.load();
+		pCommandQueue_->Signal(pFence_.Get(), currentFenceValue_) >> chk;
+		frameFenceValue_ += maxFencesPerFrame_;
+		return currentFenceValue_;
 	}
 	bool CommandQueue::FenceHasReached(uint64_t fenceValue) const
 	{
@@ -88,6 +123,14 @@ namespace chil::gfx::d12
 		if (!FenceHasReached(fenceValue)) {
 			pFence_->SetEventOnCompletion(fenceValue, nullptr) >> chk;
 		}
+	}
+	uint64_t CommandQueue::GetFrameFenceValue() const
+	{
+		return frameFenceValue_;
+	}
+	uint64_t CommandQueue::GetSignalledFenceValue() const
+	{
+		return pFence_->GetCompletedValue();
 	}
 	void CommandQueue::Flush()
 	{

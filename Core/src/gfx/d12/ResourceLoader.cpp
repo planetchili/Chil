@@ -15,7 +15,7 @@ namespace chil::gfx::d12
 		// TODO:	move CPU code into lauch async
 		//			move loading logic from Texture to Loader, Texture just holds the results
 		auto pTexture = std::make_shared<Texture>(pDevice_->GetD3D12DeviceInterface(), cmd, std::move(path));
-		const auto signal = pQueue_->ExecuteCommandList(std::move(cmd));
+		const auto signal = pQueue_->ExecuteCommandListWithFence(std::move(cmd));
 		return std::async(std::launch::deferred, [=] {
 			pQueue_->WaitForFenceValue(signal);
 			pTexture->ClearIntermediate();

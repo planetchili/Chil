@@ -74,129 +74,6 @@ namespace chil::gfx::d12
 				rtvHandle.Offset(rtvDescriptorSize_);
 			}
 		}
-
-		// sprote-mein
-		// vertex buffer
-		{
-			const CD3DX12_HEAP_PROPERTIES heapProps{ D3D12_HEAP_TYPE_UPLOAD };
-			const auto resourceDesc = CD3DX12_RESOURCE_DESC::Buffer(sizeof(Vertex) * maxVertices_);
-			pDeviceInterface->CreateCommittedResource(
-				&heapProps,
-				D3D12_HEAP_FLAG_NONE,
-				&resourceDesc,
-				D3D12_RESOURCE_STATE_GENERIC_READ,
-				nullptr, IID_PPV_ARGS(&pVertexBuffer_)
-			) >> chk;
-		}
-		// vertex buffer view
-		vertexBufferView_ = {
-			.BufferLocation = pVertexBuffer_->GetGPUVirtualAddress(),
-			.SizeInBytes = sizeof(Vertex) * maxVertices_,
-			.StrideInBytes = sizeof(Vertex),
-		};
-		// texture
-		{
-			ResourceLoader loader{ pDevice_ };
-			pTexture_ = loader.LoadTexture(L"sprote-shiet.png").get();
-		}
-		// srv heap
-		{
-			const D3D12_DESCRIPTOR_HEAP_DESC srvHeapDesc{
-				.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV,
-				.NumDescriptors = 1,
-				.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE,
-			};
-			pDeviceInterface->CreateDescriptorHeap(&srvHeapDesc, IID_PPV_ARGS(&pSrvHeap_)) >> chk;
-		}
-		// srv descriptor handle
-		srvHandle_ = pSrvHeap_->GetCPUDescriptorHandleForHeapStart();
-		// create descriptor in the heap
-		pTexture_->WriteDescriptor(pDevice_->GetD3D12DeviceInterface().Get(), srvHandle_);
-		// root signature
-		{
-			// define root signature with a matrix of 16 32-bit floats used by the vertex shader (mvp matrix) 
-			CD3DX12_ROOT_PARAMETER rootParameters[1]{};
-			{
-				const CD3DX12_DESCRIPTOR_RANGE descRange{ D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0 };
-				rootParameters[0].InitAsDescriptorTable(1, &descRange);
-			}
-			// Allow input layout and vertex shader and deny unnecessary access to certain pipeline stages.
-			const D3D12_ROOT_SIGNATURE_FLAGS rootSignatureFlags =
-				D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT |
-				D3D12_ROOT_SIGNATURE_FLAG_DENY_MESH_SHADER_ROOT_ACCESS |
-				D3D12_ROOT_SIGNATURE_FLAG_DENY_AMPLIFICATION_SHADER_ROOT_ACCESS |
-				D3D12_ROOT_SIGNATURE_FLAG_DENY_HULL_SHADER_ROOT_ACCESS |
-				D3D12_ROOT_SIGNATURE_FLAG_DENY_DOMAIN_SHADER_ROOT_ACCESS |
-				D3D12_ROOT_SIGNATURE_FLAG_DENY_GEOMETRY_SHADER_ROOT_ACCESS;
-			// define static sampler
-			const CD3DX12_STATIC_SAMPLER_DESC staticSampler{ 0, D3D12_FILTER_MIN_MAG_MIP_POINT };
-			// define root signature with transformation matrix
-			CD3DX12_ROOT_SIGNATURE_DESC rootSignatureDesc;
-			rootSignatureDesc.Init(
-				(UINT)std::size(rootParameters), rootParameters,
-				1, &staticSampler,
-				rootSignatureFlags
-			);
-			// serialize root signature 
-			ComPtr<ID3DBlob> signatureBlob;
-			ComPtr<ID3DBlob> errorBlob;
-			if (const auto hr = D3D12SerializeRootSignature(
-				&rootSignatureDesc, D3D_ROOT_SIGNATURE_VERSION_1,
-				&signatureBlob, &errorBlob); FAILED(hr)) {
-				if (errorBlob) {
-					auto errorBufferPtr = static_cast<const char*>(errorBlob->GetBufferPointer());
-					chilog.error(utl::ToWide(errorBufferPtr)).no_trace();
-				}
-				hr >> chk;
-			}
-			// Create the root signature. 
-			pDeviceInterface->CreateRootSignature(0, signatureBlob->GetBufferPointer(),
-				signatureBlob->GetBufferSize(), IID_PPV_ARGS(&pRootSignature_)) >> chk;
-		}
-		// pso (with shaders)
-		{
-			// static declaration of pso stream structure 
-			struct PipelineStateStream
-			{
-				CD3DX12_PIPELINE_STATE_STREAM_ROOT_SIGNATURE RootSignature;
-				CD3DX12_PIPELINE_STATE_STREAM_INPUT_LAYOUT InputLayout;
-				CD3DX12_PIPELINE_STATE_STREAM_PRIMITIVE_TOPOLOGY PrimitiveTopologyType;
-				CD3DX12_PIPELINE_STATE_STREAM_VS VS;
-				CD3DX12_PIPELINE_STATE_STREAM_PS PS;
-				CD3DX12_PIPELINE_STATE_STREAM_RENDER_TARGET_FORMATS RTVFormats;
-			} pipelineStateStream;
-
-			// define the Vertex input layout 
-			const D3D12_INPUT_ELEMENT_DESC inputLayout[] = {
-				{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-				{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-			};
-
-			// Load the vertex shader. 
-			ComPtr<ID3DBlob> pVertexShaderBlob;
-			D3DReadFileToBlob(L"VertexShader.cso", &pVertexShaderBlob) >> chk;
-
-			// Load the pixel shader. 
-			ComPtr<ID3DBlob> pPixelShaderBlob;
-			D3DReadFileToBlob(L"PixelShader.cso", &pPixelShaderBlob) >> chk;
-
-			// filling pso structure 
-			pipelineStateStream.RootSignature = pRootSignature_.Get();
-			pipelineStateStream.InputLayout = { inputLayout, (UINT)std::size(inputLayout) };
-			pipelineStateStream.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
-			pipelineStateStream.VS = CD3DX12_SHADER_BYTECODE(pVertexShaderBlob.Get());
-			pipelineStateStream.PS = CD3DX12_SHADER_BYTECODE(pPixelShaderBlob.Get());
-			pipelineStateStream.RTVFormats = {
-				.RTFormats{ DXGI_FORMAT_R8G8B8A8_UNORM },
-				.NumRenderTargets = 1,
-			};
-
-			// building the pipeline state object 
-			const D3D12_PIPELINE_STATE_STREAM_DESC pipelineStateStreamDesc = {
-				sizeof(PipelineStateStream), &pipelineStateStream
-			};
-			pDeviceInterface->CreatePipelineState(&pipelineStateStreamDesc, IID_PPV_ARGS(&pPipelineState_)) >> chk;
-		}
 		// scissor rect
 		scissorRect_ = CD3DX12_RECT{ 0, 0, LONG_MAX, LONG_MAX };
 		// viewport
@@ -216,80 +93,73 @@ namespace chil::gfx::d12
 		// wait for this back buffer to become free
 		pCommandQueue_->WaitForFenceValue(bufferFenceValues_[curBackBufferIndex_]);
 		// acquire command list
-		commandListPair_ = pCommandQueue_->GetCommandListPair();
+		auto commandListPair = pCommandQueue_->GetCommandListPair();
 		// transition buffer resource to render target state 
 		auto& backBuffer = backBuffers_[curBackBufferIndex_];
 		const auto barrier = CD3DX12_RESOURCE_BARRIER::Transition(
 			backBuffer.Get(),
 			D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
-		commandListPair_.pCommandList->ResourceBarrier(1, &barrier);
+		commandListPair.pCommandList->ResourceBarrier(1, &barrier);
+		// clear back buffer
+		if (clearColor_) {
+			const CD3DX12_CPU_DESCRIPTOR_HANDLE rtv{
+				pRtvDescriptorHeap_->GetCPUDescriptorHandleForHeapStart(),
+				(INT)curBackBufferIndex_, rtvDescriptorSize_ };
+			commandListPair.pCommandList->ClearRenderTargetView(rtv, &clearColor_->x, 0, nullptr);
+		}
+		// execute begin frame commands
+		pCommandQueue_->ExecuteCommandList(std::move(commandListPair));
+	}
+
+	CommandListPair RenderPane::GetCommandList()
+	{
+		// acquire command list
+		auto commandListPair = pCommandQueue_->GetCommandListPair();
+		// configure RS 
+		commandListPair.pCommandList->RSSetViewports(1, &viewport_);
+		commandListPair.pCommandList->RSSetScissorRects(1, &scissorRect_);
+		// bind render target
+		const CD3DX12_CPU_DESCRIPTOR_HANDLE rtv{
+			pRtvDescriptorHeap_->GetCPUDescriptorHandleForHeapStart(),
+			(INT)curBackBufferIndex_, rtvDescriptorSize_ };
+		commandListPair.pCommandList->OMSetRenderTargets(1, &rtv, TRUE, nullptr);
+
+		return commandListPair;
+	}
+
+	void RenderPane::SubmitCommandList(CommandListPair commands)
+	{
+		pCommandQueue_->ExecuteCommandList(std::move(commands));
+	}
+
+	uint64_t RenderPane::GetFrameFenceValue() const
+	{
+		return pCommandQueue_->GetFrameFenceValue();
+	}
+
+	uint64_t RenderPane::GetSignalledFenceValue() const
+	{
+		return pCommandQueue_->GetSignalledFenceValue();
 	}
 
 	void RenderPane::EndFrame()
 	{
 		auto& backBuffer = backBuffers_[curBackBufferIndex_];
 
-		// $$$$ sprote funsies $$$$
-		// ### copy verts to buffer
-		const Vertex verts[]{
-			{ { -0.6f, 0.4f, 0.f },    { 0.f, 0.f }  },
-			{ { -0.4f, 0.4f, 0.f },  { 1.f / 8.f, 0.f }  },
-			{ { -0.6f, 0.0f, 0.f }, { 0.f, 1.f / 4.f }  },
-			{ { -0.4f, 0.0f, 0.f }, { 1.f / 8.f, 1.f / 4.f }  },
-		};
-		{
-			Vertex* pDest = nullptr;
-			pVertexBuffer_->Map(0, nullptr, reinterpret_cast<void**>(&pDest)) >> chk;
-			rn::copy(verts, pDest);
-			pVertexBuffer_->Unmap(0, nullptr);
-		}
-		// ### bind all the things
-		const CD3DX12_CPU_DESCRIPTOR_HANDLE rtv{
-			pRtvDescriptorHeap_->GetCPUDescriptorHandleForHeapStart(),
-			(INT)curBackBufferIndex_, rtvDescriptorSize_ };
-		// set pipeline state 
-		commandListPair_.pCommandList->SetPipelineState(pPipelineState_.Get());
-		commandListPair_.pCommandList->SetGraphicsRootSignature(pRootSignature_.Get());
-		// configure IA 
-		commandListPair_.pCommandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
-		commandListPair_.pCommandList->IASetVertexBuffers(0, 1, &vertexBufferView_);
-		// configure RS 
-		commandListPair_.pCommandList->RSSetViewports(1, &viewport_);
-		commandListPair_.pCommandList->RSSetScissorRects(1, &scissorRect_);
-		// bind render target and depth
-		commandListPair_.pCommandList->OMSetRenderTargets(1, &rtv, TRUE, nullptr);
-		// bind the heap containing the texture descriptor
-		commandListPair_.pCommandList->SetDescriptorHeaps(1, pSrvHeap_.GetAddressOf());
-		// bind the descriptor table containing the texture descriptor
-		commandListPair_.pCommandList->SetGraphicsRootDescriptorTable(0, pSrvHeap_->GetGPUDescriptorHandleForHeapStart());
-		// ### draw me daddy
-		commandListPair_.pCommandList->DrawInstanced(4, 1, 0, 0);
-
+		// get a command list for end frame commands
+		auto commandListPair = pCommandQueue_->GetCommandListPair();
 		// prepare buffer for presentation by transitioning to present state
 		{
 			const auto barrier = CD3DX12_RESOURCE_BARRIER::Transition(
 				backBuffer.Get(),
 				D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
-			commandListPair_.pCommandList->ResourceBarrier(1, &barrier);
+			commandListPair.pCommandList->ResourceBarrier(1, &barrier);
 		}
 		// submit command list 
-		pCommandQueue_->ExecuteCommandList(std::move(commandListPair_));
+		pCommandQueue_->ExecuteCommandList(std::move(commandListPair));
 		// present frame 
 		pSwapChain_->Present(1, 0) >> chk;
-
-		// $$ making sure we don't use vertex buffer before it's done with
-		pCommandQueue_->Flush();
-
 		// insert a fence so we know when the buffer is free
-		bufferFenceValues_[curBackBufferIndex_] = pCommandQueue_->SignalFence();
-	}
-
-	void RenderPane::Clear(const std::array<float, 4>& color)
-	{
-		auto& backBuffer = backBuffers_[curBackBufferIndex_];
-		const CD3DX12_CPU_DESCRIPTOR_HANDLE rtv{
-			pRtvDescriptorHeap_->GetCPUDescriptorHandleForHeapStart(),
-			(INT)curBackBufferIndex_, rtvDescriptorSize_ };
-		commandListPair_.pCommandList->ClearRenderTargetView(rtv, color.data(), 0, nullptr);
+		bufferFenceValues_[curBackBufferIndex_] = pCommandQueue_->SignalFrameFence();
 	}
 }

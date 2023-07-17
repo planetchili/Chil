@@ -8,6 +8,7 @@
 #include <Core/src/gfx/d12/RenderPane.h>
 #include <Core/src/gfx/d12/CommandQueue.h>
 #include <Core/src/gfx/d12/ResourceLoader.h>
+#include <Core/src/gfx/d12/SpriteBatcher.h>
 #include <format>
 #include <ranges> 
 #include <semaphore>
@@ -34,17 +35,12 @@ int WINAPI wWinMain(
 	PWSTR pCmdLine,
 	int nCmdShow)
 {
-	Boot();
-
-	// init COM
-	CoInitializeEx(nullptr, COINIT_MULTITHREADED);
-
 	class ActiveWindow
 	{
 	public:
-		ActiveWindow(std::shared_ptr<gfx::d12::Device> pDevice)
+		ActiveWindow(std::shared_ptr<gfx::d12::Device> pDevice, std::shared_ptr<gfx::d12::ITexture> pTexture)
 			:
-			thread_{ &ActiveWindow::Kernel_, this, std::move(pDevice) }
+			thread_{ &ActiveWindow::Kernel_, this, std::move(pDevice), std::move(pTexture) }
 		{
 			constructionSemaphore_.acquire();
 		}
@@ -53,31 +49,39 @@ int WINAPI wWinMain(
 			return isLive;
 		}
 	private:
-		void Kernel_(std::shared_ptr<gfx::d12::Device> pDevice)
+		void Kernel_(std::shared_ptr<gfx::d12::Device> pDevice, std::shared_ptr<gfx::d12::ITexture> pTexture)
 		{
-			// do construction
+			//// do construction
+			// make window
 			std::shared_ptr<win::IWindow> pWindow_ = ioc::Get().Resolve<win::IWindow>();
+			// make graphics pane
 			std::shared_ptr<gfx::d12::IRenderPane> pPane_ = std::make_shared<gfx::d12::RenderPane>(
 				pWindow_->GetHandle(),
 				spa::DimensionsI{ 1280, 720 },
 				pDevice,
 				std::make_shared<gfx::d12::CommandQueue>(pDevice)
 			);
+			// make sprite batcher
+			gfx::d12::SpriteBatcher batcher{ pDevice };
+			// add sprite sheet to batcher
+			batcher.AddTexture(pTexture);
+			// signal completion of construction phase
 			constructionSemaphore_.release();
 
 			// do render loop while window not closing
-			float t = 0;
 			while (!pWindow_->IsClosing()) {
-				const std::array<float, 4> color{
-					std::sin(t + .3f) * .5f + .5f,
-					std::sin(1.1f * t + .2f) * .5f + .5f,
-					std::sin(1.2f * t + .1f) * .5f + .5f,
-					1.f
-				};
 				pPane_->BeginFrame();
-				pPane_->Clear(color);
+				batcher.StartBatch(
+					pPane_->GetCommandList(),
+					pPane_->GetFrameFenceValue(),
+					pPane_->GetSignalledFenceValue()
+				);
+				batcher.Draw(
+					{ .left = 0.f, .top = 0.f, .right = 1.f, .bottom = 1.f },
+					spa::RectF::FromPointAndDimensions({-.6f, 0.f}, {.2, .4})
+				);
+				pPane_->SubmitCommandList(batcher.EndBatch());
 				pPane_->EndFrame();
-				t += 0.01f;
 			}
 
 			isLive = false;
@@ -88,13 +92,22 @@ int WINAPI wWinMain(
 	};
 
 	try {
+		// init COM
+		if (FAILED(CoInitializeEx(nullptr, COINIT_MULTITHREADED))) {
+			throw std::runtime_error{ "COM farked" };
+		}
+
+		Boot();
+
+		// create device
 		auto pDevice = std::make_shared<gfx::d12::Device>();
+		// load texture
 		gfx::d12::ResourceLoader loader{ pDevice };
 		auto pTexture = loader.LoadTexture(L"sprote-shiet.png").get();
 
 		std::vector<std::unique_ptr<ActiveWindow>> windows;
-		for (size_t i = 0; i < 2; i++) {
-			windows.push_back(std::make_unique<ActiveWindow>(pDevice));
+		for (size_t i = 0; i < 1; i++) {
+			windows.push_back(std::make_unique<ActiveWindow>(pDevice, pTexture));
 		}
 
 		float c = 0;
