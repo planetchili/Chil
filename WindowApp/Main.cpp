@@ -80,6 +80,14 @@ int WINAPI wWinMain(
 					{ .left = 0.f, .top = 0.f, .right = 1.f / 8.f, .bottom = 1.f / 4.f },
 					spa::RectF::FromPointAndDimensions({-.6f, .4f}, {.2, -.4})
 				);
+				batcher.Draw(
+					{ .left = 0.f, .top = 0.f, .right = 1.f / 8.f, .bottom = 1.f / 4.f },
+					spa::RectF::FromPointAndDimensions({ -.0f, .4f }, { .2, -.4 })
+				);
+				batcher.Draw(
+					{ .left = 0.f, .top = 0.f, .right = 1.f / 8.f, .bottom = 1.f / 4.f },
+					spa::RectF::FromPointAndDimensions({ -.25f, -.3f }, { .2, -.4 })
+				);
 				pPane_->SubmitCommandList(batcher.EndBatch());
 				pPane_->EndFrame();
 			}
