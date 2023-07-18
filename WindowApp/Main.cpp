@@ -13,6 +13,7 @@
 #include <ranges> 
 #include <semaphore>
 #include <numbers>
+#include <random>
 
 using namespace chil;
 using namespace std::string_literals;
@@ -97,11 +98,21 @@ int WINAPI wWinMain(
 			};
 			// frame variables
 			float t = 0.f;
-			const Character characters[] = {
-				{ {-.6f, .4f}, .2f, 6.f, 0.f },
-				{ {-.0f, .4f}, .13f, 9.f, 2.f },
-				{ {-.25f, -.3f}, .07f, 3.f, 5.f },
-			};
+			const auto characters = vi::iota(0, 20) |
+				vi::transform([
+					rne = std::minstd_rand0{ std::random_device{}() },
+					posDist = std::uniform_real_distribution<float>{ -1.f, 1.f },
+					radDist = std::uniform_real_distribution<float>{ 0.f, .4f },
+					perDist = std::uniform_real_distribution<float>{ 1.f, 20.f },
+					phaDist = std::uniform_real_distribution<float>{ 0.f, 2.f * std::numbers::pi_v<float> }](auto) mutable  {
+						return Character{
+							{ posDist(rne), posDist(rne) },
+							radDist(rne),
+							perDist(rne),
+							phaDist(rne)
+						};
+					}) |
+				rn::to<std::vector>();
 			// do render loop while window not closing
 			while (!pWindow_->IsClosing()) {
 				pPane_->BeginFrame();
