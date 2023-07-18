@@ -123,14 +123,18 @@ namespace chil::gfx::d12
 		// command list/queue stuff
 		cmd_ = std::move(cmd);
 		frameFenceValue_ = frameFenceValue;
-		// vertex buffer stuff
-		currentVertexBuffer_ = GetVertexBuffer_(signaledFenceValue);
-		{
-			const auto mapReadRangeNone = CD3DX12_RANGE{ 0, 0 };
-			currentVertexBuffer_->pVertexBuffer_->Map(0,&mapReadRangeNone,
-				reinterpret_cast<void**>(&pVertexUpload_)) >> chk;
-		}
+		// frame resource stuff
+		currentFrameResource_ = GetFrameResource_(signaledFenceValue);
+		const auto mapReadRangeNone = CD3DX12_RANGE{ 0, 0 };
+		// vertex buffer
+		currentFrameResource_->pVertexBuffer_->Map(0,&mapReadRangeNone,
+			reinterpret_cast<void**>(&pVertexUpload_)) >> chk;
+		// index buffer
+		currentFrameResource_->pIndexBuffer_->Map(0, &mapReadRangeNone,
+			reinterpret_cast<void**>(&pIndexUpload_)) >> chk;
+		// write indices reset
 		nVertices_ = 0;
+		nIndices_ = 0;
 	}
 	void SpriteBatcher::SetCamera(const spa::Vec2F& pos, float rot, float scale)
 	{
@@ -138,13 +142,16 @@ namespace chil::gfx::d12
 	}
 	void SpriteBatcher::Draw(const spa::RectF& src, const spa::RectF& dest)
 	{
-		chilass(nVertices_ + 6 <= maxVertices_);
-		if (nVertices_ != 0) {
-			pVertexUpload_[nVertices_++] = Vertex_{
-				DirectX::XMFLOAT3{ dest.left, dest.top, 0.f },
-				DirectX::XMFLOAT2{ src.left, src.top },
-			};
-		}
+		chilass(nVertices_ + 4 <= maxVertices_);
+		chilass(nIndices_ + 6 <= maxIndices_);
+		// write indices
+		pIndexUpload_[nIndices_++] = nVertices_;
+		pIndexUpload_[nIndices_++] = nVertices_ + 1;
+		pIndexUpload_[nIndices_++] = nVertices_ + 2;
+		pIndexUpload_[nIndices_++] = nVertices_ + 1;
+		pIndexUpload_[nIndices_++] = nVertices_ + 3;
+		pIndexUpload_[nIndices_++] = nVertices_ + 2;
+		// write vertices
 		pVertexUpload_[nVertices_++] = Vertex_{
 			DirectX::XMFLOAT3{ dest.left, dest.top, 0.f },
 			DirectX::XMFLOAT2{ src.left, src.top },
@@ -161,43 +168,42 @@ namespace chil::gfx::d12
 			DirectX::XMFLOAT3{ dest.right, dest.bottom, 0.f },
 			DirectX::XMFLOAT2{ src.right, src.bottom },
 		};
-		// degenerate to "end" quad strip
-		pVertexUpload_[nVertices_++] = Vertex_{
-			DirectX::XMFLOAT3{ dest.right, dest.bottom, 0.f },
-			DirectX::XMFLOAT2{ src.right, src.bottom },
-		};
 	}
 	CommandListPair SpriteBatcher::EndBatch()
 	{
 		chilass(cmd_.pCommandAllocator);
 		chilass(cmd_.pCommandList);
 
-		// remove last degenerate triangle
-		nVertices_--;
-
-		// unmap upload
+		// unmap upload vertex
 		{
 			const auto mapWrittenRange = CD3DX12_RANGE{ 0, nVertices_ * sizeof(Vertex_) };
-			currentVertexBuffer_->pVertexBuffer_->Unmap(0, &mapWrittenRange);
+			currentFrameResource_->pVertexBuffer_->Unmap(0, &mapWrittenRange);
 			pVertexUpload_ = nullptr;
+		}
+		// unmap upload index
+		{
+			const auto mapWrittenRange = CD3DX12_RANGE{ 0, nIndices_ * sizeof(unsigned short) };
+			currentFrameResource_->pIndexBuffer_->Unmap(0, &mapWrittenRange);
+			pIndexUpload_ = nullptr;
 		}
 
 		// set pipeline state 
 		cmd_.pCommandList->SetPipelineState(pPipelineState_.Get());
 		cmd_.pCommandList->SetGraphicsRootSignature(pRootSignature_.Get());
 		// configure IA 
-		cmd_.pCommandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
-		cmd_.pCommandList->IASetVertexBuffers(0, 1, &currentVertexBuffer_->vertexBufferView_);
+		cmd_.pCommandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+		cmd_.pCommandList->IASetVertexBuffers(0, 1, &currentFrameResource_->vertexBufferView_);
+		cmd_.pCommandList->IASetIndexBuffer(&currentFrameResource_->indexBufferView_);
 		// bind the heap containing the texture descriptor
 		cmd_.pCommandList->SetDescriptorHeaps(1, pSrvHeap_.GetAddressOf());
 		// bind the descriptor table containing the texture descriptor
 		cmd_.pCommandList->SetGraphicsRootDescriptorTable(0, pSrvHeap_->GetGPUDescriptorHandleForHeapStart());
 		// draw vertices
-		cmd_.pCommandList->DrawInstanced(nVertices_, 1, 0, 0);
+		cmd_.pCommandList->DrawIndexedInstanced(nIndices_, 1, 0, 0, 0);
 
-		// return vertex buffer resource to pool
-		vertexBufferPool_.PutResource(std::move(*currentVertexBuffer_), frameFenceValue_);
-		currentVertexBuffer_.reset();
+		// return frame resource to pool
+		frameResourcePool_.PutResource(std::move(*currentFrameResource_), frameFenceValue_);
+		currentFrameResource_.reset();
 
 		// reliquish command list to be executed on a queue
 		return std::move(cmd_);
@@ -207,15 +213,15 @@ namespace chil::gfx::d12
 		pTexture_ = std::move(pTexture);
 		pTexture_->WriteDescriptor(pDevice_->GetD3D12DeviceInterface().Get(), srvHandle_);
 	}
-	SpriteBatcher::VertexBufferResource_ SpriteBatcher::GetVertexBuffer_(uint64_t frameFenceValue)
+	SpriteBatcher::FrameResource_ SpriteBatcher::GetFrameResource_(uint64_t frameFenceValue)
 	{
 		// get an existing buffer available from the pool
-		if (auto vb = vertexBufferPool_.GetResource(frameFenceValue)) {
-			return std::move(*vb);
+		if (auto fr = frameResourcePool_.GetResource(frameFenceValue)) {
+			return std::move(*fr);
 		}
 		// create a new one if none available
 		auto pDeviceInterface = pDevice_->GetD3D12DeviceInterface();
-		VertexBufferResource_ vbr;
+		FrameResource_ fr;
 		// vertex buffer
 		{
 			const CD3DX12_HEAP_PROPERTIES heapProps{ D3D12_HEAP_TYPE_UPLOAD };
@@ -225,15 +231,34 @@ namespace chil::gfx::d12
 				D3D12_HEAP_FLAG_NONE,
 				&resourceDesc,
 				D3D12_RESOURCE_STATE_GENERIC_READ,
-				nullptr, IID_PPV_ARGS(&vbr.pVertexBuffer_)
+				nullptr, IID_PPV_ARGS(&fr.pVertexBuffer_)
 			) >> chk;
 		}
 		// vertex buffer view
-		vbr.vertexBufferView_ = {
-			.BufferLocation = vbr.pVertexBuffer_->GetGPUVirtualAddress(),
+		fr.vertexBufferView_ = {
+			.BufferLocation = fr.pVertexBuffer_->GetGPUVirtualAddress(),
 			.SizeInBytes = sizeof(Vertex_) * maxVertices_,
 			.StrideInBytes = sizeof(Vertex_),
 		};
-		return vbr;
+		// index buffer
+		{
+			const CD3DX12_HEAP_PROPERTIES heapProps{ D3D12_HEAP_TYPE_UPLOAD };
+			const auto resourceDesc = CD3DX12_RESOURCE_DESC::Buffer(sizeof(unsigned short) * maxIndices_);
+			pDeviceInterface->CreateCommittedResource(
+				&heapProps,
+				D3D12_HEAP_FLAG_NONE,
+				&resourceDesc,
+				D3D12_RESOURCE_STATE_GENERIC_READ,
+				nullptr, IID_PPV_ARGS(&fr.pIndexBuffer_)
+			) >> chk;
+		}
+		// index buffer view
+		fr.indexBufferView_ = {
+			.BufferLocation = fr.pIndexBuffer_->GetGPUVirtualAddress(),
+			.SizeInBytes = sizeof(unsigned short) * maxIndices_,
+			.Format = DXGI_FORMAT_R16_UINT,
+		};
+
+		return fr;
 	}
 }

@@ -142,7 +142,7 @@ int WINAPI wWinMain(
 		auto pTexture = loader.LoadTexture(L"sprote-shiet.png").get();
 
 		std::vector<std::unique_ptr<ActiveWindow>> windows;
-		for (size_t i = 0; i < 3; i++) {
+		for (size_t i = 0; i < 12; i++) {
 			windows.push_back(std::make_unique<ActiveWindow>(pDevice, pTexture));
 		}
 

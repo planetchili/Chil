@@ -28,16 +28,16 @@ namespace chil::gfx::d12
 		std::optional<T> GetResource(uint64_t frameFenceValue)
 		{
 			std::optional<T> resource;
-			if (!commandAllocatorQueue_.empty() &&
-				commandAllocatorQueue_.front().frameFenceValue <= frameFenceValue) {
-				resource = std::move(commandAllocatorQueue_.front().pResource);
-				commandAllocatorQueue_.pop_front();
+			if (!resourceEntryQueue_.empty() &&
+				resourceEntryQueue_.front().frameFenceValue <= frameFenceValue) {
+				resource = std::move(resourceEntryQueue_.front().pResource);
+				resourceEntryQueue_.pop_front();
 			}
 			return resource;
 		}
 		void PutResource(T resource, uint64_t frameFenceValue)
 		{
-			commandAllocatorQueue_.push_back(ResourceEntry_{ frameFenceValue, std::move(resource) });
+			resourceEntryQueue_.push_back(ResourceEntry_{ frameFenceValue, std::move(resource) });
 		}
 	private:
 		struct ResourceEntry_
@@ -45,7 +45,7 @@ namespace chil::gfx::d12
 			uint64_t frameFenceValue;
 			T pResource;
 		};
-		std::deque<ResourceEntry_> commandAllocatorQueue_;
+		std::deque<ResourceEntry_> resourceEntryQueue_;
 	};
 
 	class SpriteBatcher : public ISpriteBatcher
@@ -65,21 +65,26 @@ namespace chil::gfx::d12
 			DirectX::XMFLOAT3 position;
 			DirectX::XMFLOAT2 tc;
 		};
-		struct VertexBufferResource_
+		struct FrameResource_
 		{
 			Microsoft::WRL::ComPtr<ID3D12Resource> pVertexBuffer_;
 			D3D12_VERTEX_BUFFER_VIEW vertexBufferView_;
+			Microsoft::WRL::ComPtr<ID3D12Resource> pIndexBuffer_;
+			D3D12_INDEX_BUFFER_VIEW indexBufferView_;
 		};
 		// functions
-		VertexBufferResource_ GetVertexBuffer_(uint64_t frameFenceValue);
+		FrameResource_ GetFrameResource_(uint64_t frameFenceValue);
 		// connection to other gfx components
 		std::shared_ptr<IDevice> pDevice_;
 		// vertex stuff
 		static constexpr UINT maxVertices_ = 4 * 1000;
+		static constexpr UINT maxIndices_ = 6 * 1000;
 		UINT nVertices_ = 0;
+		UINT nIndices_ = 0;
 		Vertex_* pVertexUpload_ = nullptr;
-		std::optional<VertexBufferResource_> currentVertexBuffer_;
-		FrameResourcePool<VertexBufferResource_> vertexBufferPool_;
+		unsigned short* pIndexUpload_ = nullptr;
+		std::optional<FrameResource_> currentFrameResource_;
+		FrameResourcePool<FrameResource_> frameResourcePool_;
 		// texture stuff
 		Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> pSrvHeap_;
 		D3D12_CPU_DESCRIPTOR_HANDLE srvHandle_;
