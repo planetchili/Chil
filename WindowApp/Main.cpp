@@ -12,6 +12,7 @@
 #include <format>
 #include <ranges> 
 #include <semaphore>
+#include <numbers>
 
 using namespace chil;
 using namespace std::string_literals;
@@ -68,6 +69,39 @@ int WINAPI wWinMain(
 			// signal completion of construction phase
 			constructionSemaphore_.release();
 
+			// character
+			class Character
+			{
+			public:
+				Character(spa::Vec2F center, float radius, float period, float phase)
+					:
+					center_{ center },
+					radius_{ radius },
+					period_{ period },
+					phase_{ phase }
+				{}
+				void Draw(gfx::d12::SpriteBatcher& batcher, float t) const
+				{
+					const auto theta = t * period_ / (2.f * std::numbers::pi_v<float>) + phase_;
+					const auto pos = center_ + spa::Vec2F{ std::cos(theta), std::sin(theta) } * radius_;
+					batcher.Draw(
+						spa::RectF::FromPointAndDimensions({ 0.f, 0.f }, { 1.f / 8.f, 1.f / 4.f }),
+						spa::RectF::FromPointAndDimensions(pos, { .2, -.4 })
+					);
+				}
+			private:
+				spa::Vec2F center_;
+				float radius_;
+				float period_;
+				float phase_;
+			};
+			// frame variables
+			float t = 0.f;
+			const Character characters[] = {
+				{ {-.6f, .4f}, .2f, 6.f, 0.f },
+				{ {-.0f, .4f}, .13f, 9.f, 2.f },
+				{ {-.25f, -.3f}, .07f, 3.f, 5.f },
+			};
 			// do render loop while window not closing
 			while (!pWindow_->IsClosing()) {
 				pPane_->BeginFrame();
@@ -76,20 +110,13 @@ int WINAPI wWinMain(
 					pPane_->GetFrameFenceValue(),
 					pPane_->GetSignalledFenceValue()
 				);
-				batcher.Draw(
-					{ .left = 0.f, .top = 0.f, .right = 1.f / 8.f, .bottom = 1.f / 4.f },
-					spa::RectF::FromPointAndDimensions({-.6f, .4f}, {.2, -.4})
-				);
-				batcher.Draw(
-					{ .left = 0.f, .top = 0.f, .right = 1.f / 8.f, .bottom = 1.f / 4.f },
-					spa::RectF::FromPointAndDimensions({ -.0f, .4f }, { .2, -.4 })
-				);
-				batcher.Draw(
-					{ .left = 0.f, .top = 0.f, .right = 1.f / 8.f, .bottom = 1.f / 4.f },
-					spa::RectF::FromPointAndDimensions({ -.25f, -.3f }, { .2, -.4 })
-				);
+				for (const auto& c : characters) {
+					c.Draw(batcher, t);
+				}
 				pPane_->SubmitCommandList(batcher.EndBatch());
 				pPane_->EndFrame();
+				// update time
+				t += 0.01f;
 			}
 
 			isLive = false;
@@ -114,7 +141,7 @@ int WINAPI wWinMain(
 		auto pTexture = loader.LoadTexture(L"sprote-shiet.png").get();
 
 		std::vector<std::unique_ptr<ActiveWindow>> windows;
-		for (size_t i = 0; i < 1; i++) {
+		for (size_t i = 0; i < 3; i++) {
 			windows.push_back(std::make_unique<ActiveWindow>(pDevice, pTexture));
 		}
 

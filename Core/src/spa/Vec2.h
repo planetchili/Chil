@@ -34,7 +34,7 @@ namespace chil::spa
         }
         Vec2T operator*(const T& rhs)
         {
-            return Vec2T{ *this } *rhs;
+            return Vec2T{ x * rhs, y * rhs };
         }
         bool operator==(const Vec2T& rhs) const
         {

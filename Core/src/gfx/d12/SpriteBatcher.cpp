@@ -172,6 +172,9 @@ namespace chil::gfx::d12
 		chilass(cmd_.pCommandAllocator);
 		chilass(cmd_.pCommandList);
 
+		// remove last degenerate triangle
+		nVertices_--;
+
 		// unmap upload
 		{
 			const auto mapWrittenRange = CD3DX12_RANGE{ 0, nVertices_ * sizeof(Vertex_) };
