@@ -19,6 +19,7 @@ namespace chil::gfx::d12
 		virtual uint64_t GetFrameFenceValue() const = 0;
 		virtual uint64_t GetSignalledFenceValue() const = 0;
 		virtual void EndFrame() = 0;
+		virtual void FlushQueues() const = 0;
 	};
 
 	class RenderPane : public IRenderPane
@@ -33,6 +34,7 @@ namespace chil::gfx::d12
 		uint64_t GetFrameFenceValue() const override;
 		uint64_t GetSignalledFenceValue() const override;
 		void EndFrame() override;
+		void FlushQueues() const override;
 	private:
 		struct Vertex
 		{

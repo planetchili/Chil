@@ -118,6 +118,7 @@ int WINAPI wWinMain(
 				// update time
 				t += 0.01f;
 			}
+			pPane_->FlushQueues();
 
 			isLive = false;
 		}

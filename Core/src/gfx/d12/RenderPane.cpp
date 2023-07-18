@@ -162,4 +162,9 @@ namespace chil::gfx::d12
 		// insert a fence so we know when the buffer is free
 		bufferFenceValues_[curBackBufferIndex_] = pCommandQueue_->SignalFrameFence();
 	}
+
+	void RenderPane::FlushQueues() const
+	{
+		pCommandQueue_->Flush();
+	}
 }
