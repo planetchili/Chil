@@ -51,6 +51,7 @@ int WINAPI wWinMain(
 			return isLive;
 		}
 	private:
+		// functions
 		void Kernel_(std::shared_ptr<gfx::d12::Device> pDevice, std::shared_ptr<gfx::d12::ITexture> pTexture)
 		{
 			//// do construction
@@ -99,7 +100,7 @@ int WINAPI wWinMain(
 			// frame variables
 			float t = 0.f;
 			const auto characters =
-				vi::iota(0, 20) |
+				vi::iota(0, 200) |
 				vi::transform([
 					rne = std::minstd_rand0{ std::random_device{}() },
 					posDist = std::uniform_real_distribution<float>{ -1.f, 1.f },
@@ -130,6 +131,7 @@ int WINAPI wWinMain(
 
 			isLive = false;
 		}
+		// data
 		std::binary_semaphore constructionSemaphore_{ 0 };
 		std::atomic<bool> isLive{ true };
 		std::jthread thread_;
