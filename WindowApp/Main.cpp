@@ -98,20 +98,17 @@ int WINAPI wWinMain(
 			};
 			// frame variables
 			float t = 0.f;
-			const auto characters = vi::iota(0, 20) |
+			const auto characters =
+				vi::iota(0, 20) |
 				vi::transform([
 					rne = std::minstd_rand0{ std::random_device{}() },
 					posDist = std::uniform_real_distribution<float>{ -1.f, 1.f },
 					radDist = std::uniform_real_distribution<float>{ 0.f, .4f },
 					perDist = std::uniform_real_distribution<float>{ 1.f, 20.f },
-					phaDist = std::uniform_real_distribution<float>{ 0.f, 2.f * std::numbers::pi_v<float> }](auto) mutable  {
-						return Character{
-							{ posDist(rne), posDist(rne) },
-							radDist(rne),
-							perDist(rne),
-							phaDist(rne)
-						};
-					}) |
+					phaDist = std::uniform_real_distribution<float>{ 0.f, 2.f * std::numbers::pi_v<float> }
+				] (auto) mutable -> Character {
+					return { { posDist(rne), posDist(rne) }, radDist(rne), perDist(rne), phaDist(rne) };
+				}) |
 				rn::to<std::vector>();
 			// do render loop while window not closing
 			while (!pWindow_->IsClosing()) {
@@ -153,7 +150,7 @@ int WINAPI wWinMain(
 		auto pTexture = loader.LoadTexture(L"sprote-shiet.png").get();
 
 		std::vector<std::unique_ptr<ActiveWindow>> windows;
-		for (size_t i = 0; i < 12; i++) {
+		for (size_t i = 0; i < 3; i++) {
 			windows.push_back(std::make_unique<ActiveWindow>(pDevice, pTexture));
 		}
 
