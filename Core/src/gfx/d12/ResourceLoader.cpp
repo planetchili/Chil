@@ -11,12 +11,13 @@ namespace chil::gfx::d12
 
 	std::future<std::shared_ptr<ITexture>> ResourceLoader::LoadTexture(std::wstring path)
 	{
-		auto cmd = pQueue_->GetCommandListPair();
-		// TODO:	move CPU code into lauch async
-		//			move loading logic from Texture to Loader, Texture just holds the results
-		auto pTexture = std::make_shared<Texture>(pDevice_->GetD3D12DeviceInterface(), cmd, std::move(path));
-		const auto signal = pQueue_->ExecuteCommandListWithFence(std::move(cmd));
-		return std::async(std::launch::deferred, [=] {
+		// - consider batching multiple loads together in a single command list
+		// - consider reusing intermediates / allocating from heap instead of committed
+		// - consider using copy / compute queue (still need to transition resource in a graphics queue before use)
+		return std::async([=]() mutable {
+			auto cmd = pQueue_->GetCommandListPair();
+			auto pTexture = std::make_shared<Texture>(pDevice_->GetD3D12DeviceInterface(), cmd, std::move(path));
+			const auto signal = pQueue_->ExecuteCommandListWithFence(std::move(cmd));
 			pQueue_->WaitForFenceValue(signal);
 			pTexture->ClearIntermediate();
 			return std::static_pointer_cast<ITexture>(pTexture);
