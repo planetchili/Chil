@@ -24,10 +24,8 @@ namespace chil::gfx::d12
 		{
 			// define root signature with a matrix of 16 32-bit floats used by the vertex shader (mvp matrix) 
 			CD3DX12_ROOT_PARAMETER rootParameters[1]{};
-			{
-				const CD3DX12_DESCRIPTOR_RANGE descRange{ D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0 };
-				rootParameters[0].InitAsDescriptorTable(1, &descRange);
-			}
+			const CD3DX12_DESCRIPTOR_RANGE descRange{ D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0 };
+			rootParameters[0].InitAsDescriptorTable(1, &descRange);
 			// Allow input layout and vertex shader and deny unnecessary access to certain pipeline stages.
 			const D3D12_ROOT_SIGNATURE_FLAGS rootSignatureFlags =
 				D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT |
