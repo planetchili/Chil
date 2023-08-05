@@ -53,16 +53,7 @@ namespace chil::gfx::d12
 		UINT curBackBufferIndex_ = 0;
 		uint64_t bufferFenceValues_[bufferCount_]{};
 		std::optional<DirectX::XMFLOAT4> clearColor_ = DirectX::XMFLOAT4{ 0.f, 0.f, 0.f, 1.f };
-		// spritey
-		Microsoft::WRL::ComPtr<ID3D12Resource> pVertexBuffer_;
-		static constexpr UINT maxVertices_ = 4 * 1000;
-		D3D12_VERTEX_BUFFER_VIEW vertexBufferView_;
-		Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> pSrvHeap_;
-		std::shared_ptr<ITexture> pTexture_;
-		D3D12_CPU_DESCRIPTOR_HANDLE srvHandle_;
 		// pipey
-		Microsoft::WRL::ComPtr<ID3D12RootSignature> pRootSignature_;
-		Microsoft::WRL::ComPtr<ID3D12PipelineState> pPipelineState_;
 		D3D12_RECT scissorRect_{};
 		D3D12_VIEWPORT viewport_{};
 	};

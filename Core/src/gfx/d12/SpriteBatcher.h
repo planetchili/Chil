@@ -68,7 +68,7 @@ namespace chil::gfx::d12
 		struct FrameResource_
 		{
 			Microsoft::WRL::ComPtr<ID3D12Resource> pVertexBuffer_;
-			D3D12_VERTEX_BUFFER_VIEW vertexBufferView_;
+			D3D12_VERTEX_BUFFER_VIEW vertexBufferView_{};
 			Microsoft::WRL::ComPtr<ID3D12Resource> pIndexBuffer_;
 			D3D12_INDEX_BUFFER_VIEW indexBufferView_;
 		};
