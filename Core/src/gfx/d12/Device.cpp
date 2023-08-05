@@ -13,14 +13,20 @@ namespace chil::gfx::d12
 
 	Device::Device()
 	{
-		// enable the software debug layer for d3d12 
-		{
+		// make an env namespace / header for build switch stuff like this
+#ifdef NDEBUG
+		constexpr bool is_debug = false;
+#else
+		constexpr bool is_debug = true;
+#endif
+		// enable the software debug layer for d3d12
+		if (is_debug) {
 			ComPtr<ID3D12Debug1> debugController;
 			D3D12GetDebugInterface(IID_PPV_ARGS(&debugController)) >> chk;
 			debugController->EnableDebugLayer();
 			debugController->SetEnableGPUBasedValidation(true);
 		}
-		CreateDXGIFactory2(DXGI_CREATE_FACTORY_DEBUG, IID_PPV_ARGS(&pDxgiFactory_)) >> chk;
+		CreateDXGIFactory2(is_debug ? DXGI_CREATE_FACTORY_DEBUG : 0, IID_PPV_ARGS(&pDxgiFactory_)) >> chk;
 		D3D12CreateDevice(nullptr, D3D_FEATURE_LEVEL_12_0, IID_PPV_ARGS(&pDevice_)) >> chk;
 	}
 
