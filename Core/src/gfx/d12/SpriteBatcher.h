@@ -77,8 +77,8 @@ namespace chil::gfx::d12
 		// connection to other gfx components
 		std::shared_ptr<IDevice> pDevice_;
 		// vertex stuff
-		static constexpr UINT maxVertices_ = 4 * 1000;
-		static constexpr UINT maxIndices_ = 6 * 1000;
+		static constexpr UINT maxVertices_ = 4 * 4000;
+		static constexpr UINT maxIndices_ = 6 * 4000;
 		UINT nVertices_ = 0;
 		UINT nIndices_ = 0;
 		Vertex_* pVertexUpload_ = nullptr;

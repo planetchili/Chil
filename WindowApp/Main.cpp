@@ -100,7 +100,7 @@ int WINAPI wWinMain(
 			// frame variables
 			float t = 0.f;
 			const auto characters =
-				vi::iota(0, 200) |
+				vi::iota(0, 2000) |
 				vi::transform([
 					rne = std::minstd_rand0{ std::random_device{}() },
 					posDist = std::uniform_real_distribution<float>{ -1.f, 1.f },
@@ -152,7 +152,7 @@ int WINAPI wWinMain(
 		auto pTexture = loader.LoadTexture(L"sprote-shiet.png").get();
 
 		std::vector<std::unique_ptr<ActiveWindow>> windows;
-		for (size_t i = 0; i < 3; i++) {
+		for (size_t i = 0; i < 6; i++) {
 			windows.push_back(std::make_unique<ActiveWindow>(pDevice, pTexture));
 		}
 
