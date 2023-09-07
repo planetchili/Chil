@@ -1,7 +1,7 @@
-Texture2D tex : register(t0);
+Texture2D textures[] : register(t0);
 SamplerState samp : register(s0);
 
-float4 main(float2 uv : TEXCOORD) : SV_TARGET
+float4 main(float2 uv : TEXCOORD, uint atlasIndex : ATLASINDEX) : SV_TARGET
 {
-	return tex.Sample(samp, uv);
+	return textures[atlasIndex].Sample(samp, uv);
 }

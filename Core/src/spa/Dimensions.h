@@ -14,6 +14,15 @@ namespace chil::spa
         {
 			return width == rhs.width && height == rhs.height;
 		}
+        DimensionsT operator/(T divisor) const
+        {
+            return { width / divisor, height / divisor };
+        }
+        template<typename S>
+        operator DimensionsT<S>() const
+        {
+            return { (S)width, (S)height };
+        }
         // data 
         T width, height;
     };

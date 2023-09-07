@@ -31,6 +31,7 @@ namespace chil::gfx::d12
 		// create texture resource
 		{
 			const auto& chainBase = *mipChain.GetImages();
+			dimensions_ = { int(chainBase.width), int(chainBase.height) };
 			const D3D12_RESOURCE_DESC texDesc{
 				.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D,
 				.Width = (UINT)chainBase.width,
@@ -108,6 +109,10 @@ namespace chil::gfx::d12
 			.Texture2D{.MipLevels = pResource_->GetDesc().MipLevels },
 		};
 		pDevice->CreateShaderResourceView(pResource_.Get(), &srvDesc, handle);
+	}
+	spa::DimensionsI Texture::GetDimensions() const
+	{
+		return dimensions_;
 	}
 	Texture::~Texture() = default;
 }

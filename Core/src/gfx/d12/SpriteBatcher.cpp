@@ -15,16 +15,20 @@ namespace chil::gfx::d12
 	using Microsoft::WRL::ComPtr;
 	using utl::chk;
 
-	SpriteBatcher::SpriteBatcher(std::shared_ptr<IDevice> pDevice)
+	SpriteBatcher::SpriteBatcher(const spa::DimensionsI& targetDimensions, std::shared_ptr<IDevice> pDevice, std::shared_ptr<SpriteCodex> pSpriteCodex)
 		:
-		pDevice_{ std::move(pDevice) }
+		pDevice_{ std::move(pDevice) },
+		outputDims_{ (spa::DimensionsF)targetDimensions },
+		pSpriteCodex_{ std::move(pSpriteCodex) }
 	{		
 		auto pDeviceInterface = pDevice_->GetD3D12DeviceInterface();
 		// root signature
 		{
-			// define root signature with a matrix of 16 32-bit floats used by the vertex shader (mvp matrix) 
+			// define root signature a table of sprite atlas textures
+			// in future to reduce root signature binding this should just be merged into a global root descriptor
+			// might want to use a bounded range, in which case the root signature will need to be updated when atlases are added
 			CD3DX12_ROOT_PARAMETER rootParameters[1]{};
-			const CD3DX12_DESCRIPTOR_RANGE descRange{ D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0 };
+			const CD3DX12_DESCRIPTOR_RANGE descRange{ D3D12_DESCRIPTOR_RANGE_TYPE_SRV, UINT_MAX, 0 };
 			rootParameters[0].InitAsDescriptorTable(1, &descRange);
 			// Allow input layout and vertex shader and deny unnecessary access to certain pipeline stages.
 			const D3D12_ROOT_SIGNATURE_FLAGS rootSignatureFlags =
@@ -77,6 +81,7 @@ namespace chil::gfx::d12
 			const D3D12_INPUT_ELEMENT_DESC inputLayout[] = {
 				{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
 				{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+				{ "ATLASINDEX", 0, DXGI_FORMAT_R16_UINT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
 			};
 
 			// Load the vertex shader. 
@@ -116,19 +121,10 @@ namespace chil::gfx::d12
 			};
 			pDeviceInterface->CreatePipelineState(&pipelineStateStreamDesc, IID_PPV_ARGS(&pPipelineState_)) >> chk;
 		}
-		// descriptor heap for srvs
-		{
-			const D3D12_DESCRIPTOR_HEAP_DESC srvHeapDesc{
-				.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV,
-				.NumDescriptors = 1,
-				.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE,
-			};
-			pDeviceInterface->CreateDescriptorHeap(&srvHeapDesc, IID_PPV_ARGS(&pSrvHeap_)) >> chk;
-		}
-		// srv descriptor handle
-		srvHandle_ = pSrvHeap_->GetCPUDescriptorHandleForHeapStart();
 	}
+
 	SpriteBatcher::~SpriteBatcher() = default;
+
 	void SpriteBatcher::StartBatch(CommandListPair cmd, uint64_t frameFenceValue, uint64_t signaledFenceValue)
 	{
 		// command list/queue stuff
@@ -138,23 +134,39 @@ namespace chil::gfx::d12
 		currentFrameResource_ = GetFrameResource_(signaledFenceValue);
 		const auto mapReadRangeNone = CD3DX12_RANGE{ 0, 0 };
 		// vertex buffer
-		currentFrameResource_->pVertexBuffer_->Map(0,&mapReadRangeNone,
+		currentFrameResource_->pVertexBuffer->Map(0,&mapReadRangeNone,
 			reinterpret_cast<void**>(&pVertexUpload_)) >> chk;
 		// index buffer
-		currentFrameResource_->pIndexBuffer_->Map(0, &mapReadRangeNone,
+		currentFrameResource_->pIndexBuffer->Map(0, &mapReadRangeNone,
 			reinterpret_cast<void**>(&pIndexUpload_)) >> chk;
 		// write indices reset
 		nVertices_ = 0;
 		nIndices_ = 0;
 	}
+
 	void SpriteBatcher::SetCamera(const spa::Vec2F& pos, float rot, float scale)
 	{
 		chilchk_fail;
 	}
-	void SpriteBatcher::Draw(const spa::RectF& src, const spa::RectF& dest)
+
+	void SpriteBatcher::Draw(size_t atlasIndex, const spa::RectF& srcInTexcoords, const spa::RectF& destInPixels)
 	{
 		chilass(nVertices_ + 4 <= maxVertices_);
 		chilass(nIndices_ + 6 <= maxIndices_);
+		
+		// atlas index 16-bit
+		const auto atlasIndex16 = (USHORT)atlasIndex;
+		// transforming dest from pixel top-left to ndc coordinates
+		const auto halfDims = outputDims_ / 2.f;
+		const auto MapToNDC = [](float value, float halfDimension) {
+			return value / halfDimension - 1.f;
+		};
+		const auto ndcDest = spa::RectF{
+			.left = MapToNDC(destInPixels.left, halfDims.width),
+			.top = -MapToNDC(destInPixels.top, halfDims.height),
+			.right = MapToNDC(destInPixels.right, halfDims.width),
+			.bottom = -MapToNDC(destInPixels.bottom, halfDims.height),
+		};
 		// write indices
 		pIndexUpload_[nIndices_++] = nVertices_;
 		pIndexUpload_[nIndices_++] = nVertices_ + 1;
@@ -164,22 +176,27 @@ namespace chil::gfx::d12
 		pIndexUpload_[nIndices_++] = nVertices_ + 2;
 		// write vertices
 		pVertexUpload_[nVertices_++] = Vertex_{
-			DirectX::XMFLOAT3{ dest.left, dest.top, 0.f },
-			DirectX::XMFLOAT2{ src.left, src.top },
+			DirectX::XMFLOAT3{ ndcDest.left, ndcDest.top, 0.f },
+			DirectX::XMFLOAT2{ srcInTexcoords.left, srcInTexcoords.top },
+			atlasIndex16,
 		};
 		pVertexUpload_[nVertices_++] = Vertex_{
-			DirectX::XMFLOAT3{ dest.right, dest.top, 0.f },
-			DirectX::XMFLOAT2{ src.right, src.top },
+			DirectX::XMFLOAT3{ ndcDest.right, ndcDest.top, 0.f },
+			DirectX::XMFLOAT2{ srcInTexcoords.right, srcInTexcoords.top },
+			atlasIndex16,
 		};
 		pVertexUpload_[nVertices_++] = Vertex_{
-			DirectX::XMFLOAT3{ dest.left, dest.bottom, 0.f },
-			DirectX::XMFLOAT2{ src.left, src.bottom },
+			DirectX::XMFLOAT3{ ndcDest.left, ndcDest.bottom, 0.f },
+			DirectX::XMFLOAT2{ srcInTexcoords.left, srcInTexcoords.bottom },
+			atlasIndex16,
 		};
 		pVertexUpload_[nVertices_++] = Vertex_{
-			DirectX::XMFLOAT3{ dest.right, dest.bottom, 0.f },
-			DirectX::XMFLOAT2{ src.right, src.bottom },
+			DirectX::XMFLOAT3{ ndcDest.right, ndcDest.bottom, 0.f },
+			DirectX::XMFLOAT2{ srcInTexcoords.right, srcInTexcoords.bottom },
+			atlasIndex16,
 		};
 	}
+
 	CommandListPair SpriteBatcher::EndBatch()
 	{
 		chilass(cmd_.pCommandAllocator);
@@ -188,13 +205,13 @@ namespace chil::gfx::d12
 		// unmap upload vertex
 		{
 			const auto mapWrittenRange = CD3DX12_RANGE{ 0, nVertices_ * sizeof(Vertex_) };
-			currentFrameResource_->pVertexBuffer_->Unmap(0, &mapWrittenRange);
+			currentFrameResource_->pVertexBuffer->Unmap(0, &mapWrittenRange);
 			pVertexUpload_ = nullptr;
 		}
 		// unmap upload index
 		{
 			const auto mapWrittenRange = CD3DX12_RANGE{ 0, nIndices_ * sizeof(unsigned short) };
-			currentFrameResource_->pIndexBuffer_->Unmap(0, &mapWrittenRange);
+			currentFrameResource_->pIndexBuffer->Unmap(0, &mapWrittenRange);
 			pIndexUpload_ = nullptr;
 		}
 
@@ -203,12 +220,15 @@ namespace chil::gfx::d12
 		cmd_.pCommandList->SetGraphicsRootSignature(pRootSignature_.Get());
 		// configure IA 
 		cmd_.pCommandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-		cmd_.pCommandList->IASetVertexBuffers(0, 1, &currentFrameResource_->vertexBufferView_);
-		cmd_.pCommandList->IASetIndexBuffer(&currentFrameResource_->indexBufferView_);
+		cmd_.pCommandList->IASetVertexBuffers(0, 1, &currentFrameResource_->vertexBufferView);
+		cmd_.pCommandList->IASetIndexBuffer(&currentFrameResource_->indexBufferView);
 		// bind the heap containing the texture descriptor
-		cmd_.pCommandList->SetDescriptorHeaps(1, pSrvHeap_.GetAddressOf());
+		{
+			ID3D12DescriptorHeap* heapArray[1] = { pSpriteCodex_->GetHeap() };
+			cmd_.pCommandList->SetDescriptorHeaps(1, heapArray);
+		}
 		// bind the descriptor table containing the texture descriptor
-		cmd_.pCommandList->SetGraphicsRootDescriptorTable(0, pSrvHeap_->GetGPUDescriptorHandleForHeapStart());
+		cmd_.pCommandList->SetGraphicsRootDescriptorTable(0, pSpriteCodex_->GetTableHandle());
 		// draw vertices
 		cmd_.pCommandList->DrawIndexedInstanced(nIndices_, 1, 0, 0, 0);
 
@@ -219,11 +239,12 @@ namespace chil::gfx::d12
 		// reliquish command list to be executed on a queue
 		return std::move(cmd_);
 	}
-	void SpriteBatcher::AddTexture(std::shared_ptr<ITexture> pTexture)
-	{
-		pTexture_ = std::move(pTexture);
-		pTexture_->WriteDescriptor(pDevice_->GetD3D12DeviceInterface().Get(), srvHandle_);
-	}
+
+
+
+	// SpriteBatcher::FrameResource_
+	// -----------------------------
+
 	SpriteBatcher::FrameResource_ SpriteBatcher::GetFrameResource_(uint64_t frameFenceValue)
 	{
 		// get an existing buffer available from the pool
@@ -242,12 +263,12 @@ namespace chil::gfx::d12
 				D3D12_HEAP_FLAG_NONE,
 				&resourceDesc,
 				D3D12_RESOURCE_STATE_GENERIC_READ,
-				nullptr, IID_PPV_ARGS(&fr.pVertexBuffer_)
+				nullptr, IID_PPV_ARGS(&fr.pVertexBuffer)
 			) >> chk;
 		}
 		// vertex buffer view
-		fr.vertexBufferView_ = {
-			.BufferLocation = fr.pVertexBuffer_->GetGPUVirtualAddress(),
+		fr.vertexBufferView = {
+			.BufferLocation = fr.pVertexBuffer->GetGPUVirtualAddress(),
 			.SizeInBytes = sizeof(Vertex_) * maxVertices_,
 			.StrideInBytes = sizeof(Vertex_),
 		};
@@ -260,16 +281,103 @@ namespace chil::gfx::d12
 				D3D12_HEAP_FLAG_NONE,
 				&resourceDesc,
 				D3D12_RESOURCE_STATE_GENERIC_READ,
-				nullptr, IID_PPV_ARGS(&fr.pIndexBuffer_)
+				nullptr, IID_PPV_ARGS(&fr.pIndexBuffer)
 			) >> chk;
 		}
 		// index buffer view
-		fr.indexBufferView_ = {
-			.BufferLocation = fr.pIndexBuffer_->GetGPUVirtualAddress(),
+		fr.indexBufferView = {
+			.BufferLocation = fr.pIndexBuffer->GetGPUVirtualAddress(),
 			.SizeInBytes = sizeof(unsigned short) * maxIndices_,
 			.Format = DXGI_FORMAT_R16_UINT,
 		};
 
 		return fr;
+	}
+
+
+
+	// sprite frame
+	// ------------
+
+	SpriteFrame::SpriteFrame(const spa::RectF& frameInPixels, size_t atlasIndex, std::shared_ptr<SpriteCodex> pCodex)
+		:
+		atlasIndex_{ atlasIndex },
+		pCodex_{ std::move(pCodex) }
+	{
+		atlasDimensions_ = pCodex_->GetAtlasDimensions(atlasIndex_);
+		frameInTexcoords_ = {
+			.left = frameInPixels.left / atlasDimensions_.width,
+			.top = frameInPixels.top / atlasDimensions_.height,
+			.right = frameInPixels.right / atlasDimensions_.width,
+			.bottom = frameInPixels.bottom / atlasDimensions_.height,
+		};
+	}
+
+	void SpriteFrame::DrawToBatch(ISpriteBatcher& batch, const spa::Vec2F& pos, float rotation, const spa::Vec2F& scale) const
+	{
+		// deriving dest in pixel coordinates from texcoord source frame, source atlas dimensions, and dest position
+		const auto destInPixels = spa::RectF{
+			.left = frameInTexcoords_.left * atlasDimensions_.width + pos.x,
+			.top = frameInTexcoords_.top * atlasDimensions_.height + pos.y,
+			.right = frameInTexcoords_.right * atlasDimensions_.width + pos.x,
+			.bottom = frameInTexcoords_.bottom * atlasDimensions_.height + pos.y,
+		};
+		batch.Draw(atlasIndex_, frameInTexcoords_, destInPixels);
+	}
+
+
+
+	// sprite codex
+	// ------------
+
+	SpriteCodex::SpriteCodex(std::shared_ptr<IDevice> pDevice, UINT maxNumAtlases)
+		:
+		pDevice_{ std::move(pDevice) },
+		maxNumAtlases_{ maxNumAtlases }
+	{
+		// descriptor heap for srvs
+		{
+			const D3D12_DESCRIPTOR_HEAP_DESC srvHeapDesc{
+				.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV,
+				.NumDescriptors = (UINT)maxNumAtlases,
+				.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE,
+			};
+			pDevice_->GetD3D12DeviceInterface()->CreateDescriptorHeap(&srvHeapDesc, IID_PPV_ARGS(&pSrvHeap_)) >> chk;
+		}
+		// size of descriptors used for index calculation
+		descriptorSize_ = pDevice_->GetD3D12DeviceInterface()->GetDescriptorHandleIncrementSize(
+			D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+	}
+
+	void SpriteCodex::AddSpriteAtlas(std::shared_ptr<ITexture> pTexture)
+	{
+		chilass(curNumAtlases_ < maxNumAtlases_);
+
+		// get handle to the destination descriptor
+		auto descriptorHandle = pSrvHeap_->GetCPUDescriptorHandleForHeapStart();
+		descriptorHandle.ptr += SIZE_T(descriptorSize_) * SIZE_T(curNumAtlases_);
+		// write into descriptor
+		pTexture->WriteDescriptor(pDevice_->GetD3D12DeviceInterface().Get(), descriptorHandle);
+		// store in atlas array
+		spriteAtlases_.push_back(std::make_unique<SpriteAtlas_>(descriptorHandle, std::move(pTexture)));
+		// update number of atlases stored
+		curNumAtlases_++;
+	}
+
+	ID3D12DescriptorHeap* SpriteCodex::GetHeap() const
+	{
+		return pSrvHeap_.Get();
+	}
+
+	D3D12_GPU_DESCRIPTOR_HANDLE SpriteCodex::GetTableHandle() const
+	{
+		return pSrvHeap_->GetGPUDescriptorHandleForHeapStart();
+	}
+
+	spa::DimensionsI SpriteCodex::GetAtlasDimensions(size_t atlasIndex) const
+	{
+		chilass(atlasIndex < curNumAtlases_);
+
+		return spriteAtlases_[atlasIndex]->pTexture_->GetDimensions();
 	}
 }
