@@ -114,7 +114,7 @@ int WINAPI wWinMain(
 			//	}) |
 			//	rn::to<std::vector>();
 			const std::vector<Character> characters{
-				{ pFrame, {640, 360}, 0, 0, 0 }
+				{ pFrame, {0, 200}, 0, 0, 0 }
 			};
 			// do render loop while window not closing
 			while (!pWindow_->IsClosing()) {

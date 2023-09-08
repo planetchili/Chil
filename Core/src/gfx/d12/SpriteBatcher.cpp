@@ -159,13 +159,13 @@ namespace chil::gfx::d12
 		// transforming dest from pixel top-left to ndc coordinates
 		const auto halfDims = outputDims_ / 2.f;
 		const auto MapToNDC = [](float value, float halfDimension) {
-			return value / halfDimension - 1.f;
+			return value / halfDimension;
 		};
 		const auto ndcDest = spa::RectF{
 			.left = MapToNDC(destInPixels.left, halfDims.width),
-			.top = -MapToNDC(destInPixels.top, halfDims.height),
+			.top = MapToNDC(destInPixels.top, halfDims.height),
 			.right = MapToNDC(destInPixels.right, halfDims.width),
-			.bottom = -MapToNDC(destInPixels.bottom, halfDims.height),
+			.bottom = MapToNDC(destInPixels.bottom, halfDims.height),
 		};
 		// write indices
 		pIndexUpload_[nIndices_++] = nVertices_;
@@ -316,11 +316,12 @@ namespace chil::gfx::d12
 	void SpriteFrame::DrawToBatch(ISpriteBatcher& batch, const spa::Vec2F& pos, float rotation, const spa::Vec2F& scale) const
 	{
 		// deriving dest in pixel coordinates from texcoord source frame, source atlas dimensions, and dest position
+		const auto srcDimsInTexcoords = frameInTexcoords_.GetDimensions();
 		const auto destInPixels = spa::RectF{
-			.left = frameInTexcoords_.left * atlasDimensions_.width + pos.x,
-			.top = frameInTexcoords_.top * atlasDimensions_.height + pos.y,
-			.right = frameInTexcoords_.right * atlasDimensions_.width + pos.x,
-			.bottom = frameInTexcoords_.bottom * atlasDimensions_.height + pos.y,
+			.left = pos.x,
+			.top = pos.y,
+			.right = srcDimsInTexcoords.width * atlasDimensions_.width + pos.x,
+			.bottom = -srcDimsInTexcoords.height * atlasDimensions_.height + pos.y,
 		};
 		batch.Draw(atlasIndex_, frameInTexcoords_, destInPixels);
 	}
