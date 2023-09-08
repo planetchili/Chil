@@ -48,6 +48,7 @@ namespace chil::gfx::d12
 	{
 	public:
 		SpriteFrame(const spa::RectF& frameInPixels, size_t atlasIndex, std::shared_ptr<SpriteCodex> pCodex);
+		SpriteFrame(const spa::DimensionsI& cellDimension, const spa::Vec2I& cellCoordinates, size_t atlasIndex, std::shared_ptr<SpriteCodex> pCodex);
 		void DrawToBatch(ISpriteBatcher& batch, const spa::Vec2F& pos, float rotation = 0.f, const spa::Vec2F& scale = { 1.f, 1.f }) const;
 	private:
 		// we want to preserve pixels from src to dst

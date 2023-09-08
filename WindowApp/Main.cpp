@@ -42,9 +42,10 @@ int WINAPI wWinMain(
 	public:
 		ActiveWindow(std::shared_ptr<gfx::d12::Device> pDevice,
 			std::shared_ptr<gfx::d12::SpriteCodex> pSpriteCodex,
-			std::shared_ptr<gfx::d12::SpriteFrame> pFrame)
+			std::shared_ptr<gfx::d12::SpriteFrame> pFrame,
+			std::shared_ptr<gfx::d12::SpriteFrame> pFrame2)
 			:
-			thread_{ &ActiveWindow::Kernel_, this, std::move(pDevice), std::move(pSpriteCodex), std::move(pFrame) }
+			thread_{ &ActiveWindow::Kernel_, this, std::move(pDevice), std::move(pSpriteCodex), std::move(pFrame), std::move(pFrame2) }
 		{
 			constructionSemaphore_.acquire();
 		}
@@ -56,7 +57,8 @@ int WINAPI wWinMain(
 		// functions
 		void Kernel_(std::shared_ptr<gfx::d12::Device> pDevice,
 			std::shared_ptr<gfx::d12::SpriteCodex> pSpriteCodex,
-			std::shared_ptr<gfx::d12::SpriteFrame> pFrame)
+			std::shared_ptr<gfx::d12::SpriteFrame> pFrame,
+			std::shared_ptr<gfx::d12::SpriteFrame> pFrame2)
 		{
 			const auto outputDims = spa::DimensionsI{ 1280, 720 };
 			//// do construction
@@ -114,7 +116,8 @@ int WINAPI wWinMain(
 			//	}) |
 			//	rn::to<std::vector>();
 			const std::vector<Character> characters{
-				{ pFrame, {0, 200}, 0, 0, 0 }
+				{ pFrame, {0, 200}, 0, 0, 0 },
+				{ pFrame2, {-100, -100}, 0, 0, 0 },
 			};
 			// do render loop while window not closing
 			while (!pWindow_->IsClosing()) {
@@ -156,15 +159,19 @@ int WINAPI wWinMain(
 		auto pSpriteCodex = std::make_shared<gfx::d12::SpriteCodex>(pDevice);
 		// load texture into sprite codex
 		gfx::d12::ResourceLoader loader{ pDevice };
+		pSpriteCodex->AddSpriteAtlas(loader.LoadTexture(L"sprote-shiet-bak.png").get());
 		pSpriteCodex->AddSpriteAtlas(loader.LoadTexture(L"sprote-shiet.png").get());
 		// create sprite frame
 		auto pSpriteFrame = std::make_shared<gfx::d12::SpriteFrame>(
-			spa::RectF::FromPointAndDimensions({ 0, 0 }, { 100, 200 }), 0, pSpriteCodex
+			spa::DimensionsI{ 8, 4 }, spa::Vec2I{ 3, 1 }, 0, pSpriteCodex
 		);
+		auto pSpriteFrame2 = std::make_shared<gfx::d12::SpriteFrame>(
+			spa::RectF::FromPointAndDimensions({ 0, 0 }, { 100, 200 }), 1, pSpriteCodex
+		); 
 
 		std::vector<std::unique_ptr<ActiveWindow>> windows;
 		for (size_t i = 0; i < 1; i++) {
-			windows.push_back(std::make_unique<ActiveWindow>(pDevice, pSpriteCodex, pSpriteFrame));
+			windows.push_back(std::make_unique<ActiveWindow>(pDevice, pSpriteCodex, pSpriteFrame, pSpriteFrame2));
 		}
 
 		float c = 0;
