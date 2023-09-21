@@ -92,7 +92,7 @@ int WINAPI wWinMain(
 				{
 					const auto theta = t * period_ / (2.f * std::numbers::pi_v<float>) + phase_;
 					const auto pos = center_ + spa::Vec2F{ std::cos(theta), std::sin(theta) } * radius_;
-					pSpriteFrame_->DrawToBatch(batcher, pos);
+					pSpriteFrame_->DrawToBatch(batcher, pos, 0.7f);
 				}
 			private:
 				std::shared_ptr<gfx::d12::SpriteFrame> pSpriteFrame_;
@@ -117,7 +117,7 @@ int WINAPI wWinMain(
 			//	rn::to<std::vector>();
 			const std::vector<Character> characters{
 				{ pFrame, {0, 200}, 0, 0, 0 },
-				{ pFrame2, {-100, -100}, 0, 0, 0 },
+				{ pFrame2, {-200, 100}, 0, 0, 0 },
 			};
 			// do render loop while window not closing
 			while (!pWindow_->IsClosing()) {

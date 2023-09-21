@@ -16,7 +16,12 @@ namespace chil::gfx::d12
 		virtual ~ISpriteBatcher() = default;
 		virtual void StartBatch(CommandListPair cmd, uint64_t frameFenceValue, uint64_t signaledFenceValue) = 0;
 		virtual void SetCamera(const spa::Vec2F& pos, float rot, float scale) = 0;
-		virtual void Draw(size_t atlasIndex, const spa::RectF& srcInTexcoords, const spa::RectF& destInPixels) = 0;
+		virtual void Draw(size_t atlasIndex,
+			const spa::RectF& srcInTexcoords,
+			const spa::DimensionsF& destPixelDims,
+			const spa::Vec2F& pos,
+			const float rot = 0.f,
+			const spa::Vec2F& scale = { 1.f, 1.f }) = 0;
 		virtual CommandListPair EndBatch() = 0;
 	};
 
@@ -106,7 +111,12 @@ namespace chil::gfx::d12
 		~SpriteBatcher();
 		void StartBatch(CommandListPair cmd, uint64_t frameFenceValue, uint64_t signaledFenceValue) override;
 		void SetCamera(const spa::Vec2F& pos, float rot, float scale) override;
-		void Draw(size_t atlasIndex, const spa::RectF& srcInTexcoords, const spa::RectF& destInPixels) override;
+		void Draw(size_t atlasIndex,
+			const spa::RectF& srcInTexcoords,
+			const spa::DimensionsF& destPixelDims,
+			const spa::Vec2F& pos,
+			const float rot = 0.f,
+			const spa::Vec2F& scale = { 1.f, 1.f }) override;
 		CommandListPair EndBatch() override;
 	private:		
 		// types

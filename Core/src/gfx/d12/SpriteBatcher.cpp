@@ -149,24 +149,40 @@ namespace chil::gfx::d12
 		chilchk_fail;
 	}
 
-	void SpriteBatcher::Draw(size_t atlasIndex, const spa::RectF& srcInTexcoords, const spa::RectF& destInPixels)
+	void SpriteBatcher::Draw(size_t atlasIndex,
+		const spa::RectF& srcInTexcoords,
+		const spa::DimensionsF& destPixelDims,
+		const spa::Vec2F& pos,
+		const float rot,
+		const spa::Vec2F& scale)
 	{
+		using namespace DirectX;
+
 		chilass(nVertices_ + 4 <= maxVertices_);
 		chilass(nIndices_ + 6 <= maxIndices_);
 		
 		// atlas index 16-bit
 		const auto atlasIndex16 = (USHORT)atlasIndex;
-		// transforming dest from pixel top-left to ndc coordinates
+
+		// starting dest vertice vectors
+		const XMVECTOR posSimd[4]{
+			XMVectorSet(0.f, 0.f, 0.f, 1.f),
+			XMVectorSet(destPixelDims.width, 0.f, 0.f, 1.f),
+			XMVectorSet(0.f, -destPixelDims.height, 0.f, 1.f),
+			XMVectorSet(destPixelDims.width, -destPixelDims.height, 0.f, 1.f),
+		};
+
+		// xform: scale
+		auto transform = XMMatrixScaling(scale.x, scale.y, 1.f);
+		// xform: rotate
+		transform = transform * XMMatrixRotationZ(rot);
+		// xform: translate
+		transform = transform * XMMatrixTranslation(pos.x, pos.y, 0.f);
+		// TODO: xform: camera
+		// xform: to ndc
 		const auto halfDims = outputDims_ / 2.f;
-		const auto MapToNDC = [](float value, float halfDimension) {
-			return value / halfDimension;
-		};
-		const auto ndcDest = spa::RectF{
-			.left = MapToNDC(destInPixels.left, halfDims.width),
-			.top = MapToNDC(destInPixels.top, halfDims.height),
-			.right = MapToNDC(destInPixels.right, halfDims.width),
-			.bottom = MapToNDC(destInPixels.bottom, halfDims.height),
-		};
+		transform = transform * XMMatrixScaling(1.f / halfDims.width, 1.f / halfDims.height, 1.f);
+		
 		// write indices
 		pIndexUpload_[nIndices_++] = nVertices_;
 		pIndexUpload_[nIndices_++] = nVertices_ + 1;
@@ -174,27 +190,23 @@ namespace chil::gfx::d12
 		pIndexUpload_[nIndices_++] = nVertices_ + 1;
 		pIndexUpload_[nIndices_++] = nVertices_ + 3;
 		pIndexUpload_[nIndices_++] = nVertices_ + 2;
-		// write vertices
-		pVertexUpload_[nVertices_++] = Vertex_{
-			DirectX::XMFLOAT3{ ndcDest.left, ndcDest.top, 0.f },
-			DirectX::XMFLOAT2{ srcInTexcoords.left, srcInTexcoords.top },
-			atlasIndex16,
-		};
-		pVertexUpload_[nVertices_++] = Vertex_{
-			DirectX::XMFLOAT3{ ndcDest.right, ndcDest.top, 0.f },
-			DirectX::XMFLOAT2{ srcInTexcoords.right, srcInTexcoords.top },
-			atlasIndex16,
-		};
-		pVertexUpload_[nVertices_++] = Vertex_{
-			DirectX::XMFLOAT3{ ndcDest.left, ndcDest.bottom, 0.f },
-			DirectX::XMFLOAT2{ srcInTexcoords.left, srcInTexcoords.bottom },
-			atlasIndex16,
-		};
-		pVertexUpload_[nVertices_++] = Vertex_{
-			DirectX::XMFLOAT3{ ndcDest.right, ndcDest.bottom, 0.f },
-			DirectX::XMFLOAT2{ srcInTexcoords.right, srcInTexcoords.bottom },
-			atlasIndex16,
-		};
+
+		// write vertex source coordinates
+		pVertexUpload_[nVertices_ + 0].tc = { srcInTexcoords.left, srcInTexcoords.top };
+		pVertexUpload_[nVertices_ + 1].tc = { srcInTexcoords.right, srcInTexcoords.top };
+		pVertexUpload_[nVertices_ + 2].tc = { srcInTexcoords.left, srcInTexcoords.bottom };
+		pVertexUpload_[nVertices_ + 3].tc = { srcInTexcoords.right, srcInTexcoords.bottom };
+
+		// write vertex destination and atlas index
+		for (int i = 0; i < 4; i++) {
+			auto& vtx = pVertexUpload_[nVertices_ + i];
+			const auto dest = XMVector4Transform(posSimd[i], transform);
+			XMStoreFloat3(&vtx.position, dest);
+			vtx.atlasIndex = atlasIndex16;
+		}
+
+		// increment vertex write index / count
+		nVertices_ += 4;
 	}
 
 	CommandListPair SpriteBatcher::EndBatch()
@@ -337,15 +349,9 @@ namespace chil::gfx::d12
 
 	void SpriteFrame::DrawToBatch(ISpriteBatcher& batch, const spa::Vec2F& pos, float rotation, const spa::Vec2F& scale) const
 	{
-		// deriving dest in pixel coordinates from texcoord source frame, source atlas dimensions, and dest position
-		const auto srcDimsInTexcoords = frameInTexcoords_.GetDimensions();
-		const auto destInPixels = spa::RectF{
-			.left = pos.x,
-			.top = pos.y,
-			.right = srcDimsInTexcoords.width * atlasDimensions_.width + pos.x,
-			.bottom = -srcDimsInTexcoords.height * atlasDimensions_.height + pos.y,
-		};
-		batch.Draw(atlasIndex_, frameInTexcoords_, destInPixels);
+		// deriving dest in pixel coordinates from texcoord source frame and source atlas dimensions
+		const auto destPixelDims = frameInTexcoords_.GetDimensions() * atlasDimensions_;
+		batch.Draw(atlasIndex_, frameInTexcoords_, destPixelDims, pos, rotation, scale);
 	}
 
 

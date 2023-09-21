@@ -23,6 +23,10 @@ namespace chil::spa
         {
             return { (S)width, (S)height };
         }
+        DimensionsT operator*(const DimensionsT& rhs) const
+        {
+            return { width * rhs.width, height * rhs.height };
+        }
         // data 
         T width, height;
     };
