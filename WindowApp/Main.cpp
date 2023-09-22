@@ -62,6 +62,7 @@ int WINAPI wWinMain(
 			std::shared_ptr<gfx::d12::SpriteFrame> pFrame,
 			std::shared_ptr<gfx::d12::SpriteFrame> pFrame2)
 		{
+			const unsigned int nCharacters = 64'000;
 			const auto outputDims = spa::DimensionsI{ 1280, 720 };
 			//// do construction
 			// make window
@@ -75,7 +76,7 @@ int WINAPI wWinMain(
 				std::make_shared<gfx::d12::CommandQueue>(pDevice)
 			);
 			// make sprite batcher
-			gfx::d12::SpriteBatcher batcher{ outputDims, pDevice, std::move(pSpriteCodex), 20000 };
+			gfx::d12::SpriteBatcher batcher{ outputDims, pDevice, std::move(pSpriteCodex), nCharacters };
 			// signal completion of construction phase
 			constructionSemaphore_.release();
 
@@ -116,7 +117,7 @@ int WINAPI wWinMain(
 			// frame variables
 			float t = 0.f;
 			const auto characters =
-				vi::iota(0, 20000) |
+				vi::iota(0u, nCharacters) |
 				vi::transform([
 					pFrame,
 					rne = std::minstd_rand0{ std::random_device{}() },

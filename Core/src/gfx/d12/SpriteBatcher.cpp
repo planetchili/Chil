@@ -130,7 +130,7 @@ namespace chil::gfx::d12
 			// create index buffer resource
 			{
 				const CD3DX12_HEAP_PROPERTIES heapProps{ D3D12_HEAP_TYPE_DEFAULT };
-				const auto resourceDesc = CD3DX12_RESOURCE_DESC::Buffer(sizeof(WORD) * maxIndices_);
+				const auto resourceDesc = CD3DX12_RESOURCE_DESC::Buffer(sizeof(UINT) * maxIndices_);
 				pDeviceInterface->CreateCommittedResource(
 					&heapProps,
 					D3D12_HEAP_FLAG_NONE,
@@ -142,8 +142,8 @@ namespace chil::gfx::d12
 			// index buffer view
 			indexBufferView_ = {
 				.BufferLocation = pIndexBuffer_->GetGPUVirtualAddress(),
-				.SizeInBytes = (UINT)sizeof(WORD) * maxIndices_,
-				.Format = DXGI_FORMAT_R16_UINT,
+				.SizeInBytes = (UINT)sizeof(UINT) * maxIndices_,
+				.Format = DXGI_FORMAT_R32_UINT,
 			};
 		}
 	}
@@ -160,7 +160,7 @@ namespace chil::gfx::d12
 		currentFrameResource_ = GetFrameResource_(signaledFenceValue);
 		const auto mapReadRangeNone = CD3DX12_RANGE{ 0, 0 };
 		// vertex buffer
-		currentFrameResource_->pVertexBuffer->Map(0,&mapReadRangeNone,
+		currentFrameResource_->pVertexBuffer->Map(0, &mapReadRangeNone,
 			reinterpret_cast<void**>(&pVertexUpload_)) >> chk;
 		// write indices reset
 		nVertices_ = 0;
@@ -184,8 +184,8 @@ namespace chil::gfx::d12
 		chilass(nVertices_ + 4 <= maxVertices_);
 		chilass(nIndices_ + 6 <= maxIndices_);
 		
-		// atlas index 16-bit
-		const auto atlasIndex16 = (USHORT)atlasIndex;
+		// atlas index 32-bit
+		const auto atlasIndex32 = (UINT)atlasIndex;
 
 		// starting dest vertice vectors
 		const XMVECTOR posSimd[4]{
@@ -220,7 +220,7 @@ namespace chil::gfx::d12
 			auto& vtx = pVertexUpload_[nVertices_ + i];
 			const auto dest = XMVector4Transform(posSimd[i], transform);
 			XMStoreFloat3(&vtx.position, dest);
-			vtx.atlasIndex = atlasIndex16;
+			vtx.atlasIndex = atlasIndex32;
 		}
 
 		// increment vertex write index / count
@@ -311,9 +311,9 @@ namespace chil::gfx::d12
 	void SpriteBatcher::WriteIndexBufferFillCommands_(CommandListPair& cmd)
 	{
 		// create array of index data
-		std::vector<WORD> indexData(maxIndices_);
+		std::vector<UINT> indexData(maxIndices_);
 		{
-			WORD baseVertexIndex_ = 0;
+			UINT baseVertexIndex_ = 0;
 			for (size_t i = 0; i < maxIndices_; i += 6) {
 				indexData[i + 0] = baseVertexIndex_ + 0;
 				indexData[i + 1] = baseVertexIndex_ + 1;
@@ -327,7 +327,7 @@ namespace chil::gfx::d12
 		// create committed resource for cpu upload of index data
 		{
 			const CD3DX12_HEAP_PROPERTIES heapProps{ D3D12_HEAP_TYPE_UPLOAD };
-			const auto resourceDesc = CD3DX12_RESOURCE_DESC::Buffer(indexData.size() * sizeof(WORD));
+			const auto resourceDesc = CD3DX12_RESOURCE_DESC::Buffer(indexData.size() * sizeof(UINT));
 			pDevice_->GetD3D12DeviceInterface()->CreateCommittedResource(
 				&heapProps,
 				D3D12_HEAP_FLAG_NONE,
@@ -338,7 +338,7 @@ namespace chil::gfx::d12
 		}
 		// copy array of index data to upload buffer  
 		{
-			WORD* mappedIndexData = nullptr;
+			UINT* mappedIndexData = nullptr;
 			pIndexUploadBuffer_->Map(0, nullptr, reinterpret_cast<void**>(&mappedIndexData)) >> chk;
 			rn::copy(indexData, mappedIndexData);
 			pIndexUploadBuffer_->Unmap(0, nullptr);
