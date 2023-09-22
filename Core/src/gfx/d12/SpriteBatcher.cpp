@@ -15,11 +15,16 @@ namespace chil::gfx::d12
 	using Microsoft::WRL::ComPtr;
 	using utl::chk;
 
-	SpriteBatcher::SpriteBatcher(const spa::DimensionsI& targetDimensions, std::shared_ptr<IDevice> pDevice, std::shared_ptr<SpriteCodex> pSpriteCodex)
+	SpriteBatcher::SpriteBatcher(const spa::DimensionsI& targetDimensions,
+		std::shared_ptr<IDevice> pDevice,
+		std::shared_ptr<SpriteCodex> pSpriteCodex,
+		UINT maxSpriteCount)
 		:
 		pDevice_{ std::move(pDevice) },
 		outputDims_{ (spa::DimensionsF)targetDimensions },
-		pSpriteCodex_{ std::move(pSpriteCodex) }
+		pSpriteCodex_{ std::move(pSpriteCodex) },
+		maxIndices_{ 6 * maxSpriteCount },
+		maxVertices_{ 4 * maxSpriteCount }
 	{		
 		auto pDeviceInterface = pDevice_->GetD3D12DeviceInterface();
 		// root signature
@@ -281,7 +286,7 @@ namespace chil::gfx::d12
 		// vertex buffer view
 		fr.vertexBufferView = {
 			.BufferLocation = fr.pVertexBuffer->GetGPUVirtualAddress(),
-			.SizeInBytes = sizeof(Vertex_) * maxVertices_,
+			.SizeInBytes = (UINT)sizeof(Vertex_) * maxVertices_,
 			.StrideInBytes = sizeof(Vertex_),
 		};
 		// index buffer
@@ -299,7 +304,7 @@ namespace chil::gfx::d12
 		// index buffer view
 		fr.indexBufferView = {
 			.BufferLocation = fr.pIndexBuffer->GetGPUVirtualAddress(),
-			.SizeInBytes = sizeof(unsigned short) * maxIndices_,
+			.SizeInBytes = (UINT)sizeof(unsigned short) * maxIndices_,
 			.Format = DXGI_FORMAT_R16_UINT,
 		};
 

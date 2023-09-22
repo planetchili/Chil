@@ -40,12 +40,13 @@ int WINAPI wWinMain(
 	class ActiveWindow
 	{
 	public:
-		ActiveWindow(std::shared_ptr<gfx::d12::Device> pDevice,
+		ActiveWindow(int index,
+			std::shared_ptr<gfx::d12::Device> pDevice,
 			std::shared_ptr<gfx::d12::SpriteCodex> pSpriteCodex,
 			std::shared_ptr<gfx::d12::SpriteFrame> pFrame,
 			std::shared_ptr<gfx::d12::SpriteFrame> pFrame2)
 			:
-			thread_{ &ActiveWindow::Kernel_, this, std::move(pDevice), std::move(pSpriteCodex), std::move(pFrame), std::move(pFrame2) }
+			thread_{ &ActiveWindow::Kernel_, this, index, std::move(pDevice), std::move(pSpriteCodex), std::move(pFrame), std::move(pFrame2) }
 		{
 			constructionSemaphore_.acquire();
 		}
@@ -55,7 +56,8 @@ int WINAPI wWinMain(
 		}
 	private:
 		// functions
-		void Kernel_(std::shared_ptr<gfx::d12::Device> pDevice,
+		void Kernel_(int index,
+			std::shared_ptr<gfx::d12::Device> pDevice,
 			std::shared_ptr<gfx::d12::SpriteCodex> pSpriteCodex,
 			std::shared_ptr<gfx::d12::SpriteFrame> pFrame,
 			std::shared_ptr<gfx::d12::SpriteFrame> pFrame2)
@@ -63,7 +65,8 @@ int WINAPI wWinMain(
 			const auto outputDims = spa::DimensionsI{ 1280, 720 };
 			//// do construction
 			// make window
-			std::shared_ptr<win::IWindow> pWindow_ = ioc::Get().Resolve<win::IWindow>();
+			std::shared_ptr<win::IWindow> pWindow_ = ioc::Get().Resolve<win::IWindow>(
+				win::IWindow::IocParams{ .name = std::format(L"Window #{}", index) } );
 			// make graphics pane
 			std::shared_ptr<gfx::d12::IRenderPane> pPane_ = std::make_shared<gfx::d12::RenderPane>(
 				pWindow_->GetHandle(),
@@ -72,7 +75,7 @@ int WINAPI wWinMain(
 				std::make_shared<gfx::d12::CommandQueue>(pDevice)
 			);
 			// make sprite batcher
-			gfx::d12::SpriteBatcher batcher{ outputDims, pDevice, std::move(pSpriteCodex) };
+			gfx::d12::SpriteBatcher batcher{ outputDims, pDevice, std::move(pSpriteCodex), 20000 };
 			// signal completion of construction phase
 			constructionSemaphore_.release();
 
@@ -80,45 +83,53 @@ int WINAPI wWinMain(
 			class Character
 			{
 			public:
-				Character(std::shared_ptr<gfx::d12::SpriteFrame> pSpriteFrame, spa::Vec2F center, float radius, float period, float phase)
+				Character(std::shared_ptr<gfx::d12::SpriteFrame> pSpriteFrame,
+					spa::Vec2F center, float radius,
+					float periodOrbit, float phaseOrbit,
+					float periodRotate, float phaseRotate
+					)
 					:
 					pSpriteFrame_{ std::move(pSpriteFrame) },
 					center_{ center },
 					radius_{ radius },
-					period_{ period },
-					phase_{ phase }
+					periodOrbit_{ periodOrbit },
+					phaseOrbit_{ phaseOrbit },
+					periodRotate_{ periodRotate },
+					phaseRotate_{ phaseRotate }
 				{}
 				void Draw(gfx::d12::SpriteBatcher& batcher, float t) const
 				{
-					const auto theta = t * period_ / (2.f * std::numbers::pi_v<float>) + phase_;
-					const auto pos = center_ + spa::Vec2F{ std::cos(theta), std::sin(theta) } * radius_;
-					pSpriteFrame_->DrawToBatch(batcher, pos, 0.7f);
+					const auto thetaOrbit = t * periodOrbit_ / (2.f * std::numbers::pi_v<float>) + phaseOrbit_;
+					const auto thetaRotate = t * periodRotate_ / (2.f * std::numbers::pi_v<float>) + phaseRotate_;
+					const auto pos = center_ + spa::Vec2F{ std::cos(thetaOrbit), std::sin(thetaOrbit) } * radius_;
+					pSpriteFrame_->DrawToBatch(batcher, pos, thetaRotate);
 				}
 			private:
 				std::shared_ptr<gfx::d12::SpriteFrame> pSpriteFrame_;
 				spa::Vec2F center_;
 				float radius_;
-				float period_;
-				float phase_;
+				float periodOrbit_;
+				float phaseOrbit_;
+				float periodRotate_;
+				float phaseRotate_;
 			};
 			// frame variables
 			float t = 0.f;
-			//const auto characters =
-			//	vi::iota(0, 2000) |
-			//	vi::transform([
-			//		rne = std::minstd_rand0{ std::random_device{}() },
-			//		posDist = std::uniform_real_distribution<float>{ -1.f, 1.f },
-			//		radDist = std::uniform_real_distribution<float>{ 0.f, .4f },
-			//		perDist = std::uniform_real_distribution<float>{ 1.f, 20.f },
-			//		phaDist = std::uniform_real_distribution<float>{ 0.f, 2.f * std::numbers::pi_v<float> }
-			//	] (auto) mutable -> Character {
-			//		return { { posDist(rne), posDist(rne) }, radDist(rne), perDist(rne), phaDist(rne) };
-			//	}) |
-			//	rn::to<std::vector>();
-			const std::vector<Character> characters{
-				{ pFrame, {0, 200}, 0, 0, 0 },
-				{ pFrame2, {-200, 100}, 0, 0, 0 },
-			};
+			const auto characters =
+				vi::iota(0, 20000) |
+				vi::transform([
+					pFrame,
+					rne = std::minstd_rand0{ std::random_device{}() },
+					posDist = std::uniform_real_distribution<float>{ -360.f, 360.f },
+					radDist = std::uniform_real_distribution<float>{ 0.f, 200.f },
+					perDist = std::uniform_real_distribution<float>{ 1.f, 20.f },
+					phaDist = std::uniform_real_distribution<float>{ 0.f, 2.f * std::numbers::pi_v<float> },
+					perDist2 = std::uniform_real_distribution<float>{ 1.f, 20.f },
+					phaDist2 = std::uniform_real_distribution<float>{ 0.f, 2.f * std::numbers::pi_v<float> }
+				] (auto) mutable -> Character {
+					return { pFrame, { posDist(rne), posDist(rne) }, radDist(rne), perDist(rne), phaDist(rne), perDist2(rne), phaDist2(rne) };
+				}) |
+				rn::to<std::vector>();
 			// do render loop while window not closing
 			while (!pWindow_->IsClosing()) {
 				pPane_->BeginFrame();
@@ -170,8 +181,8 @@ int WINAPI wWinMain(
 		); 
 
 		std::vector<std::unique_ptr<ActiveWindow>> windows;
-		for (size_t i = 0; i < 1; i++) {
-			windows.push_back(std::make_unique<ActiveWindow>(pDevice, pSpriteCodex, pSpriteFrame, pSpriteFrame2));
+		for (int i = 0; i < 2; i++) {
+			windows.push_back(std::make_unique<ActiveWindow>(i, pDevice, pSpriteCodex, pSpriteFrame, pSpriteFrame2));
 		}
 
 		float c = 0;

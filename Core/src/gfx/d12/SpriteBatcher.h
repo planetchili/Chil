@@ -107,7 +107,8 @@ namespace chil::gfx::d12
 	class SpriteBatcher : public ISpriteBatcher
 	{
 	public:
-		SpriteBatcher(const spa::DimensionsI& targetDimensions, std::shared_ptr<IDevice> pDevice, std::shared_ptr<SpriteCodex> pSpriteCodex_);
+		SpriteBatcher(const spa::DimensionsI& targetDimensions, std::shared_ptr<IDevice> pDevice,
+			std::shared_ptr<SpriteCodex> pSpriteCodex_, UINT maxSpriteCount = 4000);
 		~SpriteBatcher();
 		void StartBatch(CommandListPair cmd, uint64_t frameFenceValue, uint64_t signaledFenceValue) override;
 		void SetCamera(const spa::Vec2F& pos, float rot, float scale) override;
@@ -138,8 +139,8 @@ namespace chil::gfx::d12
 		// connection to other gfx components
 		std::shared_ptr<IDevice> pDevice_;
 		// vertex stuff
-		static constexpr UINT maxVertices_ = 4 * 4000;
-		static constexpr UINT maxIndices_ = 6 * 4000;
+		UINT maxVertices_;
+		UINT maxIndices_;
 		UINT nVertices_ = 0;
 		UINT nIndices_ = 0;
 		Vertex_* pVertexUpload_ = nullptr;
