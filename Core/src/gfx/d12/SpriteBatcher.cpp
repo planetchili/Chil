@@ -14,6 +14,7 @@ namespace chil::gfx::d12
 {
 	using Microsoft::WRL::ComPtr;
 	using utl::chk;
+	namespace rn = std::ranges;
 
 	SpriteBatcher::SpriteBatcher(const spa::DimensionsI& targetDimensions,
 		std::shared_ptr<IDevice> pDevice,
@@ -125,6 +126,25 @@ namespace chil::gfx::d12
 				sizeof(PipelineStateStream), &pipelineStateStream
 			};
 			pDeviceInterface->CreatePipelineState(&pipelineStateStreamDesc, IID_PPV_ARGS(&pPipelineState_)) >> chk;
+
+			// create index buffer resource
+			{
+				const CD3DX12_HEAP_PROPERTIES heapProps{ D3D12_HEAP_TYPE_DEFAULT };
+				const auto resourceDesc = CD3DX12_RESOURCE_DESC::Buffer(sizeof(WORD) * maxIndices_);
+				pDeviceInterface->CreateCommittedResource(
+					&heapProps,
+					D3D12_HEAP_FLAG_NONE,
+					&resourceDesc,
+					D3D12_RESOURCE_STATE_COPY_DEST,
+					nullptr, IID_PPV_ARGS(&pIndexBuffer_)
+				) >> chk;
+			}
+			// index buffer view
+			indexBufferView_ = {
+				.BufferLocation = pIndexBuffer_->GetGPUVirtualAddress(),
+				.SizeInBytes = (UINT)sizeof(WORD) * maxIndices_,
+				.Format = DXGI_FORMAT_R16_UINT,
+			};
 		}
 	}
 
@@ -135,15 +155,13 @@ namespace chil::gfx::d12
 		// command list/queue stuff
 		cmd_ = std::move(cmd);
 		frameFenceValue_ = frameFenceValue;
+		signaledFenceValue_ = signaledFenceValue;
 		// frame resource stuff
 		currentFrameResource_ = GetFrameResource_(signaledFenceValue);
 		const auto mapReadRangeNone = CD3DX12_RANGE{ 0, 0 };
 		// vertex buffer
 		currentFrameResource_->pVertexBuffer->Map(0,&mapReadRangeNone,
 			reinterpret_cast<void**>(&pVertexUpload_)) >> chk;
-		// index buffer
-		currentFrameResource_->pIndexBuffer->Map(0, &mapReadRangeNone,
-			reinterpret_cast<void**>(&pIndexUpload_)) >> chk;
 		// write indices reset
 		nVertices_ = 0;
 		nIndices_ = 0;
@@ -188,13 +206,8 @@ namespace chil::gfx::d12
 		const auto halfDims = outputDims_ / 2.f;
 		transform = transform * XMMatrixScaling(1.f / halfDims.width, 1.f / halfDims.height, 1.f);
 		
-		// write indices
-		pIndexUpload_[nIndices_++] = nVertices_;
-		pIndexUpload_[nIndices_++] = nVertices_ + 1;
-		pIndexUpload_[nIndices_++] = nVertices_ + 2;
-		pIndexUpload_[nIndices_++] = nVertices_ + 1;
-		pIndexUpload_[nIndices_++] = nVertices_ + 3;
-		pIndexUpload_[nIndices_++] = nVertices_ + 2;
+		// update index count
+		nIndices_ += 6;
 
 		// write vertex source coordinates
 		pVertexUpload_[nVertices_ + 0].tc = { srcInTexcoords.left, srcInTexcoords.top };
@@ -219,17 +232,19 @@ namespace chil::gfx::d12
 		chilass(cmd_.pCommandAllocator);
 		chilass(cmd_.pCommandList);
 
+		// fill index buffer if not already filled
+		if (!indexBufferFilled_) {
+			WriteIndexBufferFillCommands_(cmd_);
+		}
+		else if (pIndexUploadBuffer_ && signaledFenceValue_ >= indexBufferUploadFenceValue_) {
+			// remove upload buffer when upload is finished
+			pIndexUploadBuffer_.Reset();
+		}
 		// unmap upload vertex
 		{
 			const auto mapWrittenRange = CD3DX12_RANGE{ 0, nVertices_ * sizeof(Vertex_) };
 			currentFrameResource_->pVertexBuffer->Unmap(0, &mapWrittenRange);
 			pVertexUpload_ = nullptr;
-		}
-		// unmap upload index
-		{
-			const auto mapWrittenRange = CD3DX12_RANGE{ 0, nIndices_ * sizeof(unsigned short) };
-			currentFrameResource_->pIndexBuffer->Unmap(0, &mapWrittenRange);
-			pIndexUpload_ = nullptr;
 		}
 
 		// set pipeline state 
@@ -238,7 +253,7 @@ namespace chil::gfx::d12
 		// configure IA 
 		cmd_.pCommandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 		cmd_.pCommandList->IASetVertexBuffers(0, 1, &currentFrameResource_->vertexBufferView);
-		cmd_.pCommandList->IASetIndexBuffer(&currentFrameResource_->indexBufferView);
+		cmd_.pCommandList->IASetIndexBuffer(&indexBufferView_);
 		// bind the heap containing the texture descriptor
 		{
 			ID3D12DescriptorHeap* heapArray[1] = { pSpriteCodex_->GetHeap() };
@@ -289,26 +304,59 @@ namespace chil::gfx::d12
 			.SizeInBytes = (UINT)sizeof(Vertex_) * maxVertices_,
 			.StrideInBytes = sizeof(Vertex_),
 		};
-		// index buffer
+
+		return fr;
+	}
+
+	void SpriteBatcher::WriteIndexBufferFillCommands_(CommandListPair& cmd)
+	{
+		// create array of index data
+		std::vector<WORD> indexData(maxIndices_);
+		{
+			WORD baseVertexIndex_ = 0;
+			for (size_t i = 0; i < maxIndices_; i += 6) {
+				indexData[i + 0] = baseVertexIndex_ + 0;
+				indexData[i + 1] = baseVertexIndex_ + 1;
+				indexData[i + 2] = baseVertexIndex_ + 2;
+				indexData[i + 3] = baseVertexIndex_ + 1;
+				indexData[i + 4] = baseVertexIndex_ + 3;
+				indexData[i + 5] = baseVertexIndex_ + 2;
+				baseVertexIndex_ += 4;
+			}
+		}
+		// create committed resource for cpu upload of index data
 		{
 			const CD3DX12_HEAP_PROPERTIES heapProps{ D3D12_HEAP_TYPE_UPLOAD };
-			const auto resourceDesc = CD3DX12_RESOURCE_DESC::Buffer(sizeof(unsigned short) * maxIndices_);
-			pDeviceInterface->CreateCommittedResource(
+			const auto resourceDesc = CD3DX12_RESOURCE_DESC::Buffer(indexData.size() * sizeof(WORD));
+			pDevice_->GetD3D12DeviceInterface()->CreateCommittedResource(
 				&heapProps,
 				D3D12_HEAP_FLAG_NONE,
 				&resourceDesc,
 				D3D12_RESOURCE_STATE_GENERIC_READ,
-				nullptr, IID_PPV_ARGS(&fr.pIndexBuffer)
+				nullptr, IID_PPV_ARGS(&pIndexUploadBuffer_)
 			) >> chk;
 		}
-		// index buffer view
-		fr.indexBufferView = {
-			.BufferLocation = fr.pIndexBuffer->GetGPUVirtualAddress(),
-			.SizeInBytes = (UINT)sizeof(unsigned short) * maxIndices_,
-			.Format = DXGI_FORMAT_R16_UINT,
-		};
+		// copy array of index data to upload buffer  
+		{
+			WORD* mappedIndexData = nullptr;
+			pIndexUploadBuffer_->Map(0, nullptr, reinterpret_cast<void**>(&mappedIndexData)) >> chk;
+			rn::copy(indexData, mappedIndexData);
+			pIndexUploadBuffer_->Unmap(0, nullptr);
+		}
+		// copy upload buffer to index buffer  
+		cmd.pCommandList->CopyResource(pIndexBuffer_.Get(), pIndexUploadBuffer_.Get());
+		// transition index buffer to index buffer state 
+		{
+			const auto barrier = CD3DX12_RESOURCE_BARRIER::Transition(
+				pIndexBuffer_.Get(),
+				D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_INDEX_BUFFER);
+			cmd.pCommandList->ResourceBarrier(1, &barrier);
+		}
 
-		return fr;
+		// set index buffer filled flag
+		indexBufferFilled_ = true;
+		// set fence value for upload complete
+		indexBufferUploadFenceValue_ = frameFenceValue_;
 	}
 
 

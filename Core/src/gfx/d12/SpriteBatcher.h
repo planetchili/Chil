@@ -131,27 +131,31 @@ namespace chil::gfx::d12
 		{
 			Microsoft::WRL::ComPtr<ID3D12Resource> pVertexBuffer;
 			D3D12_VERTEX_BUFFER_VIEW vertexBufferView{};
-			Microsoft::WRL::ComPtr<ID3D12Resource> pIndexBuffer;
-			D3D12_INDEX_BUFFER_VIEW indexBufferView{};
 		};
 		// functions
 		FrameResource_ GetFrameResource_(uint64_t frameFenceValue);
+		void WriteIndexBufferFillCommands_(CommandListPair& cmd);
 		// connection to other gfx components
 		std::shared_ptr<IDevice> pDevice_;
 		// vertex stuff
 		UINT maxVertices_;
 		UINT maxIndices_;
-		UINT nVertices_ = 0;
+		UINT nVertices_ = 0; 
 		UINT nIndices_ = 0;
 		Vertex_* pVertexUpload_ = nullptr;
-		unsigned short* pIndexUpload_ = nullptr;
 		std::optional<FrameResource_> currentFrameResource_;
 		FrameResourcePool<FrameResource_> frameResourcePool_;
+		Microsoft::WRL::ComPtr<ID3D12Resource> pIndexBuffer_;
+		D3D12_INDEX_BUFFER_VIEW indexBufferView_{};
+		bool indexBufferFilled_ = false;
+		Microsoft::WRL::ComPtr<ID3D12Resource> pIndexUploadBuffer_;
+		uint64_t indexBufferUploadFenceValue_ = 0;
 		// sprite atlas codex
 		std::shared_ptr<SpriteCodex> pSpriteCodex_;
 		// command list (moved in/out)
 		CommandListPair cmd_;
 		uint64_t frameFenceValue_ = 0;
+		uint64_t signaledFenceValue_ = 0;
 		// pipey
 		Microsoft::WRL::ComPtr<ID3D12RootSignature> pRootSignature_;
 		Microsoft::WRL::ComPtr<ID3D12PipelineState> pPipelineState_;
