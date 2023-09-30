@@ -3,6 +3,7 @@
   "name": "chil-framework",
   "version": "0.1.0",
   "dependencies": [
-    "directxtex"
+    "directxtex",
+    "concurrentqueue"
   ]
 }
