@@ -182,7 +182,7 @@ int WINAPI wWinMain(
 		); 
 
 		std::vector<std::unique_ptr<ActiveWindow>> windows;
-		for (int i = 0; i < 2; i++) {
+		for (int i = 0; i < 1; i++) {
 			windows.push_back(std::make_unique<ActiveWindow>(i, pDevice, pSpriteCodex, pSpriteFrame, pSpriteFrame2));
 		}
 
