@@ -139,26 +139,59 @@ int WINAPI wWinMain(
 			//	}) |
 			//	rn::to<std::vector>();
 			// do render loop while window not closing
+			spa::Vec2F pos{};
+			float rot = 0.f;
+			float scale = 1.f;
 			while (!pWindow_->IsClosing()) {
-				if (characters.size() < nCharacters && keyboard->KeyIsPressed(VK_SPACE)) {
-					[
-						&characters,
-							pFrame,
-							rne = std::minstd_rand0{ std::random_device{}() },
-							posDist = std::uniform_real_distribution<float>{ -360.f, 360.f },
-							radDist = std::uniform_real_distribution<float>{ 0.f, 200.f },
-							perDist = std::uniform_real_distribution<float>{ 1.f, 20.f },
-							phaDist = std::uniform_real_distribution<float>{ 0.f, 2.f * std::numbers::pi_v<float> },
-							perDist2 = std::uniform_real_distribution<float>{ 1.f, 20.f },
-							phaDist2 = std::uniform_real_distribution<float>{ 0.f, 2.f * std::numbers::pi_v<float> }
-					] () mutable {
-						characters.push_back(Character{
-							pFrame, { posDist(rne), posDist(rne) },
-							radDist(rne), perDist(rne), phaDist(rne),
-							perDist2(rne), phaDist2(rne)
-						});
-					}();
+				while (const auto e = keyboard->GetEvent()) {
+					if (e->type == win::KeyEvent::Type::Release) continue;
+					switch (e->code) {
+					case VK_SPACE:
+						[
+							&characters,
+								pFrame,
+								rne = std::minstd_rand0{ std::random_device{}() },
+								posDist = std::uniform_real_distribution<float>{ -360.f, 360.f },
+								radDist = std::uniform_real_distribution<float>{ 0.f, 200.f },
+								perDist = std::uniform_real_distribution<float>{ 1.f, 20.f },
+								phaDist = std::uniform_real_distribution<float>{ 0.f, 2.f * std::numbers::pi_v<float> },
+								perDist2 = std::uniform_real_distribution<float>{ 1.f, 20.f },
+								phaDist2 = std::uniform_real_distribution<float>{ 0.f, 2.f * std::numbers::pi_v<float> }
+						] () mutable {
+							characters.push_back(Character{
+								pFrame, { posDist(rne), posDist(rne) },
+								radDist(rne), perDist(rne), phaDist(rne),
+								perDist2(rne), phaDist2(rne)
+							});
+						}();
+						break;
+					}
 				}
+				if (keyboard->KeyIsPressed('W')) {
+					pos.y -= 1.f;
+				}
+				if (keyboard->KeyIsPressed('S')) {
+					pos.y += 1.f;
+				}
+				if (keyboard->KeyIsPressed('D')) {
+					pos.x -= 1.f;
+				}
+				if (keyboard->KeyIsPressed('A')) {
+					pos.x += 1.f;
+				}
+				if (keyboard->KeyIsPressed('Q')) {
+					rot += 0.02f;
+				}
+				if (keyboard->KeyIsPressed('E')) {
+					rot -= 0.02f;
+				}
+				if (keyboard->KeyIsPressed('R')) {
+					scale *= 1.02f;
+				}
+				if (keyboard->KeyIsPressed('F')) {
+					scale /= 1.02f;
+				}
+				batcher.SetCamera(pos, rot, scale);
 				pPane_->BeginFrame();
 				batcher.StartBatch(
 					pPane_->GetCommandList(),
@@ -171,7 +204,7 @@ int WINAPI wWinMain(
 				pPane_->SubmitCommandList(batcher.EndBatch());
 				pPane_->EndFrame();
 				// update time
-				t += 0.01f;
+				// t += 0.01f;
 			}
 			pPane_->FlushQueues();
 

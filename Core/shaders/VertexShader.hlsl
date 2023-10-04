@@ -5,10 +5,16 @@ struct Output
     float4 position : SV_Position;
 };
 
+struct Camera
+{
+    matrix transform;
+};
+ConstantBuffer<Camera> cam : register(b0);
+
 Output main(float3 pos : POSITION, float2 uv : TEXCOORD, uint atlasIndex : ATLASINDEX)
 {
 	Output vertexOut;
-	vertexOut.position = float4(pos, 1.f);
+    vertexOut.position = mul(float4(pos, 1.f), cam.transform);
 	vertexOut.uv = uv;
     vertexOut.atlasIndex = atlasIndex;
 

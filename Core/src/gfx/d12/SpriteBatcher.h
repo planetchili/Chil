@@ -160,5 +160,7 @@ namespace chil::gfx::d12
 		Microsoft::WRL::ComPtr<ID3D12RootSignature> pRootSignature_;
 		Microsoft::WRL::ComPtr<ID3D12PipelineState> pPipelineState_;
 		spa::DimensionsF outputDims_;
+		// camera
+		DirectX::XMMATRIX cameraTransform_;
 	};
 }

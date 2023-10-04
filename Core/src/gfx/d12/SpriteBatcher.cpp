@@ -25,7 +25,8 @@ namespace chil::gfx::d12
 		outputDims_{ (spa::DimensionsF)targetDimensions },
 		pSpriteCodex_{ std::move(pSpriteCodex) },
 		maxIndices_{ 6 * maxSpriteCount },
-		maxVertices_{ 4 * maxSpriteCount }
+		maxVertices_{ 4 * maxSpriteCount },
+		cameraTransform_{ DirectX::XMMatrixIdentity() }
 	{		
 		auto pDeviceInterface = pDevice_->GetD3D12DeviceInterface();
 		// root signature
@@ -33,9 +34,12 @@ namespace chil::gfx::d12
 			// define root signature a table of sprite atlas textures
 			// in future to reduce root signature binding this should just be merged into a global root descriptor
 			// might want to use a bounded range, in which case the root signature will need to be updated when atlases are added
-			CD3DX12_ROOT_PARAMETER rootParameters[1]{};
+			CD3DX12_ROOT_PARAMETER rootParameters[2]{};
 			const CD3DX12_DESCRIPTOR_RANGE descRange{ D3D12_DESCRIPTOR_RANGE_TYPE_SRV, UINT_MAX, 0 };
+			// sprite codex
 			rootParameters[0].InitAsDescriptorTable(1, &descRange);
+			// camera transform
+			rootParameters[1].InitAsConstants(sizeof(DirectX::XMMATRIX) / sizeof(float), 0, 0, D3D12_SHADER_VISIBILITY_VERTEX);
 			// Allow input layout and vertex shader and deny unnecessary access to certain pipeline stages.
 			const D3D12_ROOT_SIGNATURE_FLAGS rootSignatureFlags =
 				D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT |
@@ -169,7 +173,18 @@ namespace chil::gfx::d12
 
 	void SpriteBatcher::SetCamera(const spa::Vec2F& pos, float rot, float scale)
 	{
-		chilchk_fail;
+		using namespace DirectX;
+
+		// xform: rotate
+		auto transform = XMMatrixRotationZ(rot);
+		// xform: translate
+		transform = transform * XMMatrixTranslation(pos.x, pos.y, 0.f);
+		// xform: scale
+		transform = transform * XMMatrixScaling(scale, scale, 1.f);
+		// xform: to ndc
+		transform = transform * XMMatrixScaling(2.f / outputDims_.width, 2.f / outputDims_.height, 1.f);
+		// column major for
+		cameraTransform_ = XMMatrixTranspose(transform);
 	}
 
 	void SpriteBatcher::Draw(size_t atlasIndex,
@@ -201,10 +216,7 @@ namespace chil::gfx::d12
 		transform = transform * XMMatrixRotationZ(rot);
 		// xform: translate
 		transform = transform * XMMatrixTranslation(pos.x, pos.y, 0.f);
-		// TODO: xform: camera
-		// xform: to ndc
-		const auto halfDims = outputDims_ / 2.f;
-		transform = transform * XMMatrixScaling(1.f / halfDims.width, 1.f / halfDims.height, 1.f);
+		// TODO: (maybe) xform: camera
 		
 		// update index count
 		nIndices_ += 6;
@@ -261,6 +273,8 @@ namespace chil::gfx::d12
 		}
 		// bind the descriptor table containing the texture descriptor
 		cmd_.pCommandList->SetGraphicsRootDescriptorTable(0, pSpriteCodex_->GetTableHandle());
+		// bind the camera transform matrix
+		cmd_.pCommandList->SetGraphicsRoot32BitConstants(1, sizeof(cameraTransform_) / 4, &cameraTransform_, 0);
 		// draw vertices
 		cmd_.pCommandList->DrawIndexedInstanced(nIndices_, 1, 0, 0, 0);
 
