@@ -50,6 +50,7 @@
     <ClInclude Include="src\win\Boot.h" />
     <ClInclude Include="src\win\ChilWin.h" />
     <ClInclude Include="src\win\Exception.h" />
+    <ClInclude Include="src\win\Input.h" />
     <ClInclude Include="src\win\IWindow.h" />
     <ClInclude Include="src\win\Utilities.h" />
     <ClInclude Include="src\win\Window.h" />

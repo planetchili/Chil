@@ -9,6 +9,7 @@
 #include <Core/src/gfx/d12/CommandQueue.h>
 #include <Core/src/gfx/d12/ResourceLoader.h>
 #include <Core/src/gfx/d12/SpriteBatcher.h>
+#include <Core/src/win/Input.h>
 #include <format>
 #include <ranges> 
 #include <semaphore>
@@ -66,8 +67,13 @@ int WINAPI wWinMain(
 			const auto outputDims = spa::DimensionsI{ 1280, 720 };
 			//// do construction
 			// make window
+			auto keyboard = std::make_shared<win::Keyboard>();
 			std::shared_ptr<win::IWindow> pWindow_ = ioc::Get().Resolve<win::IWindow>(
-				win::IWindow::IocParams{ .name = std::format(L"Window #{}", index) } );
+				win::IWindow::IocParams{
+					.pKeySink = keyboard,
+					.name = std::format(L"Window #{}", index),
+				}
+			);
 			// make graphics pane
 			std::shared_ptr<gfx::d12::IRenderPane> pPane_ = std::make_shared<gfx::d12::RenderPane>(
 				pWindow_->GetHandle(),
@@ -116,23 +122,43 @@ int WINAPI wWinMain(
 			};
 			// frame variables
 			float t = 0.f;
-			const auto characters =
-				vi::iota(0u, nCharacters) |
-				vi::transform([
-					pFrame,
-					rne = std::minstd_rand0{ std::random_device{}() },
-					posDist = std::uniform_real_distribution<float>{ -360.f, 360.f },
-					radDist = std::uniform_real_distribution<float>{ 0.f, 200.f },
-					perDist = std::uniform_real_distribution<float>{ 1.f, 20.f },
-					phaDist = std::uniform_real_distribution<float>{ 0.f, 2.f * std::numbers::pi_v<float> },
-					perDist2 = std::uniform_real_distribution<float>{ 1.f, 20.f },
-					phaDist2 = std::uniform_real_distribution<float>{ 0.f, 2.f * std::numbers::pi_v<float> }
-				] (auto) mutable -> Character {
-					return { pFrame, { posDist(rne), posDist(rne) }, radDist(rne), perDist(rne), phaDist(rne), perDist2(rne), phaDist2(rne) };
-				}) |
-				rn::to<std::vector>();
+			std::vector<Character> characters;
+			//const auto characters =
+			//	vi::iota(0u, nCharacters) |
+			//	vi::transform([
+			//		pFrame,
+			//		rne = std::minstd_rand0{ std::random_device{}() },
+			//		posDist = std::uniform_real_distribution<float>{ -360.f, 360.f },
+			//		radDist = std::uniform_real_distribution<float>{ 0.f, 200.f },
+			//		perDist = std::uniform_real_distribution<float>{ 1.f, 20.f },
+			//		phaDist = std::uniform_real_distribution<float>{ 0.f, 2.f * std::numbers::pi_v<float> },
+			//		perDist2 = std::uniform_real_distribution<float>{ 1.f, 20.f },
+			//		phaDist2 = std::uniform_real_distribution<float>{ 0.f, 2.f * std::numbers::pi_v<float> }
+			//	] (auto) mutable -> Character {
+			//		return { pFrame, { posDist(rne), posDist(rne) }, radDist(rne), perDist(rne), phaDist(rne), perDist2(rne), phaDist2(rne) };
+			//	}) |
+			//	rn::to<std::vector>();
 			// do render loop while window not closing
 			while (!pWindow_->IsClosing()) {
+				if (characters.size() < nCharacters && keyboard->KeyIsPressed(VK_SPACE)) {
+					[
+						&characters,
+							pFrame,
+							rne = std::minstd_rand0{ std::random_device{}() },
+							posDist = std::uniform_real_distribution<float>{ -360.f, 360.f },
+							radDist = std::uniform_real_distribution<float>{ 0.f, 200.f },
+							perDist = std::uniform_real_distribution<float>{ 1.f, 20.f },
+							phaDist = std::uniform_real_distribution<float>{ 0.f, 2.f * std::numbers::pi_v<float> },
+							perDist2 = std::uniform_real_distribution<float>{ 1.f, 20.f },
+							phaDist2 = std::uniform_real_distribution<float>{ 0.f, 2.f * std::numbers::pi_v<float> }
+					] () mutable {
+						characters.push_back(Character{
+							pFrame, { posDist(rne), posDist(rne) },
+							radDist(rne), perDist(rne), phaDist(rne),
+							perDist2(rne), phaDist2(rne)
+						});
+					}();
+				}
 				pPane_->BeginFrame();
 				batcher.StartBatch(
 					pPane_->GetCommandList(),
@@ -148,6 +174,8 @@ int WINAPI wWinMain(
 				t += 0.01f;
 			}
 			pPane_->FlushQueues();
+
+			chilog.info(std::format(L"sprites: {}", characters.size()));
 
 			isLive = false;
 		}

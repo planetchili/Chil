@@ -12,10 +12,12 @@
 
 namespace chil::win
 {
+	class IKeyboardSink;
+
 	class Window : public IWindow
 	{
 	public:
-		Window(std::shared_ptr<IWindowClass> pWindowClass, std::wstring title,
+		Window(std::shared_ptr<IWindowClass> pWindowClass, std::shared_ptr<IKeyboardSink> pKeySink, std::wstring title,
 			spa::DimensionsI clientAreaSize, std::optional<spa::Vec2I> position = {});
 		HWND GetHandle() const override;
 		bool IsClosing() const override;
@@ -37,6 +39,7 @@ namespace chil::win
 		void NotifyTaskDispatch_() const;
 		// data
 		std::shared_ptr<IWindowClass> pWindowClass_;
+		std::shared_ptr<IKeyboardSink> pKeySink_;
 		mutable ccr::GenericTaskQueue tasks_;
 		std::binary_semaphore startSignal_{ 0 };
 		std::thread kernelThread_;

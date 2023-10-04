@@ -5,6 +5,7 @@
 #include <optional>
 #include <Core/src/spa/Dimensions.h>
 #include <Core/src/spa/Vec2.h>
+#include "Input.h"
 
 namespace chil::win
 {
@@ -19,6 +20,7 @@ namespace chil::win
 		struct IocParams
 		{
 			std::shared_ptr<IWindowClass> pClass;
+			std::shared_ptr<IKeyboardSink> pKeySink;
 			std::optional<std::wstring> name;
 			std::optional<spa::DimensionsI> size;
 			std::optional<spa::Vec2I> position;

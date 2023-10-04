@@ -56,7 +56,8 @@ namespace chil::ioc
 			}
 			else
 			{
-				throw ServiceNotFound{ std::format("Could not find entry for type [{}] in singleton container", typeid(T).name()) };
+				auto name = typeid(T).name();
+				throw ServiceNotFound{ std::format("Could not find entry for type [{}] in singleton container", name) };
 			}
 		}
 	private:
