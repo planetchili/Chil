@@ -53,6 +53,9 @@ namespace chil::gfx::d12
 		UINT curBackBufferIndex_ = 0;
 		uint64_t bufferFenceValues_[bufferCount_]{};
 		std::optional<DirectX::XMFLOAT4> clearColor_ = DirectX::XMFLOAT4{ 0.f, 0.f, 0.f, 1.f };
+		// depth
+		Microsoft::WRL::ComPtr<ID3D12Resource> pDepthBuffer_;
+		Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> pDsvDescriptorHeap_;
 		// pipey
 		D3D12_RECT scissorRect_{};
 		D3D12_VIEWPORT viewport_{};
