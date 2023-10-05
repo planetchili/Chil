@@ -85,6 +85,7 @@ namespace chil::gfx::d12
 				CD3DX12_PIPELINE_STATE_STREAM_PS PS;
 				CD3DX12_PIPELINE_STATE_STREAM_RENDER_TARGET_FORMATS RTVFormats;
 				CD3DX12_PIPELINE_STATE_STREAM_BLEND_DESC Blend;
+				CD3DX12_PIPELINE_STATE_STREAM_DEPTH_STENCIL_FORMAT DSVFormat;
 			} pipelineStateStream;
 
 			// define the Vertex input layout 
@@ -124,6 +125,7 @@ namespace chil::gfx::d12
 				blendDesc.RenderTarget[0].RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
 				return blendDesc;
 			}();
+			pipelineStateStream.DSVFormat = DXGI_FORMAT_D32_FLOAT;
 
 			// building the pipeline state object 
 			const D3D12_PIPELINE_STATE_STREAM_DESC pipelineStateStreamDesc = {
