@@ -63,7 +63,7 @@ int WINAPI wWinMain(
 			std::shared_ptr<gfx::d12::SpriteFrame> pFrame,
 			std::shared_ptr<gfx::d12::SpriteFrame> pFrame2)
 		{
-			const unsigned int nCharacters = 64'000;
+			const unsigned int nCharacters = 320'000;
 			const auto outputDims = spa::DimensionsI{ 1280, 720 };
 			//// do construction
 			// make window
@@ -122,22 +122,22 @@ int WINAPI wWinMain(
 			};
 			// frame variables
 			float t = 0.f;
-			std::vector<Character> characters;
-			//const auto characters =
-			//	vi::iota(0u, nCharacters) |
-			//	vi::transform([
-			//		pFrame,
-			//		rne = std::minstd_rand0{ std::random_device{}() },
-			//		posDist = std::uniform_real_distribution<float>{ -360.f, 360.f },
-			//		radDist = std::uniform_real_distribution<float>{ 0.f, 200.f },
-			//		perDist = std::uniform_real_distribution<float>{ 1.f, 20.f },
-			//		phaDist = std::uniform_real_distribution<float>{ 0.f, 2.f * std::numbers::pi_v<float> },
-			//		perDist2 = std::uniform_real_distribution<float>{ 1.f, 20.f },
-			//		phaDist2 = std::uniform_real_distribution<float>{ 0.f, 2.f * std::numbers::pi_v<float> }
-			//	] (auto) mutable -> Character {
-			//		return { pFrame, { posDist(rne), posDist(rne) }, radDist(rne), perDist(rne), phaDist(rne), perDist2(rne), phaDist2(rne) };
-			//	}) |
-			//	rn::to<std::vector>();
+			//std::vector<Character> characters;
+			const auto characters =
+				vi::iota(0u, nCharacters) |
+				vi::transform([
+					pFrame,
+					rne = std::minstd_rand0{ 0 },
+					posDist = std::uniform_real_distribution<float>{ -360.f, 360.f },
+					radDist = std::uniform_real_distribution<float>{ 0.f, 200.f },
+					perDist = std::uniform_real_distribution<float>{ 1.f, 20.f },
+					phaDist = std::uniform_real_distribution<float>{ 0.f, 2.f * std::numbers::pi_v<float> },
+					perDist2 = std::uniform_real_distribution<float>{ 1.f, 20.f },
+					phaDist2 = std::uniform_real_distribution<float>{ 0.f, 2.f * std::numbers::pi_v<float> }
+				] (auto) mutable -> Character {
+					return { pFrame, { posDist(rne), posDist(rne) }, radDist(rne), perDist(rne), phaDist(rne), perDist2(rne), phaDist2(rne) };
+				}) |
+				rn::to<std::vector>();
 			// do render loop while window not closing
 			spa::Vec2F pos{};
 			float rot = 0.f;
@@ -147,23 +147,24 @@ int WINAPI wWinMain(
 					if (e->type == win::KeyEvent::Type::Release) continue;
 					switch (e->code) {
 					case VK_SPACE:
-						[
-							&characters,
-								pFrame,
-								rne = std::minstd_rand0{ std::random_device{}() },
-								posDist = std::uniform_real_distribution<float>{ -360.f, 360.f },
-								radDist = std::uniform_real_distribution<float>{ 0.f, 200.f },
-								perDist = std::uniform_real_distribution<float>{ 1.f, 20.f },
-								phaDist = std::uniform_real_distribution<float>{ 0.f, 2.f * std::numbers::pi_v<float> },
-								perDist2 = std::uniform_real_distribution<float>{ 1.f, 20.f },
-								phaDist2 = std::uniform_real_distribution<float>{ 0.f, 2.f * std::numbers::pi_v<float> }
-						] () mutable {
-							characters.push_back(Character{
-								pFrame, { posDist(rne), posDist(rne) },
-								radDist(rne), perDist(rne), phaDist(rne),
-								perDist2(rne), phaDist2(rne)
-							});
-						}();
+						//[
+						//	&characters,
+						//		pFrame,
+						//		rne = std::minstd_rand0{ std::random_device{}() },
+						//		posDist = std::uniform_real_distribution<float>{ -360.f, 360.f },
+						//		radDist = std::uniform_real_distribution<float>{ 0.f, 200.f },
+						//		perDist = std::uniform_real_distribution<float>{ 1.f, 20.f },
+						//		phaDist = std::uniform_real_distribution<float>{ 0.f, 2.f * std::numbers::pi_v<float> },
+						//		perDist2 = std::uniform_real_distribution<float>{ 1.f, 20.f },
+						//		phaDist2 = std::uniform_real_distribution<float>{ 0.f, 2.f * std::numbers::pi_v<float> }
+						//] () mutable {
+						//	characters.push_back(Character{
+						//		pFrame, { posDist(rne), posDist(rne) },
+						//		radDist(rne), perDist(rne), phaDist(rne),
+						//		perDist2(rne), phaDist2(rne)
+						//	});
+						//}();
+						//break;
 						break;
 					}
 				}

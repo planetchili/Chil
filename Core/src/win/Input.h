@@ -1,5 +1,8 @@
 #pragma once
+#pragma warning(push)
+#pragma warning(disable: 28182 26495)
 #include <concurrentqueue/concurrentqueue.h>
+#pragma warning(pop)
 #include <optional>
 #include <array>
 #include <atomic>
@@ -52,7 +55,7 @@ namespace chil::win
 		}
 		void PutEvent(KeyEvent e) override
 		{
-			queue_.enqueue(e);
+			queue_.try_enqueue(e);
 			keys_[e.code] = e.type == KeyEvent::Type::Press;
 		}
 	private:
