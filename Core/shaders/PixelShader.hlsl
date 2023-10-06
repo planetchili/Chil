@@ -3,5 +3,8 @@ SamplerState samp : register(s0);
 
 float4 main(float2 uv : TEXCOORD, uint atlasIndex : ATLASINDEX) : SV_TARGET
 {
-	return textures[atlasIndex].Sample(samp, uv);
+    const float4 pixel = textures[atlasIndex].Sample(samp, uv);
+    if (pixel.a == 0.f)
+        discard;
+	return pixel;
 }
