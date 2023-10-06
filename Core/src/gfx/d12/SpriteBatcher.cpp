@@ -84,7 +84,6 @@ namespace chil::gfx::d12
 				CD3DX12_PIPELINE_STATE_STREAM_VS VS;
 				CD3DX12_PIPELINE_STATE_STREAM_PS PS;
 				CD3DX12_PIPELINE_STATE_STREAM_RENDER_TARGET_FORMATS RTVFormats;
-				CD3DX12_PIPELINE_STATE_STREAM_BLEND_DESC Blend;
 				CD3DX12_PIPELINE_STATE_STREAM_DEPTH_STENCIL_FORMAT DSVFormat;
 			} pipelineStateStream;
 
@@ -113,18 +112,6 @@ namespace chil::gfx::d12
 				.RTFormats{ DXGI_FORMAT_R8G8B8A8_UNORM },
 				.NumRenderTargets = 1,
 			};
-			pipelineStateStream.Blend = [] {
-				CD3DX12_BLEND_DESC blendDesc{ D3D12_DEFAULT };
-				blendDesc.RenderTarget[0].BlendEnable = TRUE;
-				blendDesc.RenderTarget[0].SrcBlend = D3D12_BLEND_SRC_ALPHA;
-				blendDesc.RenderTarget[0].DestBlend = D3D12_BLEND_INV_SRC_ALPHA;
-				blendDesc.RenderTarget[0].BlendOp = D3D12_BLEND_OP_ADD;
-				blendDesc.RenderTarget[0].SrcBlendAlpha = D3D12_BLEND_ONE;
-				blendDesc.RenderTarget[0].DestBlendAlpha = D3D12_BLEND_ZERO;
-				blendDesc.RenderTarget[0].BlendOpAlpha = D3D12_BLEND_OP_ADD;
-				blendDesc.RenderTarget[0].RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
-				return blendDesc;
-			}();
 			pipelineStateStream.DSVFormat = DXGI_FORMAT_D32_FLOAT;
 
 			// building the pipeline state object 
