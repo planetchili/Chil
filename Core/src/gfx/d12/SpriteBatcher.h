@@ -125,6 +125,9 @@ namespace chil::gfx::d12
 		{
 			DirectX::XMFLOAT3 position;
 			DirectX::XMFLOAT2 tc;
+			DirectX::XMFLOAT2 translation;
+			DirectX::XMFLOAT2 scale;
+			float rotation;
 			USHORT atlasIndex;
 		};
 		struct FrameResource_

@@ -89,9 +89,12 @@ namespace chil::gfx::d12
 
 			// define the Vertex input layout 
 			const D3D12_INPUT_ELEMENT_DESC inputLayout[] = {
-				{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-				{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-				{ "ATLASINDEX", 0, DXGI_FORMAT_R16_UINT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+				{ "POSITION",		0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+				{ "TEXCOORD",		0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+				{ "TRANSLATION",	0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+				{ "SCALE",			0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+				{ "ROTATION",		0, DXGI_FORMAT_R32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+				{ "ATLASINDEX",		0, DXGI_FORMAT_R16_UINT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
 			};
 
 			// Load the vertex shader. 
@@ -192,20 +195,12 @@ namespace chil::gfx::d12
 		const auto atlasIndex32 = (UINT)atlasIndex;
 
 		// starting dest vertice vectors
-		const XMVECTOR posSimd[4]{
-			XMVectorSet(0.f, 0.f, 0.f, 1.f),
-			XMVectorSet(destPixelDims.width, 0.f, 0.f, 1.f),
-			XMVectorSet(0.f, -destPixelDims.height, 0.f, 1.f),
-			XMVectorSet(destPixelDims.width, -destPixelDims.height, 0.f, 1.f),
+		const DirectX::XMFLOAT3 posArray[4]{
+			{ 0.f, 0.f, 0.f },
+			{ destPixelDims.width, 0.f, 0.f },
+			{ 0.f, -destPixelDims.height, 0.f },
+			{ destPixelDims.width, -destPixelDims.height, 0.f },
 		};
-
-		// xform: scale
-		auto transform = XMMatrixScaling(scale.x, scale.y, 1.f);
-		// xform: rotate
-		transform = transform * XMMatrixRotationZ(rot);
-		// xform: translate
-		transform = transform * XMMatrixTranslation(pos.x, pos.y, 0.f);
-		// TODO: (maybe) xform: camera
 		
 		// update index count
 		nIndices_ += 6;
@@ -219,8 +214,10 @@ namespace chil::gfx::d12
 		// write vertex destination and atlas index
 		for (int i = 0; i < 4; i++) {
 			auto& vtx = pVertexUpload_[nVertices_ + i];
-			const auto dest = XMVector4Transform(posSimd[i], transform);
-			XMStoreFloat3(&vtx.position, dest);
+			vtx.position = posArray[i];
+			vtx.rotation = rot;
+			vtx.scale = { scale.x, scale.y };
+			vtx.translation = { pos.x, pos.y };
 			vtx.atlasIndex = atlasIndex32;
 		}
 

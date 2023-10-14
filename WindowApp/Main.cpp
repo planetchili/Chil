@@ -63,7 +63,7 @@ int WINAPI wWinMain(
 			std::shared_ptr<gfx::d12::SpriteFrame> pFrame,
 			std::shared_ptr<gfx::d12::SpriteFrame> pFrame2)
 		{
-			const unsigned int nCharacters = 320'000;
+			const unsigned int nCharacters = 4;
 			const auto outputDims = spa::DimensionsI{ 1280, 720 };
 			//// do construction
 			// make window
