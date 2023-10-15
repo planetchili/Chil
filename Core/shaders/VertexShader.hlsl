@@ -23,10 +23,10 @@ Output main(
     float s, c;
     sincos(rot, s, c);
     const matrix objTransform = {
-        scale.x * c, -scale.y * s, 0, tl.x,
-        scale.x * s, scale.y * c, 0, tl.y,
+        scale.x * c, scale.x * s, 0, 0,
+        -scale.y * s, scale.y * c, 0, 0,
         0, 0, 1, 0,
-        0, 0, 0, 1
+        tl.x, tl.y, 0, 1
     };
     
     // concatenate object and camera matrices
