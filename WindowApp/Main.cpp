@@ -63,7 +63,7 @@ int WINAPI wWinMain(
 			std::shared_ptr<gfx::d12::SpriteFrame> pFrame,
 			std::shared_ptr<gfx::d12::SpriteFrame> pFrame2)
 		{
-			const unsigned int nCharacters = 4;
+			const unsigned int nCharacters = 450'000;
 			const auto outputDims = spa::DimensionsI{ 1280, 720 };
 			//// do construction
 			// make window
@@ -205,7 +205,7 @@ int WINAPI wWinMain(
 				pPane_->SubmitCommandList(batcher.EndBatch());
 				pPane_->EndFrame();
 				// update time
-				// t += 0.01f;
+				t += 0.01f;
 			}
 			pPane_->FlushQueues();
 
