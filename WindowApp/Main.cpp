@@ -44,8 +44,8 @@ int WINAPI wWinMain(
 		ActiveWindow(int index,
 			std::shared_ptr<gfx::d12::Device> pDevice,
 			std::shared_ptr<gfx::d12::SpriteCodex> pSpriteCodex,
-			std::shared_ptr<gfx::d12::SpriteFrame> pFrame,
-			std::shared_ptr<gfx::d12::SpriteFrame> pFrame2)
+			std::shared_ptr<gfx::d12::ISpriteFrame> pFrame,
+			std::shared_ptr<gfx::d12::ISpriteFrame> pFrame2)
 			:
 			thread_{ &ActiveWindow::Kernel_, this, index, std::move(pDevice), std::move(pSpriteCodex), std::move(pFrame), std::move(pFrame2) }
 		{
@@ -60,8 +60,8 @@ int WINAPI wWinMain(
 		void Kernel_(int index,
 			std::shared_ptr<gfx::d12::Device> pDevice,
 			std::shared_ptr<gfx::d12::SpriteCodex> pSpriteCodex,
-			std::shared_ptr<gfx::d12::SpriteFrame> pFrame,
-			std::shared_ptr<gfx::d12::SpriteFrame> pFrame2)
+			std::shared_ptr<gfx::d12::ISpriteFrame> pFrame,
+			std::shared_ptr<gfx::d12::ISpriteFrame> pFrame2)
 		{
 #ifdef NDEBUG
 			const unsigned int nCharacters = 450'000;
@@ -94,7 +94,7 @@ int WINAPI wWinMain(
 			class Character
 			{
 			public:
-				Character(std::shared_ptr<gfx::d12::SpriteFrame> pSpriteFrame,
+				Character(std::shared_ptr<gfx::d12::ISpriteFrame> pSpriteFrame,
 					spa::Vec2F center, float radius,
 					float periodOrbit, float phaseOrbit,
 					float periodRotate, float phaseRotate
@@ -116,7 +116,7 @@ int WINAPI wWinMain(
 					pSpriteFrame_->DrawToBatch(batcher, pos, thetaRotate);
 				}
 			private:
-				std::shared_ptr<gfx::d12::SpriteFrame> pSpriteFrame_;
+				std::shared_ptr<gfx::d12::ISpriteFrame> pSpriteFrame_;
 				spa::Vec2F center_;
 				float radius_;
 				float periodOrbit_;
@@ -246,10 +246,10 @@ int WINAPI wWinMain(
 		pSpriteCodex->AddSpriteAtlas(loader.LoadTexture(L"sprote-shiet-bak.png").get());
 		pSpriteCodex->AddSpriteAtlas(loader.LoadTexture(L"sprote-shiet.png").get());
 		// create sprite frame
-		auto pSpriteFrame = std::make_shared<gfx::d12::SpriteFrame>(
+		std::shared_ptr<gfx::d12::ISpriteFrame> pSpriteFrame = std::make_shared<gfx::d12::SpriteFrame>(
 			spa::DimensionsI{ 8, 4 }, spa::Vec2I{ 3, 1 }, 0, pSpriteCodex
 		);
-		auto pSpriteFrame2 = std::make_shared<gfx::d12::SpriteFrame>(
+		std::shared_ptr<gfx::d12::ISpriteFrame> pSpriteFrame2 = std::make_shared<gfx::d12::SpriteFrame>(
 			spa::RectF::FromPointAndDimensions({ 0, 0 }, { 100, 200 }), 1, pSpriteCodex
 		); 
 
