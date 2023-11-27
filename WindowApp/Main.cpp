@@ -63,7 +63,11 @@ int WINAPI wWinMain(
 			std::shared_ptr<gfx::d12::SpriteFrame> pFrame,
 			std::shared_ptr<gfx::d12::SpriteFrame> pFrame2)
 		{
+#ifdef NDEBUG
 			const unsigned int nCharacters = 450'000;
+#else
+			const unsigned int nCharacters = 5'000;
+#endif
 			const auto outputDims = spa::DimensionsI{ 1280, 720 };
 			//// do construction
 			// make window
@@ -169,27 +173,33 @@ int WINAPI wWinMain(
 					}
 				}
 				if (keyboard->KeyIsPressed('W')) {
-					pos.y -= 1.f;
+					constexpr auto deg90 = float(std::numbers::pi / 2.);
+					auto up = spa::Vec2F{ std::cos(rot + deg90), std::sin(rot + deg90) };
+					pos += up * 10.f;
 				}
-				if (keyboard->KeyIsPressed('S')) {
-					pos.y += 1.f;
+				else if (keyboard->KeyIsPressed('S')) {
+					constexpr auto deg90 = float(std::numbers::pi / 2.);
+					auto up = spa::Vec2F{ std::cos(rot + deg90), std::sin(rot + deg90) };
+					pos -= up * 10.f;
 				}
 				if (keyboard->KeyIsPressed('D')) {
-					pos.x -= 1.f;
+					auto right = spa::Vec2F{ std::cos(rot), std::sin(rot) };
+					pos += right * 10.f;
 				}
-				if (keyboard->KeyIsPressed('A')) {
-					pos.x += 1.f;
+				else if (keyboard->KeyIsPressed('A')) {
+					auto right = spa::Vec2F{ std::cos(rot), std::sin(rot) };
+					pos -= right * 10.f;
 				}
 				if (keyboard->KeyIsPressed('Q')) {
 					rot += 0.02f;
 				}
-				if (keyboard->KeyIsPressed('E')) {
+				else if (keyboard->KeyIsPressed('E')) {
 					rot -= 0.02f;
 				}
 				if (keyboard->KeyIsPressed('R')) {
 					scale *= 1.02f;
 				}
-				if (keyboard->KeyIsPressed('F')) {
+				else if (keyboard->KeyIsPressed('F')) {
 					scale /= 1.02f;
 				}
 				batcher.SetCamera(pos, rot, scale);

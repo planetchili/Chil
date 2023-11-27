@@ -167,10 +167,10 @@ namespace chil::gfx::d12
 	{
 		using namespace DirectX;
 
-		// xform: rotate
-		auto transform = XMMatrixRotationZ(rot);
 		// xform: translate
-		transform = transform * XMMatrixTranslation(pos.x, pos.y, 0.f);
+		auto transform = XMMatrixTranslation(-pos.x, -pos.y, 0.f);
+		// xform: rotate
+		transform = transform * XMMatrixRotationZ(-rot);
 		// xform: scale
 		transform = transform * XMMatrixScaling(scale, scale, 1.f);
 		// xform: to ndc
