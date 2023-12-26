@@ -57,12 +57,14 @@ namespace chil::gfx::d12
 		virtual void DrawToBatch(ISpriteBatcher& batch, const spa::Vec2F& pos, float rotation = 0.f, const spa::Vec2F& scale = { 1.f, 1.f }) const = 0;
 	};
 
+	class SpriteBatcher;
+
 	class SpriteFrame VSELECT(: public ISpriteFrame)
 	{
 	public:
 		SpriteFrame(const spa::RectF& frameInPixels, size_t atlasIndex, std::shared_ptr<SpriteCodex> pCodex);
 		SpriteFrame(const spa::DimensionsI& cellDimension, const spa::Vec2I& cellCoordinates, size_t atlasIndex, std::shared_ptr<SpriteCodex> pCodex);
-		void DrawToBatch(ISpriteBatcher& batch, const spa::Vec2F& pos, float rotation = 0.f, const spa::Vec2F& scale = { 1.f, 1.f }) const VOVERRIDE;
+		void DrawToBatch(VINTERFACE(SpriteBatcher)& batch, const spa::Vec2F& pos, float rotation = 0.f, const spa::Vec2F& scale = { 1.f, 1.f }) const VOVERRIDE;
 	private:
 		// we want to preserve pixels from src to dst
 		// we can then draw to dest using src and position ONLY (and optionally scale/rotate)
@@ -112,21 +114,21 @@ namespace chil::gfx::d12
 		std::deque<ResourceEntry_> resourceEntryQueue_;
 	};
 
-	class SpriteBatcher : public ISpriteBatcher
+	class SpriteBatcher VSELECT(: public ISpriteBatcher)
 	{
 	public:
 		SpriteBatcher(const spa::DimensionsI& targetDimensions, std::shared_ptr<IDevice> pDevice,
 			std::shared_ptr<SpriteCodex> pSpriteCodex_, UINT maxSpriteCount = 4000);
 		~SpriteBatcher();
-		void StartBatch(CommandListPair cmd, uint64_t frameFenceValue, uint64_t signaledFenceValue) override;
-		void SetCamera(const spa::Vec2F& pos, float rot, float scale) override;
+		void StartBatch(CommandListPair cmd, uint64_t frameFenceValue, uint64_t signaledFenceValue) VOVERRIDE;
+		void SetCamera(const spa::Vec2F& pos, float rot, float scale) VOVERRIDE;
 		void Draw(size_t atlasIndex,
 			const spa::RectF& srcInTexcoords,
 			const spa::DimensionsF& destPixelDims,
 			const spa::Vec2F& pos,
 			const float rot = 0.f,
-			const spa::Vec2F& scale = { 1.f, 1.f }) override;
-		CommandListPair EndBatch() override;
+			const spa::Vec2F& scale = { 1.f, 1.f }) VOVERRIDE;
+		CommandListPair EndBatch() VOVERRIDE;
 	private:		
 		// types
 		struct Vertex_

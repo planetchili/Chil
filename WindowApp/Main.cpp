@@ -86,7 +86,8 @@ int WINAPI wWinMain(
 				std::make_shared<gfx::d12::CommandQueue>(pDevice)
 			);
 			// make sprite batcher
-			gfx::d12::SpriteBatcher batcher{ outputDims, pDevice, std::move(pSpriteCodex), nCharacters };
+			gfx::d12::SpriteBatcher batcherConcrete{ outputDims, pDevice, std::move(pSpriteCodex), nCharacters };
+			gfx::d12::VINTERFACE(SpriteBatcher)& batcher = batcherConcrete;
 			// signal completion of construction phase
 			constructionSemaphore_.release();
 
@@ -108,7 +109,7 @@ int WINAPI wWinMain(
 					periodRotate_{ periodRotate },
 					phaseRotate_{ phaseRotate }
 				{}
-				void Draw(gfx::d12::SpriteBatcher& batcher, float t) const
+				void Draw(gfx::d12::VINTERFACE(SpriteBatcher)& batcher, float t) const
 				{
 					const auto thetaOrbit = t * periodOrbit_ / (2.f * std::numbers::pi_v<float>) + phaseOrbit_;
 					const auto thetaRotate = t * periodRotate_ / (2.f * std::numbers::pi_v<float>) + phaseRotate_;
