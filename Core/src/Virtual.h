@@ -1,6 +1,6 @@
 #pragma once
 
-// #define VIRTUAL_ACTIVE
+#define VIRTUAL_ACTIVE
 
 #ifdef VIRTUAL_ACTIVE
 #define VVIRTUAL virtual

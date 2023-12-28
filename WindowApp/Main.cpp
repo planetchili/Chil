@@ -9,6 +9,7 @@
 #include <Core/src/gfx/d12/CommandQueue.h>
 #include <Core/src/gfx/d12/ResourceLoader.h>
 #include <Core/src/gfx/d12/SpriteBatcher.h>
+#include "Sprite.h"
 #include <Core/src/win/Input.h>
 #include <format>
 #include <ranges> 
@@ -43,11 +44,9 @@ int WINAPI wWinMain(
 	public:
 		ActiveWindow(int index,
 			std::shared_ptr<gfx::d12::Device> pDevice,
-			std::shared_ptr<gfx::d12::SpriteCodex> pSpriteCodex,
-			std::shared_ptr<gfx::d12::VINTERFACE(SpriteFrame)> pFrame,
-			std::shared_ptr<gfx::d12::VINTERFACE(SpriteFrame)> pFrame2)
+			std::shared_ptr<gfx::d12::SpriteCodex> pSpriteCodex)
 			:
-			thread_{ &ActiveWindow::Kernel_, this, index, std::move(pDevice), std::move(pSpriteCodex), std::move(pFrame), std::move(pFrame2) }
+			thread_{ &ActiveWindow::Kernel_, this, index, std::move(pDevice), std::move(pSpriteCodex) }
 		{
 			constructionSemaphore_.acquire();
 		}
@@ -59,14 +58,12 @@ int WINAPI wWinMain(
 		// functions
 		void Kernel_(int index,
 			std::shared_ptr<gfx::d12::Device> pDevice,
-			std::shared_ptr<gfx::d12::SpriteCodex> pSpriteCodex,
-			std::shared_ptr<gfx::d12::VINTERFACE(SpriteFrame)> pFrame,
-			std::shared_ptr<gfx::d12::VINTERFACE(SpriteFrame)> pFrame2)
+			std::shared_ptr<gfx::d12::SpriteCodex> pSpriteCodex)
 		{
 #ifdef NDEBUG
-			const unsigned int nCharacters = 450'000;
+			const unsigned int nCharacters = 250'000;
 #else
-			const unsigned int nCharacters = 5'000;
+			const unsigned int nCharacters = 50;
 #endif
 			const auto outputDims = spa::DimensionsI{ 1280, 720 };
 			//// do construction
@@ -86,93 +83,40 @@ int WINAPI wWinMain(
 				std::make_shared<gfx::d12::CommandQueue>(pDevice)
 			);
 			// make sprite batcher
-			gfx::d12::SpriteBatcher batcherConcrete{ outputDims, pDevice, std::move(pSpriteCodex), nCharacters };
+			gfx::d12::SpriteBatcher batcherConcrete{ outputDims, pDevice, pSpriteCodex, nCharacters };
 			gfx::d12::VINTERFACE(SpriteBatcher)& batcher = batcherConcrete;
 			// signal completion of construction phase
 			constructionSemaphore_.release();
 
-			// character
-			class Character
-			{
-			public:
-				Character(std::shared_ptr<gfx::d12::VINTERFACE(SpriteFrame)> pSpriteFrame,
-					spa::Vec2F center, float radius,
-					float periodOrbit, float phaseOrbit,
-					float periodRotate, float phaseRotate
-					)
-					:
-					pSpriteFrame_{ std::move(pSpriteFrame) },
-					center_{ center },
-					radius_{ radius },
-					periodOrbit_{ periodOrbit },
-					phaseOrbit_{ phaseOrbit },
-					periodRotate_{ periodRotate },
-					phaseRotate_{ phaseRotate }
-				{}
-				void Draw(gfx::d12::VINTERFACE(SpriteBatcher)& batcher, float t) const
-				{
-					const auto thetaOrbit = t * periodOrbit_ / (2.f * std::numbers::pi_v<float>) + phaseOrbit_;
-					const auto thetaRotate = t * periodRotate_ / (2.f * std::numbers::pi_v<float>) + phaseRotate_;
-					const auto pos = center_ + spa::Vec2F{ std::cos(thetaOrbit), std::sin(thetaOrbit) } * radius_;
-					pSpriteFrame_->DrawToBatch(batcher, pos, thetaRotate);
-				}
-			private:
-				std::shared_ptr<gfx::d12::VINTERFACE(SpriteFrame)> pSpriteFrame_;
-				spa::Vec2F center_;
-				float radius_;
-				float periodOrbit_;
-				float phaseOrbit_;
-				float periodRotate_;
-				float phaseRotate_;
-			};
-			// frame variables
-			float t = 0.f;
-			//std::vector<Character> characters;
+			// random engine
+			std::minstd_rand0 rne;
+			// sprite blueprints
+			const auto pBlueprint = std::make_shared<SpriteBlueprint>(pSpriteCodex, 0, 8, 4);
+			// sprite instances
 			const auto characters =
 				vi::iota(0u, nCharacters) |
 				vi::transform([
-					pFrame,
-					rne = std::minstd_rand0{ 0 },
+					pBlueprint,
+					rne,
 					posDist = std::uniform_real_distribution<float>{ -360.f, 360.f },
-					radDist = std::uniform_real_distribution<float>{ 0.f, 200.f },
-					perDist = std::uniform_real_distribution<float>{ 1.f, 20.f },
-					phaDist = std::uniform_real_distribution<float>{ 0.f, 2.f * std::numbers::pi_v<float> },
-					perDist2 = std::uniform_real_distribution<float>{ 1.f, 20.f },
-					phaDist2 = std::uniform_real_distribution<float>{ 0.f, 2.f * std::numbers::pi_v<float> }
-				] (auto) mutable -> Character {
-					return { pFrame, { posDist(rne), posDist(rne) }, radDist(rne), perDist(rne), phaDist(rne), perDist2(rne), phaDist2(rne) };
+					speedDist = std::uniform_real_distribution<float>{ 240.f, 600.f },
+					angleDist = std::uniform_real_distribution<float>{ 0.f, 2.f * std::numbers::pi_v<float> }
+				] (auto) mutable -> std::unique_ptr<VINTERFACE(SpriteInstance)> {
+					return std::make_unique<SpriteInstance>(pBlueprint,
+						spa::Vec2F{ posDist(rne), posDist(rne) },
+						spa::Vec2F{ 1.f, 0.f }.GetRotated(angleDist(rne)) * speedDist(rne)
+					);
 				}) |
 				rn::to<std::vector>();
-			// do render loop while window not closing
+
+			// camera state variables
 			spa::Vec2F pos{};
 			float rot = 0.f;
 			float scale = 1.f;
+
+			// do render loop while window not closing
 			while (!pWindow_->IsClosing()) {
-				while (const auto e = keyboard->GetEvent()) {
-					if (e->type == win::KeyEvent::Type::Release) continue;
-					switch (e->code) {
-					case VK_SPACE:
-						//[
-						//	&characters,
-						//		pFrame,
-						//		rne = std::minstd_rand0{ std::random_device{}() },
-						//		posDist = std::uniform_real_distribution<float>{ -360.f, 360.f },
-						//		radDist = std::uniform_real_distribution<float>{ 0.f, 200.f },
-						//		perDist = std::uniform_real_distribution<float>{ 1.f, 20.f },
-						//		phaDist = std::uniform_real_distribution<float>{ 0.f, 2.f * std::numbers::pi_v<float> },
-						//		perDist2 = std::uniform_real_distribution<float>{ 1.f, 20.f },
-						//		phaDist2 = std::uniform_real_distribution<float>{ 0.f, 2.f * std::numbers::pi_v<float> }
-						//] () mutable {
-						//	characters.push_back(Character{
-						//		pFrame, { posDist(rne), posDist(rne) },
-						//		radDist(rne), perDist(rne), phaDist(rne),
-						//		perDist2(rne), phaDist2(rne)
-						//	});
-						//}();
-						//break;
-						break;
-					}
-				}
+				// camera movement controls
 				if (keyboard->KeyIsPressed('W')) {
 					constexpr auto deg90 = float(std::numbers::pi / 2.);
 					auto up = spa::Vec2F{ std::cos(rot + deg90), std::sin(rot + deg90) };
@@ -204,19 +148,24 @@ int WINAPI wWinMain(
 					scale /= 1.02f;
 				}
 				batcher.SetCamera(pos, rot, scale);
+
+				// update sprites
+				for (const auto& pc : characters) {
+					pc->Update(0.001f, rne);
+				}
+
+				// render frame
 				pPane_->BeginFrame();
 				batcher.StartBatch(
 					pPane_->GetCommandList(),
 					pPane_->GetFrameFenceValue(),
 					pPane_->GetSignalledFenceValue()
 				);
-				for (const auto& c : characters) {
-					c.Draw(batcher, t);
+				for (const auto& pc : characters) {
+					pc->Draw(batcher);
 				}
 				pPane_->SubmitCommandList(batcher.EndBatch());
 				pPane_->EndFrame();
-				// update time
-				t += 0.01f;
 			}
 			pPane_->FlushQueues();
 
@@ -245,18 +194,10 @@ int WINAPI wWinMain(
 		// load texture into sprite codex
 		gfx::d12::ResourceLoader loader{ pDevice };
 		pSpriteCodex->AddSpriteAtlas(loader.LoadTexture(L"sprote-shiet-bak.png").get());
-		pSpriteCodex->AddSpriteAtlas(loader.LoadTexture(L"sprote-shiet.png").get());
-		// create sprite frame
-		std::shared_ptr<gfx::d12::VINTERFACE(SpriteFrame)> pSpriteFrame = std::make_shared<gfx::d12::SpriteFrame>(
-			spa::DimensionsI{ 8, 4 }, spa::Vec2I{ 3, 1 }, 0, pSpriteCodex
-		);
-		std::shared_ptr<gfx::d12::VINTERFACE(SpriteFrame)> pSpriteFrame2 = std::make_shared<gfx::d12::SpriteFrame>(
-			spa::RectF::FromPointAndDimensions({ 0, 0 }, { 100, 200 }), 1, pSpriteCodex
-		); 
 
 		std::vector<std::unique_ptr<ActiveWindow>> windows;
 		for (int i = 0; i < 1; i++) {
-			windows.push_back(std::make_unique<ActiveWindow>(i, pDevice, pSpriteCodex, pSpriteFrame, pSpriteFrame2));
+			windows.push_back(std::make_unique<ActiveWindow>(i, pDevice, pSpriteCodex));
 		}
 
 		float c = 0;
