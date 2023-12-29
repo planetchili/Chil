@@ -186,13 +186,15 @@ int WINAPI wWinMain(
 							for (const auto& ps : spritePtrRange) {
 								ps->Draw(*pBatcher);
 							}
-							pPane_->SubmitCommandList(pBatcher->EndBatch());
 						}, batch);
 					}) | rn::to<std::vector>();
 				}
 				const auto durationSpriteDraw = hrclock::now() - markStartSpriteDraw;
 				const auto spriteDrawMs = std::chrono::duration<float, std::milli>(durationSpriteDraw).count();
 
+				for (auto& pBatcher : batchers) {
+					pPane_->SubmitCommandList(pBatcher->EndBatch());
+				}
 				pPane_->EndFrame();
 
 				// output benching information
