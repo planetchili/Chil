@@ -16,10 +16,12 @@
 #include <semaphore>
 #include <numbers>
 #include <random>
+#include <chrono>
 
 using namespace chil;
 using namespace std::string_literals;
 using namespace std::chrono_literals;
+using hrclock = std::chrono::high_resolution_clock;
 namespace rn = std::ranges;
 namespace vi = rn::views;
 
@@ -150,9 +152,12 @@ int WINAPI wWinMain(
 				batcher.SetCamera(pos, rot, scale);
 
 				// update sprites
+				const auto markStartSpriteUpdate = hrclock::now();
 				for (const auto& pc : characters) {
 					pc->Update(0.001f, rne);
 				}
+				const auto durationSpriteUpdate = hrclock::now() - markStartSpriteUpdate;
+				const auto spriteUpdateMs = std::chrono::duration<float, std::milli>(durationSpriteUpdate).count();
 
 				// render frame
 				pPane_->BeginFrame();
@@ -161,11 +166,19 @@ int WINAPI wWinMain(
 					pPane_->GetFrameFenceValue(),
 					pPane_->GetSignalledFenceValue()
 				);
+
+				const auto markStartSpriteDraw = hrclock::now();
 				for (const auto& pc : characters) {
 					pc->Draw(batcher);
 				}
+				const auto durationSpriteDraw = hrclock::now() - markStartSpriteDraw;
+				const auto spriteDrawMs = std::chrono::duration<float, std::milli>(durationSpriteDraw).count();
+
 				pPane_->SubmitCommandList(batcher.EndBatch());
 				pPane_->EndFrame();
+
+				// output benching information
+				OutputDebugStringA(std::format("s-up [{:>8.4f}ms]  s-draw [{:>8.4f}ms]\n", spriteUpdateMs, spriteDrawMs).c_str());
 			}
 			pPane_->FlushQueues();
 
