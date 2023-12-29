@@ -179,20 +179,16 @@ int WINAPI wWinMain(
 				}
 
 				const auto markStartSpriteDraw = hrclock::now();
-				//auto drawFutures = spriteRanges | vi::transform([&](auto&& spritePtrRange) {
-				//	return std::async([&](auto&& spritePtrRange) {
-				//		for (const auto& ps : spritePtrRange) {
-				//			ps->Draw(batcher);
-				//		}
-				//		pPane_->SubmitCommandList(batcher.EndBatch());
-				//	}, spritePtrRange);
-				//}) | rn::to<std::vector>();
-				//for (auto& f : drawFutures) f.wait();
-				for (auto&& [pBatcher, spritePtrRange] : batches) {
-					for (const auto& ps : spritePtrRange) {
-						ps->Draw(*pBatcher);
-					}
-					pPane_->SubmitCommandList(pBatcher->EndBatch());
+				{
+					auto drawFutures = batches | vi::transform([&](auto&& batch) {
+						return std::async([&](auto&& batch) {
+							auto&& [pBatcher, spritePtrRange] = batch;
+							for (const auto& ps : spritePtrRange) {
+								ps->Draw(*pBatcher);
+							}
+							pPane_->SubmitCommandList(pBatcher->EndBatch());
+						}, batch);
+					}) | rn::to<std::vector>();
 				}
 				const auto durationSpriteDraw = hrclock::now() - markStartSpriteDraw;
 				const auto spriteDrawMs = std::chrono::duration<float, std::milli>(durationSpriteDraw).count();
