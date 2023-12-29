@@ -65,7 +65,7 @@ int WINAPI wWinMain(
 #ifdef NDEBUG
 			const unsigned int nCharacters = 250'000;
 #else
-			const unsigned int nCharacters = 50;
+			const unsigned int nCharacters = 500;
 #endif
 			const auto outputDims = spa::DimensionsI{ 1280, 720 };
 			//// do construction
@@ -84,9 +84,14 @@ int WINAPI wWinMain(
 				pDevice,
 				std::make_shared<gfx::d12::CommandQueue>(pDevice)
 			);
-			// make sprite batcher
-			gfx::d12::SpriteBatcher batcherConcrete{ outputDims, pDevice, pSpriteCodex, nCharacters };
-			gfx::d12::VINTERFACE(SpriteBatcher)& batcher = batcherConcrete;
+			// make sprite batchers
+			constexpr size_t nBatches = 4;
+			std::vector<std::unique_ptr<gfx::d12::VINTERFACE(SpriteBatcher)>> batchers;
+			for (auto dum : vi::iota(0u, nBatches)) {
+				batchers.push_back(std::make_unique<gfx::d12::SpriteBatcher>(
+					outputDims, pDevice, pSpriteCodex, UINT(nCharacters / nBatches + 1)
+				));
+			}
 			// signal completion of construction phase
 			constructionSemaphore_.release();
 
@@ -115,6 +120,8 @@ int WINAPI wWinMain(
 			spa::Vec2F pos{};
 			float rot = 0.f;
 			float scale = 1.f;
+
+			auto batches = vi::zip(batchers, characters | vi::chunk(characters.size() / batchers.size() + 1));
 
 			// do render loop while window not closing
 			while (!pWindow_->IsClosing()) {
@@ -149,7 +156,9 @@ int WINAPI wWinMain(
 				else if (keyboard->KeyIsPressed('F')) {
 					scale /= 1.02f;
 				}
-				batcher.SetCamera(pos, rot, scale);
+				for (auto& pBatcher : batchers) {
+					pBatcher->SetCamera(pos, rot, scale);
+				}
 
 				// update sprites
 				const auto markStartSpriteUpdate = hrclock::now();
@@ -161,20 +170,33 @@ int WINAPI wWinMain(
 
 				// render frame
 				pPane_->BeginFrame();
-				batcher.StartBatch(
-					pPane_->GetCommandList(),
-					pPane_->GetFrameFenceValue(),
-					pPane_->GetSignalledFenceValue()
-				);
+				for (auto& pBatcher : batchers) {
+					pBatcher->StartBatch(
+						pPane_->GetCommandList(),
+						pPane_->GetFrameFenceValue(),
+						pPane_->GetSignalledFenceValue()
+					);
+				}
 
 				const auto markStartSpriteDraw = hrclock::now();
-				for (const auto& pc : characters) {
-					pc->Draw(batcher);
+				//auto drawFutures = spriteRanges | vi::transform([&](auto&& spritePtrRange) {
+				//	return std::async([&](auto&& spritePtrRange) {
+				//		for (const auto& ps : spritePtrRange) {
+				//			ps->Draw(batcher);
+				//		}
+				//		pPane_->SubmitCommandList(batcher.EndBatch());
+				//	}, spritePtrRange);
+				//}) | rn::to<std::vector>();
+				//for (auto& f : drawFutures) f.wait();
+				for (auto&& [pBatcher, spritePtrRange] : batches) {
+					for (const auto& ps : spritePtrRange) {
+						ps->Draw(*pBatcher);
+					}
+					pPane_->SubmitCommandList(pBatcher->EndBatch());
 				}
 				const auto durationSpriteDraw = hrclock::now() - markStartSpriteDraw;
 				const auto spriteDrawMs = std::chrono::duration<float, std::milli>(durationSpriteDraw).count();
 
-				pPane_->SubmitCommandList(batcher.EndBatch());
 				pPane_->EndFrame();
 
 				// output benching information
