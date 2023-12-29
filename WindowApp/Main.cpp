@@ -162,8 +162,15 @@ int WINAPI wWinMain(
 
 				// update sprites
 				const auto markStartSpriteUpdate = hrclock::now();
-				for (const auto& pc : characters) {
-					pc->Update(0.001f, rne);
+				{
+					auto drawFutures = batches | vi::transform([&](auto&& batch) {
+						return std::async([&](auto&& batch) {
+							auto&& [pBatcher, spritePtrRange] = batch;
+							for (const auto& ps : spritePtrRange) {
+								ps->Update(0.001f, rne);
+							}
+						}, batch);
+					}) | rn::to<std::vector>();
 				}
 				const auto durationSpriteUpdate = hrclock::now() - markStartSpriteUpdate;
 				const auto spriteUpdateMs = std::chrono::duration<float, std::milli>(durationSpriteUpdate).count();
