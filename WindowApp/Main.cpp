@@ -35,6 +35,8 @@ void Boot()
 	win::Boot();
 }
 
+constexpr int nSheets = 32;
+
 int WINAPI wWinMain(
 	HINSTANCE hInstance,
 	HINSTANCE hPrevInstance,
@@ -98,18 +100,21 @@ int WINAPI wWinMain(
 			// random engine
 			std::minstd_rand0 rne;
 			// sprite blueprints
-			const auto pBlueprint = std::make_shared<SpriteBlueprint>(pSpriteCodex, 0, 8, 4);
+			std::vector<std::shared_ptr<VINTERFACE(SpriteBlueprint)>> blueprints;
+			for (int i = 0; i < nSheets; i++) {
+				blueprints.push_back(std::make_shared<SpriteBlueprint>(pSpriteCodex, i, 8, 4));
+			}
 			// sprite instances
 			const auto characters =
 				vi::iota(0u, nCharacters) |
 				vi::transform([
-					pBlueprint,
-					rne,
+					&blueprints,
+					&rne,
 					posDist = std::uniform_real_distribution<float>{ -360.f, 360.f },
 					speedDist = std::uniform_real_distribution<float>{ 240.f, 600.f },
 					angleDist = std::uniform_real_distribution<float>{ 0.f, 2.f * std::numbers::pi_v<float> }
-				] (auto) mutable -> std::unique_ptr<VINTERFACE(SpriteInstance)> {
-					return std::make_unique<SpriteInstance>(pBlueprint,
+				] (uint32_t i) mutable -> std::unique_ptr<VINTERFACE(SpriteInstance)> {
+					return std::make_unique<SpriteInstance>(blueprints[i % nSheets],
 						spa::Vec2F{ posDist(rne), posDist(rne) },
 						spa::Vec2F{ 1.f, 0.f }.GetRotated(angleDist(rne)) * speedDist(rne)
 					);
@@ -230,10 +235,18 @@ int WINAPI wWinMain(
 		// create device
 		auto pDevice = std::make_shared<gfx::d12::Device>();
 		// create sprite codex
-		auto pSpriteCodex = std::make_shared<gfx::d12::SpriteCodex>(pDevice);
+		auto pSpriteCodex = std::make_shared<gfx::d12::SpriteCodex>(pDevice, nSheets);
 		// load texture into sprite codex
 		gfx::d12::ResourceLoader loader{ pDevice };
-		pSpriteCodex->AddSpriteAtlas(loader.LoadTexture(L"sprote-shiet-bak.png").get());
+		{
+			std::vector<decltype(loader.LoadTexture(L""))> futures;
+			for (int i = 0; i < nSheets; i++) {
+				futures.push_back(loader.LoadTexture(std::format(L"sprote-shiet-{}.png", i)));
+			}
+			for (auto& f : futures) {
+				pSpriteCodex->AddSpriteAtlas(f.get());
+			}
+		}
 
 		std::vector<std::unique_ptr<ActiveWindow>> windows;
 		for (int i = 0; i < 1; i++) {

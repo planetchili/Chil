@@ -201,25 +201,31 @@ namespace chil::gfx::d12
 			{ 0.f, -destPixelDims.height, 0.f },
 			{ destPixelDims.width, -destPixelDims.height, 0.f },
 		};
+
+		// use a system memory cache for building vertices before writing to UWCM
+		Vertex_ vertexCache[4];
 		
 		// update index count
 		nIndices_ += 6;
 
 		// write vertex source coordinates
-		pVertexUpload_[nVertices_ + 0].tc = { srcInTexcoords.left, srcInTexcoords.top };
-		pVertexUpload_[nVertices_ + 1].tc = { srcInTexcoords.right, srcInTexcoords.top };
-		pVertexUpload_[nVertices_ + 2].tc = { srcInTexcoords.left, srcInTexcoords.bottom };
-		pVertexUpload_[nVertices_ + 3].tc = { srcInTexcoords.right, srcInTexcoords.bottom };
+		vertexCache[0].tc = { srcInTexcoords.left, srcInTexcoords.top };
+		vertexCache[1].tc = { srcInTexcoords.right, srcInTexcoords.top };
+		vertexCache[2].tc = { srcInTexcoords.left, srcInTexcoords.bottom };
+		vertexCache[3].tc = { srcInTexcoords.right, srcInTexcoords.bottom };
 
 		// write vertex destination and atlas index
 		for (int i = 0; i < 4; i++) {
-			auto& vtx = pVertexUpload_[nVertices_ + i];
+			auto& vtx = vertexCache[i];
 			vtx.position = posArray[i];
 			vtx.rotation = rot;
 			vtx.scale = { scale.x, scale.y };
 			vtx.translation = { pos.x, pos.y };
 			vtx.atlasIndex = atlasIndex32;
 		}
+
+		// copy from system cache to write-combining memory
+		memcpy(&pVertexUpload_[nVertices_], vertexCache, sizeof(vertexCache));
 
 		// increment vertex write index / count
 		nVertices_ += 4;
