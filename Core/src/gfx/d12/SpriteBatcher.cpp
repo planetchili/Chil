@@ -278,42 +278,6 @@ namespace chil::gfx::d12
 		return std::move(cmd_);
 	}
 
-
-
-	// SpriteBatcher::FrameResource_
-	// -----------------------------
-
-	SpriteBatcher::FrameResource_ SpriteBatcher::GetFrameResource_(uint64_t frameFenceValue)
-	{
-		// get an existing buffer available from the pool
-		if (auto fr = frameResourcePool_.GetResource(frameFenceValue)) {
-			return std::move(*fr);
-		}
-		// create a new one if none available
-		auto pDeviceInterface = pDevice_->GetD3D12DeviceInterface();
-		FrameResource_ fr;
-		// vertex buffer
-		{
-			const CD3DX12_HEAP_PROPERTIES heapProps{ D3D12_HEAP_TYPE_UPLOAD };
-			const auto resourceDesc = CD3DX12_RESOURCE_DESC::Buffer(sizeof(Vertex_) * maxVertices_);
-			pDeviceInterface->CreateCommittedResource(
-				&heapProps,
-				D3D12_HEAP_FLAG_NONE,
-				&resourceDesc,
-				D3D12_RESOURCE_STATE_GENERIC_READ,
-				nullptr, IID_PPV_ARGS(&fr.pVertexBuffer)
-			) >> chk;
-		}
-		// vertex buffer view
-		fr.vertexBufferView = {
-			.BufferLocation = fr.pVertexBuffer->GetGPUVirtualAddress(),
-			.SizeInBytes = (UINT)sizeof(Vertex_) * maxVertices_,
-			.StrideInBytes = sizeof(Vertex_),
-		};
-
-		return fr;
-	}
-
 	void SpriteBatcher::WriteIndexBufferFillCommands_(CommandListPair& cmd)
 	{
 		// create array of index data
@@ -365,107 +329,37 @@ namespace chil::gfx::d12
 		indexBufferUploadFenceValue_ = frameFenceValue_;
 	}
 
+	// SpriteBatcher::FrameResource_
+	// -----------------------------
 
-
-	// sprite frame
-	// ------------
-
-	SpriteFrame::SpriteFrame(const spa::RectF& frameInPixels, size_t atlasIndex, std::shared_ptr<SpriteCodex> pCodex)
-		:
-		atlasIndex_{ atlasIndex },
-		pCodex_{ std::move(pCodex) }
+	SpriteBatcher::FrameResource_ SpriteBatcher::GetFrameResource_(uint64_t frameFenceValue)
 	{
-		atlasDimensions_ = pCodex_->GetAtlasDimensions(atlasIndex_);
-		frameInTexcoords_ = {
-			.left = frameInPixels.left / atlasDimensions_.width,
-			.top = frameInPixels.top / atlasDimensions_.height,
-			.right = frameInPixels.right / atlasDimensions_.width,
-			.bottom = frameInPixels.bottom / atlasDimensions_.height,
-		};
-	}
-
-	SpriteFrame::SpriteFrame(const spa::DimensionsI& cellGridDimensions, const spa::Vec2I& cellCoordinates, size_t atlasIndex, std::shared_ptr<SpriteCodex> pCodex)
-		:
-		atlasIndex_{ atlasIndex },
-		pCodex_{ std::move(pCodex) }
-	{
-		atlasDimensions_ = pCodex_->GetAtlasDimensions(atlasIndex_);
-		const auto cellWidth = atlasDimensions_.width / float(cellGridDimensions.width);
-		const auto cellHeight = atlasDimensions_.height / float(cellGridDimensions.height);
-		const auto frameInPixels = spa::RectF{
-			.left = cellWidth * cellCoordinates.x,
-			.top = cellHeight * cellCoordinates.y,
-			.right = cellWidth * (cellCoordinates.x + 1),
-			.bottom = cellHeight * (cellCoordinates.y + 1),
-		};
-		frameInTexcoords_ = {
-			.left = frameInPixels.left / atlasDimensions_.width,
-			.top = frameInPixels.top / atlasDimensions_.height,
-			.right = frameInPixels.right / atlasDimensions_.width,
-			.bottom = frameInPixels.bottom / atlasDimensions_.height,
-		};
-	}
-
-	void SpriteFrame::DrawToBatch(VINTERFACE(SpriteBatcher)& batch, const spa::Vec2F& pos, float rotation, const spa::Vec2F& scale) const
-	{
-		// deriving dest in pixel coordinates from texcoord source frame and source atlas dimensions
-		const auto destPixelDims = frameInTexcoords_.GetDimensions() * atlasDimensions_;
-		batch.Draw(atlasIndex_, frameInTexcoords_, destPixelDims, pos, rotation, scale);
-	}
-
-
-
-	// sprite codex
-	// ------------
-
-	SpriteCodex::SpriteCodex(std::shared_ptr<IDevice> pDevice, UINT maxNumAtlases)
-		:
-		pDevice_{ std::move(pDevice) },
-		maxNumAtlases_{ maxNumAtlases }
-	{
-		// descriptor heap for srvs
-		{
-			const D3D12_DESCRIPTOR_HEAP_DESC srvHeapDesc{
-				.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV,
-				.NumDescriptors = (UINT)maxNumAtlases,
-				.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE,
-			};
-			pDevice_->GetD3D12DeviceInterface()->CreateDescriptorHeap(&srvHeapDesc, IID_PPV_ARGS(&pSrvHeap_)) >> chk;
+		// get an existing buffer available from the pool
+		if (auto fr = frameResourcePool_.GetResource(frameFenceValue)) {
+			return std::move(*fr);
 		}
-		// size of descriptors used for index calculation
-		descriptorSize_ = pDevice_->GetD3D12DeviceInterface()->GetDescriptorHandleIncrementSize(
-			D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-	}
+		// create a new one if none available
+		auto pDeviceInterface = pDevice_->GetD3D12DeviceInterface();
+		FrameResource_ fr;
+		// vertex buffer
+		{
+			const CD3DX12_HEAP_PROPERTIES heapProps{ D3D12_HEAP_TYPE_UPLOAD };
+			const auto resourceDesc = CD3DX12_RESOURCE_DESC::Buffer(sizeof(Vertex_) * maxVertices_);
+			pDeviceInterface->CreateCommittedResource(
+				&heapProps,
+				D3D12_HEAP_FLAG_NONE,
+				&resourceDesc,
+				D3D12_RESOURCE_STATE_GENERIC_READ,
+				nullptr, IID_PPV_ARGS(&fr.pVertexBuffer)
+			) >> chk;
+		}
+		// vertex buffer view
+		fr.vertexBufferView = {
+			.BufferLocation = fr.pVertexBuffer->GetGPUVirtualAddress(),
+			.SizeInBytes = (UINT)sizeof(Vertex_) * maxVertices_,
+			.StrideInBytes = sizeof(Vertex_),
+		};
 
-	void SpriteCodex::AddSpriteAtlas(std::shared_ptr<ITexture> pTexture)
-	{
-		chilass(curNumAtlases_ < maxNumAtlases_);
-
-		// get handle to the destination descriptor
-		auto descriptorHandle = pSrvHeap_->GetCPUDescriptorHandleForHeapStart();
-		descriptorHandle.ptr += SIZE_T(descriptorSize_) * SIZE_T(curNumAtlases_);
-		// write into descriptor
-		pTexture->WriteDescriptor(pDevice_->GetD3D12DeviceInterface().Get(), descriptorHandle);
-		// store in atlas array
-		spriteAtlases_.push_back(std::make_unique<SpriteAtlas_>(descriptorHandle, std::move(pTexture)));
-		// update number of atlases stored
-		curNumAtlases_++;
-	}
-
-	ID3D12DescriptorHeap* SpriteCodex::GetHeap() const
-	{
-		return pSrvHeap_.Get();
-	}
-
-	D3D12_GPU_DESCRIPTOR_HANDLE SpriteCodex::GetTableHandle() const
-	{
-		return pSrvHeap_->GetGPUDescriptorHandleForHeapStart();
-	}
-
-	spa::DimensionsI SpriteCodex::GetAtlasDimensions(size_t atlasIndex) const
-	{
-		chilass(atlasIndex < curNumAtlases_);
-
-		return spriteAtlases_[atlasIndex]->pTexture_->GetDimensions();
+		return fr;
 	}
 }

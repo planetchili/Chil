@@ -95,6 +95,8 @@ int WINAPI wWinMain(
 				));
 			}
 			// signal completion of construction phase
+			// TODO: catch exceptions, use std::exception_ptr to signal to ctor (marshall)
+			// and also catch below this point and signal/marshall somehow
 			constructionSemaphore_.release();
 
 			// random engine

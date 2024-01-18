@@ -7,7 +7,11 @@
 #include "Texture.h"
 #include <DirectXMath.h>
 #include <Core/src/spa/Rect.h>
+#include "../FrameResourcePool.h"
+#include "SpriteCodex.h"
+
 #include "../../Virtual.h"
+
 
 namespace chil::gfx::d12
 {
@@ -24,94 +28,6 @@ namespace chil::gfx::d12
 			const float rot = 0.f,
 			const spa::Vec2F& scale = { 1.f, 1.f }) = 0;
 		virtual CommandListPair EndBatch() = 0;
-	};
-
-	class SpriteCodex
-	{
-	public:
-		SpriteCodex(std::shared_ptr<IDevice> pDevice, UINT maxNumAtlases = 4);
-		void AddSpriteAtlas(std::shared_ptr<ITexture> pTexture);
-		ID3D12DescriptorHeap* GetHeap() const;
-		D3D12_GPU_DESCRIPTOR_HANDLE GetTableHandle() const;
-		spa::DimensionsI GetAtlasDimensions(size_t atlasIndex) const;
-	private:
-		// types
-		struct SpriteAtlas_
-		{
-			D3D12_CPU_DESCRIPTOR_HANDLE srvHandle_;
-			std::shared_ptr<ITexture> pTexture_;
-		};
-		// data
-		std::shared_ptr<IDevice> pDevice_;
-		UINT descriptorSize_;
-		UINT maxNumAtlases_;
-		UINT curNumAtlases_ = 0;
-		Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> pSrvHeap_;
-		std::vector<std::unique_ptr<SpriteAtlas_>> spriteAtlases_;
-	};
-
-	class ISpriteFrame
-	{
-	public:
-		virtual ~ISpriteFrame() = default;
-		virtual void DrawToBatch(ISpriteBatcher& batch, const spa::Vec2F& pos, float rotation = 0.f, const spa::Vec2F& scale = { 1.f, 1.f }) const = 0;
-	};
-
-	class SpriteBatcher;
-
-	class SpriteFrame VSELECT(: public ISpriteFrame)
-	{
-	public:
-		SpriteFrame(const spa::RectF& frameInPixels, size_t atlasIndex, std::shared_ptr<SpriteCodex> pCodex);
-		SpriteFrame(const spa::DimensionsI& cellDimension, const spa::Vec2I& cellCoordinates, size_t atlasIndex, std::shared_ptr<SpriteCodex> pCodex);
-		void DrawToBatch(VINTERFACE(SpriteBatcher)& batch, const spa::Vec2F& pos, float rotation = 0.f, const spa::Vec2F& scale = { 1.f, 1.f }) const VOVERRIDE;
-	private:
-		// we want to preserve pixels from src to dst
-		// we can then draw to dest using src and position ONLY (and optionally scale/rotate)
-		// options: frame stores src in pixel dims => convert to texcoord during drawing
-		// either way, we need the atlas dimensions along with the src rect
-		// we need reference to the atlas (texture) anyways, so get dimensions from there I guess?
-		// we might want the flexibility of doing scale/rotate in the vertex shader, keep it in mind when placing things
-		spa::RectF frameInTexcoords_;
-		spa::DimensionsF atlasDimensions_;
-		size_t atlasIndex_;
-		std::shared_ptr<SpriteCodex> pCodex_;
-		// we need a handle that connects to a SRV in a heap of the batch
-		// you can have different sets of textures in multiple batches
-		// how can you allow the same sprite frame to work with different batches?
-		//   could use an unordered map: but maybe a little slow
-		//   could use different frames per batch: annoying to try and render one scene into multiple batches
-		//   could just have same textures bound to each batch
-		//        pull srvs out of batches into atlas
-		//		  closed ecosystem of batches, sprite frames, and 1 atlas, but you could have multiple ecosystems
-		//		  might be good (at least in debug) to validate that frames are being used with valid batches
-	};
-
-	template<class T>
-	class FrameResourcePool
-	{
-	public:
-		std::optional<T> GetResource(uint64_t frameFenceValue)
-		{
-			std::optional<T> resource;
-			if (!resourceEntryQueue_.empty() &&
-				resourceEntryQueue_.front().frameFenceValue <= frameFenceValue) {
-				resource = std::move(resourceEntryQueue_.front().pResource);
-				resourceEntryQueue_.pop_front();
-			}
-			return resource;
-		}
-		void PutResource(T resource, uint64_t frameFenceValue)
-		{
-			resourceEntryQueue_.push_back(ResourceEntry_{ frameFenceValue, std::move(resource) });
-		}
-	private:
-		struct ResourceEntry_
-		{
-			uint64_t frameFenceValue;
-			T pResource;
-		};
-		std::deque<ResourceEntry_> resourceEntryQueue_;
 	};
 
 	class SpriteBatcher VSELECT(: public ISpriteBatcher)

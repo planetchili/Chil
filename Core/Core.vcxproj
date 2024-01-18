@@ -16,10 +16,13 @@
     <ClInclude Include="src\gfx\d12\CommandQueue.h" />
     <ClInclude Include="src\gfx\d12\d3dx12.h" />
     <ClInclude Include="src\gfx\d12\Device.h" />
+    <ClInclude Include="src\gfx\FrameResourcePool.h" />
     <ClInclude Include="src\gfx\d12\ICommandQueue.h" />
     <ClInclude Include="src\gfx\d12\RenderPane.h" />
     <ClInclude Include="src\gfx\d12\ResourceLoader.h" />
     <ClInclude Include="src\gfx\d12\SpriteBatcher.h" />
+    <ClInclude Include="src\gfx\d12\SpriteCodex.h" />
+    <ClInclude Include="src\gfx\d12\SpriteFrame.h" />
     <ClInclude Include="src\gfx\d12\Texture.h" />
     <ClInclude Include="src\gfx\IDevice.h" />
     <ClInclude Include="src\gfx\IRenderPane.h" />
@@ -65,6 +68,8 @@
     <ClCompile Include="src\gfx\d12\RenderPane.cpp" />
     <ClCompile Include="src\gfx\d12\ResourceLoader.cpp" />
     <ClCompile Include="src\gfx\d12\SpriteBatcher.cpp" />
+    <ClCompile Include="src\gfx\d12\SpriteCodex.cpp" />
+    <ClCompile Include="src\gfx\d12\SpriteFrame.cpp" />
     <ClCompile Include="src\gfx\d12\Texture.cpp" />
     <ClCompile Include="src\ioc\Container.cpp" />
     <ClCompile Include="src\ioc\Singletons.cpp" />

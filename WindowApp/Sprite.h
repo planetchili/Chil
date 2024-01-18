@@ -1,9 +1,11 @@
 #pragma once
 #include <Core/src/gfx/d12/SpriteBatcher.h>
+#include <Core/src/gfx/d12/SpriteFrame.h>
 #include <Core/src/spa/Vec2.h>
 #include <vector>
 #include <memory>
 #include <random>
+
 
 namespace chil
 {
