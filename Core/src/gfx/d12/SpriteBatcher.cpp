@@ -4,6 +4,8 @@
 #pragma warning(disable : 26495)
 #include "d3dx12.h"
 #pragma warning(pop)
+#include "SpriteCodex.h"
+#include "RenderPane.h"
 #include <Core/src/log/Log.h>
 #include <Core/src/utl/String.h>
 #include <Core/src/utl/HrChecker.h>
@@ -16,14 +18,12 @@ namespace chil::gfx::d12
 	using utl::chk;
 	namespace rn = std::ranges;
 
-	SpriteBatcher::SpriteBatcher(const spa::DimensionsI& targetDimensions,
-		std::shared_ptr<IDevice> pDevice,
-		std::shared_ptr<SpriteCodex> pSpriteCodex,
-		UINT maxSpriteCount)
+	SpriteBatcher::SpriteBatcher(const spa::DimensionsI& targetDimensions, std::shared_ptr<gfx::IDevice> pDevice,
+		std::shared_ptr<gfx::ISpriteCodex> pSpriteCodex, UINT maxSpriteCount)
 		:
-		pDevice_{ std::move(pDevice) },
+		pDevice_{ std::dynamic_pointer_cast<decltype(pDevice_)::element_type>(std::move(pDevice)) },
 		outputDims_{ (spa::DimensionsF)targetDimensions },
-		pSpriteCodex_{ std::move(pSpriteCodex) },
+		pSpriteCodex_{ std::dynamic_pointer_cast<decltype(pSpriteCodex_)::element_type>(std::move(pSpriteCodex)) },
 		maxIndices_{ 6 * maxSpriteCount },
 		maxVertices_{ 4 * maxSpriteCount },
 		cameraTransform_{ DirectX::XMMatrixIdentity() }
@@ -144,16 +144,15 @@ namespace chil::gfx::d12
 		}
 	}
 
-	SpriteBatcher::~SpriteBatcher() = default;
-
-	void SpriteBatcher::StartBatch(CommandListPair cmd, uint64_t frameFenceValue, uint64_t signaledFenceValue)
+	void SpriteBatcher::StartBatch(gfx::IRenderPane& pane)
 	{
 		// command list/queue stuff
-		cmd_ = std::move(cmd);
-		frameFenceValue_ = frameFenceValue;
-		signaledFenceValue_ = signaledFenceValue;
+		auto& d12pane = dynamic_cast<d12::IRenderPane&>(pane);
+		cmd_ = d12pane.GetCommandList();
+		frameFenceValue_ = d12pane.GetFrameFenceValue();
+		signaledFenceValue_ = d12pane.GetSignalledFenceValue();
 		// frame resource stuff
-		currentFrameResource_ = GetFrameResource_(signaledFenceValue);
+		currentFrameResource_ = GetFrameResource_(signaledFenceValue_);
 		const auto mapReadRangeNone = CD3DX12_RANGE{ 0, 0 };
 		// vertex buffer
 		currentFrameResource_->pVertexBuffer->Map(0, &mapReadRangeNone,
@@ -231,7 +230,7 @@ namespace chil::gfx::d12
 		nVertices_ += 4;
 	}
 
-	CommandListPair SpriteBatcher::EndBatch()
+	void SpriteBatcher::EndBatch(gfx::IRenderPane& pane)
 	{
 		chilass(cmd_.pCommandAllocator);
 		chilass(cmd_.pCommandList);
@@ -274,8 +273,8 @@ namespace chil::gfx::d12
 		frameResourcePool_.PutResource(std::move(*currentFrameResource_), frameFenceValue_);
 		currentFrameResource_.reset();
 
-		// reliquish command list to be executed on a queue
-		return std::move(cmd_);
+		// submit command list to the queue of the passed-in pane
+		dynamic_cast<d12::IRenderPane&>(pane).SubmitCommandList(std::move(cmd_));
 	}
 
 	void SpriteBatcher::WriteIndexBufferFillCommands_(CommandListPair& cmd)

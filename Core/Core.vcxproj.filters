@@ -150,16 +150,25 @@
     <ClInclude Include="src\win\Input.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\Virtual.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\gfx\d12\SpriteFrame.h">
+    <ClInclude Include="src\gfx\SpriteFrame.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\gfx\d12\SpriteCodex.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\gfx\FrameResourcePool.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\gfx\ISpriteBatcher.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\gfx\ITexture.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\gfx\IResourceLoader.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\gfx\ISpriteCodex.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -245,7 +254,7 @@
     <ClCompile Include="src\gfx\d12\SpriteBatcher.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\gfx\d12\SpriteFrame.cpp">
+    <ClCompile Include="src\gfx\SpriteFrame.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\gfx\d12\SpriteCodex.cpp">

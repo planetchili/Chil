@@ -6,16 +6,17 @@
 #include <dxgi1_6.h>
 #include <wrl/client.h>
 #include "CommandListPair.h"
+#include "../ITexture.h"
 #include <string>
 
 namespace chil::gfx::d12
 {
-	class ITexture
+	class ITexture : public gfx::ITexture
 	{
 	public:
 		virtual ~ITexture() = default;
 		virtual void WriteDescriptor(ID3D12Device* pDevice, D3D12_CPU_DESCRIPTOR_HANDLE handle) const = 0;
-		virtual spa::DimensionsI GetDimensions() const = 0;
+		virtual spa::DimensionsI GetDimensions() const override = 0;
 	};
 
 	class Texture : public ITexture

@@ -1,9 +1,9 @@
 #include "SpriteFrame.h"
 
 
-namespace chil::gfx::d12
+namespace chil::gfx
 {
-	SpriteFrame::SpriteFrame(const spa::RectF& frameInPixels, size_t atlasIndex, std::shared_ptr<SpriteCodex> pCodex)
+	SpriteFrame::SpriteFrame(const spa::RectF& frameInPixels, size_t atlasIndex, std::shared_ptr<ISpriteCodex> pCodex)
 		:
 		atlasIndex_{ atlasIndex },
 		pCodex_{ std::move(pCodex) }
@@ -17,7 +17,7 @@ namespace chil::gfx::d12
 		};
 	}
 
-	SpriteFrame::SpriteFrame(const spa::DimensionsI& cellGridDimensions, const spa::Vec2I& cellCoordinates, size_t atlasIndex, std::shared_ptr<SpriteCodex> pCodex)
+	SpriteFrame::SpriteFrame(const spa::DimensionsI& cellGridDimensions, const spa::Vec2I& cellCoordinates, size_t atlasIndex, std::shared_ptr<ISpriteCodex> pCodex)
 		:
 		atlasIndex_{ atlasIndex },
 		pCodex_{ std::move(pCodex) }
@@ -39,7 +39,7 @@ namespace chil::gfx::d12
 		};
 	}
 
-	void SpriteFrame::DrawToBatch(VINTERFACE(SpriteBatcher)& batch, const spa::Vec2F& pos, float rotation, const spa::Vec2F& scale) const
+	void SpriteFrame::DrawToBatch(ISpriteBatcher& batch, const spa::Vec2F& pos, float rotation, const spa::Vec2F& scale) const
 	{
 		// deriving dest in pixel coordinates from texcoord source frame and source atlas dimensions
 		const auto destPixelDims = frameInTexcoords_.GetDimensions() * atlasDimensions_;

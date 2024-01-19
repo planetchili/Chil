@@ -1,19 +1,27 @@
 #pragma once
 #include "Device.h"
 #include "Texture.h"
+#include "../ISpriteCodex.h"
 #include <memory>
 
 
 namespace chil::gfx::d12
 {
-	class SpriteCodex
+	class ISpriteCodex : public gfx::ISpriteCodex
+	{
+	public:
+		virtual ID3D12DescriptorHeap* GetHeap() const = 0;
+		virtual D3D12_GPU_DESCRIPTOR_HANDLE GetTableHandle() const = 0;
+	};
+
+	class SpriteCodex : public ISpriteCodex
 	{
 	public:
 		SpriteCodex(std::shared_ptr<IDevice> pDevice, UINT maxNumAtlases = 4);
-		void AddSpriteAtlas(std::shared_ptr<ITexture> pTexture);
-		ID3D12DescriptorHeap* GetHeap() const;
-		D3D12_GPU_DESCRIPTOR_HANDLE GetTableHandle() const;
-		spa::DimensionsI GetAtlasDimensions(size_t atlasIndex) const;
+		void AddSpriteAtlas(std::shared_ptr<gfx::ITexture> pTexture) override;
+		ID3D12DescriptorHeap* GetHeap() const override;
+		D3D12_GPU_DESCRIPTOR_HANDLE GetTableHandle() const override;
+		spa::DimensionsI GetAtlasDimensions(size_t atlasIndex) const override;
 	private:
 		// types
 		struct SpriteAtlas_

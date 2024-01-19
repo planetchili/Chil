@@ -26,17 +26,20 @@ namespace chil::gfx::d12
 			D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 	}
 
-	void SpriteCodex::AddSpriteAtlas(std::shared_ptr<ITexture> pTexture)
+	void SpriteCodex::AddSpriteAtlas(std::shared_ptr<gfx::ITexture> pTexture)
 	{
 		chilass(curNumAtlases_ < maxNumAtlases_);
+
+		// downcast to platform-specific interface
+		auto pTextureD12 = std::dynamic_pointer_cast<d12::ITexture>(std::move(pTexture));
 
 		// get handle to the destination descriptor
 		auto descriptorHandle = pSrvHeap_->GetCPUDescriptorHandleForHeapStart();
 		descriptorHandle.ptr += SIZE_T(descriptorSize_) * SIZE_T(curNumAtlases_);
 		// write into descriptor
-		pTexture->WriteDescriptor(pDevice_->GetD3D12DeviceInterface().Get(), descriptorHandle);
+		pTextureD12->WriteDescriptor(pDevice_->GetD3D12DeviceInterface().Get(), descriptorHandle);
 		// store in atlas array
-		spriteAtlases_.push_back(std::make_unique<SpriteAtlas_>(descriptorHandle, std::move(pTexture)));
+		spriteAtlases_.push_back(std::make_unique<SpriteAtlas_>(descriptorHandle, std::move(pTextureD12)));
 		// update number of atlases stored
 		curNumAtlases_++;
 	}

@@ -1,10 +1,9 @@
 #pragma once
 #include <memory>
-#include "SpriteBatcher.h"
+#include "ISpriteBatcher.h"
+#include "ISpriteCodex.h"
 
-#include "../../Virtual.h"
-
-namespace chil::gfx::d12
+namespace chil::gfx
 {
 	class ISpriteFrame
 	{
@@ -13,12 +12,12 @@ namespace chil::gfx::d12
 		virtual void DrawToBatch(ISpriteBatcher& batch, const spa::Vec2F& pos, float rotation = 0.f, const spa::Vec2F& scale = { 1.f, 1.f }) const = 0;
 	};
 
-	class SpriteFrame VSELECT(: public ISpriteFrame)
+	class SpriteFrame : public ISpriteFrame
 	{
 	public:
-		SpriteFrame(const spa::RectF & frameInPixels, size_t atlasIndex, std::shared_ptr<SpriteCodex> pCodex);
-		SpriteFrame(const spa::DimensionsI & cellDimension, const spa::Vec2I & cellCoordinates, size_t atlasIndex, std::shared_ptr<SpriteCodex> pCodex);
-		void DrawToBatch(VINTERFACE(SpriteBatcher) & batch, const spa::Vec2F & pos, float rotation = 0.f, const spa::Vec2F & scale = { 1.f, 1.f }) const VOVERRIDE;
+		SpriteFrame(const spa::RectF& frameInPixels, size_t atlasIndex, std::shared_ptr<ISpriteCodex> pCodex);
+		SpriteFrame(const spa::DimensionsI & cellDimension, const spa::Vec2I & cellCoordinates, size_t atlasIndex, std::shared_ptr<ISpriteCodex> pCodex);
+		void DrawToBatch(ISpriteBatcher& batch, const spa::Vec2F & pos, float rotation = 0.f, const spa::Vec2F & scale = { 1.f, 1.f }) const override;
 	private:
 		// we want to preserve pixels from src to dst
 		// we can then draw to dest using src and position ONLY (and optionally scale/rotate)
@@ -29,7 +28,7 @@ namespace chil::gfx::d12
 		spa::RectF frameInTexcoords_;
 		spa::DimensionsF atlasDimensions_;
 		size_t atlasIndex_;
-		std::shared_ptr<SpriteCodex> pCodex_;
+		std::shared_ptr<ISpriteCodex> pCodex_;
 		// we need a handle that connects to a SRV in a heap of the batch
 		// you can have different sets of textures in multiple batches
 		// how can you allow the same sprite frame to work with different batches?

@@ -1,8 +1,9 @@
 #pragma once
-#include <Core/src/gfx/d12/SpriteBatcher.h>
-#include <Core/src/gfx/d12/SpriteFrame.h>
+#include <Core/src/gfx/ISpriteBatcher.h>
+#include <Core/src/gfx/SpriteFrame.h>
 #include <Core/src/spa/Vec2.h>
 #include <vector>
+#include <array>
 #include <memory>
 #include <random>
 
@@ -20,7 +21,7 @@ namespace chil
 
 	struct AnimationFrame
 	{
-		std::shared_ptr<gfx::d12::VINTERFACE(SpriteFrame)> pFrame_;
+		std::shared_ptr<gfx::ISpriteFrame> pFrame_;
 		float holdSeconds_;
 	};
 
@@ -35,19 +36,19 @@ namespace chil
 		};
 		virtual void ChangeDirection(State&, const spa::Vec2F&) const = 0;
 		virtual void StepAnimation(State&, float dt) const = 0;
-		virtual const gfx::d12::VINTERFACE(SpriteFrame)& GetFrame(const State&) const = 0;
+		virtual const gfx::ISpriteFrame& GetFrame(const State&) const = 0;
 		virtual ~ISpriteBlueprint() = default;
 	};
 
-	class SpriteBlueprint VSELECT(: public ISpriteBlueprint)
+	class SpriteBlueprint : public ISpriteBlueprint
 	{
 	public:
-		SpriteBlueprint(std::shared_ptr<gfx::d12::SpriteCodex> pCodex, size_t atlasIndex, int hCells, int vCells)
+		SpriteBlueprint(std::shared_ptr<gfx::ISpriteCodex> pCodex, size_t atlasIndex, int hCells, int vCells)
 		{
 			const auto sheetDims = pCodex->GetAtlasDimensions(atlasIndex);
 			for (int v = 0; v < vCells; v++) {
 				for (int h = 0; h < hCells; h++) {
-					auto pFrame = std::make_shared<gfx::d12::SpriteFrame>(
+					auto pFrame = std::make_shared<gfx::SpriteFrame>(
 						spa::DimensionsI{ hCells, vCells }, spa::Vec2I{h, v}, atlasIndex, pCodex);
 					animations_[v].push_back(AnimationFrame{
 						.pFrame_ = std::move(pFrame),
@@ -56,7 +57,7 @@ namespace chil
 				}
 			}
 		}
-		void ChangeDirection(ISpriteBlueprint::State& state, const spa::Vec2F& vel) const VOVERRIDE
+		void ChangeDirection(ISpriteBlueprint::State& state, const spa::Vec2F& vel) const override
 		{
 			const auto oldAnimation = state.currentAnimation_;
 			if (std::abs(vel.x) >= std::abs(vel.y)) {
@@ -80,7 +81,7 @@ namespace chil
 				state.currentAnimationFrame_ = 0;
 			}
 		}
-		void StepAnimation(ISpriteBlueprint::State& state, float dt) const VOVERRIDE
+		void StepAnimation(ISpriteBlueprint::State& state, float dt) const override
 		{
 			const auto& curAnimation = animations_[size_t(state.currentAnimation_) - 1];
 			state.timeInAnimationFrame_ += dt;
@@ -91,7 +92,7 @@ namespace chil
 				}
 			}
 		}
-		const gfx::d12::VINTERFACE(SpriteFrame)& GetFrame(const ISpriteBlueprint::State& state) const VOVERRIDE
+		const gfx::ISpriteFrame& GetFrame(const ISpriteBlueprint::State& state) const override
 		{
 			return *animations_[size_t(state.currentAnimation_) - 1][state.currentAnimationFrame_].pFrame_;
 		}
@@ -102,15 +103,15 @@ namespace chil
 	class ISpriteInstance
 	{
 	public:
-		virtual void Draw(gfx::d12::VINTERFACE(SpriteBatcher)&) const = 0;
+		virtual void Draw(gfx::ISpriteBatcher&) const = 0;
 		virtual void Update(float dt, std::minstd_rand0& rng) = 0;
 		virtual ~ISpriteInstance() = default;
 	};
 
-	class SpriteInstance VSELECT(: public ISpriteInstance)
+	class SpriteInstance : public ISpriteInstance
 	{
 	public:
-		SpriteInstance(std::shared_ptr<VINTERFACE(SpriteBlueprint)> pBlueprint,
+		SpriteInstance(std::shared_ptr<ISpriteBlueprint> pBlueprint,
 			const spa::Vec2F& pos, const spa::Vec2F& vel)
 			:
 			pBlueprint_{ std::move(pBlueprint) },
@@ -119,11 +120,11 @@ namespace chil
 		{
 			pBlueprint_->ChangeDirection(animationState_, vel_);
 		}
-		void Draw(gfx::d12::VINTERFACE(SpriteBatcher)& batcher) const VOVERRIDE
+		void Draw(gfx::ISpriteBatcher& batcher) const override
 		{
 			pBlueprint_->GetFrame(animationState_).DrawToBatch(batcher, pos_);
 		}
-		void Update(float dt, std::minstd_rand0& rng) VOVERRIDE
+		void Update(float dt, std::minstd_rand0& rng) override
 		{
 			timeUntilChangeDirection_ -= dt;
 			if (timeUntilChangeDirection_ <= 0.f) {
@@ -141,7 +142,7 @@ namespace chil
 		}
 	private:
 		constexpr static float directionChangePeriod_ = 1.f;
-		std::shared_ptr<VINTERFACE(SpriteBlueprint)> pBlueprint_;
+		std::shared_ptr<ISpriteBlueprint> pBlueprint_;
 		ISpriteBlueprint::State animationState_{};
 		spa::Vec2F pos_;
 		spa::Vec2F vel_;

@@ -88,7 +88,7 @@ int WINAPI wWinMain(
 			);
 			// make sprite batchers
 			constexpr size_t nBatches = 4;
-			std::vector<std::unique_ptr<gfx::d12::VINTERFACE(SpriteBatcher)>> batchers;
+			std::vector<std::unique_ptr<gfx::ISpriteBatcher>> batchers;
 			for (auto dum : vi::iota(0u, nBatches)) {
 				batchers.push_back(std::make_unique<gfx::d12::SpriteBatcher>(
 					outputDims, pDevice, pSpriteCodex, UINT(nCharacters / nBatches + 1)
@@ -102,7 +102,7 @@ int WINAPI wWinMain(
 			// random engine
 			std::minstd_rand0 rne;
 			// sprite blueprints
-			std::vector<std::shared_ptr<VINTERFACE(SpriteBlueprint)>> blueprints;
+			std::vector<std::shared_ptr<ISpriteBlueprint>> blueprints;
 			for (int i = 0; i < nSheets; i++) {
 				blueprints.push_back(std::make_shared<SpriteBlueprint>(pSpriteCodex, i, 8, 4));
 			}
@@ -115,7 +115,7 @@ int WINAPI wWinMain(
 					posDist = std::uniform_real_distribution<float>{ -360.f, 360.f },
 					speedDist = std::uniform_real_distribution<float>{ 240.f, 600.f },
 					angleDist = std::uniform_real_distribution<float>{ 0.f, 2.f * std::numbers::pi_v<float> }
-				] (uint32_t i) mutable -> std::unique_ptr<VINTERFACE(SpriteInstance)> {
+				] (uint32_t i) mutable -> std::unique_ptr<ISpriteInstance> {
 					return std::make_unique<SpriteInstance>(blueprints[i % nSheets],
 						spa::Vec2F{ posDist(rne), posDist(rne) },
 						spa::Vec2F{ 1.f, 0.f }.GetRotated(angleDist(rne)) * speedDist(rne)
@@ -185,11 +185,7 @@ int WINAPI wWinMain(
 				// render frame
 				pPane_->BeginFrame();
 				for (auto& pBatcher : batchers) {
-					pBatcher->StartBatch(
-						pPane_->GetCommandList(),
-						pPane_->GetFrameFenceValue(),
-						pPane_->GetSignalledFenceValue()
-					);
+					pBatcher->StartBatch(*pPane_);
 				}
 
 				const auto markStartSpriteDraw = hrclock::now();
@@ -207,7 +203,7 @@ int WINAPI wWinMain(
 				const auto spriteDrawMs = std::chrono::duration<float, std::milli>(durationSpriteDraw).count();
 
 				for (auto& pBatcher : batchers) {
-					pPane_->SubmitCommandList(pBatcher->EndBatch());
+					pBatcher->EndBatch(*pPane_);
 				}
 				pPane_->EndFrame();
 
