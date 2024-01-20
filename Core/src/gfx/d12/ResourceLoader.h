@@ -2,7 +2,6 @@
 #include "Device.h"
 #include "ICommandQueue.h"
 #include "../IResourceLoader.h"
-#include "../FrameResourcePool.h"
 #include "Texture.h"
 #include <functional>
 
@@ -21,7 +20,6 @@ namespace chil::gfx::d12
 	private:
 		std::shared_ptr<d12::IDevice> pDevice_;
 		std::shared_ptr<ICommandQueue> pQueue_;
-		FrameResourcePool<Microsoft::WRL::ComPtr<ID3D12Resource>> stagingTexturesInflight_;
 		TextureFactory textureFactory_;
 	};
 }
