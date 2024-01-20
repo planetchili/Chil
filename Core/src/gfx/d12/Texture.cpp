@@ -11,7 +11,7 @@ namespace chil::gfx::d12
 	using utl::chk;
 	using Microsoft::WRL::ComPtr;
 
-	Texture::Texture(IoCParams&& params)
+	Texture::Texture(IocParams&& params)
 		:
 		dimensions_{ params.pixelDimensions }
 	{

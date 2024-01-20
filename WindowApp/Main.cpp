@@ -1,16 +1,16 @@
 #include <Core/src/win/ChilWin.h>
+#include <objbase.h>
 #include <Core/src/ioc/Container.h> 
 #include <Core/src/log/SeverityLevelPolicy.h> 
-#include <Core/src/win/Boot.h>
 #include <Core/src/log/Log.h> 
+#include <Core/src/win/Boot.h>
 #include <Core/src/win/IWindow.h>
-#include <Core/src/gfx/d12/Device.h>
-#include <Core/src/gfx/d12/RenderPane.h>
-#include <Core/src/gfx/d12/CommandQueue.h>
-#include <Core/src/gfx/d12/ResourceLoader.h>
-#include <Core/src/gfx/d12/SpriteBatcher.h>
-#include "Sprite.h"
 #include <Core/src/win/Input.h>
+#include <Core/src/gfx/IRenderPane.h>
+#include <Core/src/gfx/IResourceLoader.h>
+#include <Core/src/gfx/ISpriteBatcher.h>
+#include <Core/src/gfx/d12/Boot.h>
+#include "Sprite.h"
 #include <format>
 #include <ranges> 
 #include <semaphore>
@@ -33,6 +33,8 @@ void Boot()
 	});
 
 	win::Boot();
+
+	gfx::d12::Boot();
 }
 
 constexpr int nSheets = 32;
@@ -47,10 +49,9 @@ int WINAPI wWinMain(
 	{
 	public:
 		ActiveWindow(int index,
-			std::shared_ptr<gfx::IDevice> pDevice,
 			std::shared_ptr<gfx::ISpriteCodex> pSpriteCodex)
 			:
-			thread_{ &ActiveWindow::Kernel_, this, index, std::move(pDevice), std::move(pSpriteCodex) }
+			thread_{ &ActiveWindow::Kernel_, this, index, std::move(pSpriteCodex) }
 		{
 			constructionSemaphore_.acquire();
 		}
@@ -61,7 +62,6 @@ int WINAPI wWinMain(
 	private:
 		// functions
 		void Kernel_(int index,
-			std::shared_ptr<gfx::IDevice> pDevice,
 			std::shared_ptr<gfx::ISpriteCodex> pSpriteCodex)
 		{
 #ifdef NDEBUG
@@ -73,26 +73,26 @@ int WINAPI wWinMain(
 			//// do construction
 			// make window
 			auto keyboard = std::make_shared<win::Keyboard>();
-			std::shared_ptr<win::IWindow> pWindow_ = ioc::Get().Resolve<win::IWindow>(
-				win::IWindow::IocParams{
-					.pKeySink = keyboard,
-					.name = std::format(L"Window #{}", index),
-				}
-			);
+			auto pWindow = ioc::Get().Resolve<win::IWindow>(win::IWindow::IocParams{
+				.pKeySink = keyboard,
+				.name = std::format(L"Window #{}", index),
+				.size = outputDims,
+			});
 			// make graphics pane
-			std::shared_ptr<gfx::IRenderPane> pPane_ = std::make_shared<gfx::d12::RenderPane>(
-				pWindow_->GetHandle(),
-				outputDims,
-				std::dynamic_pointer_cast<gfx::d12::IDevice>(pDevice),
-				std::make_shared<gfx::d12::CommandQueue>(std::dynamic_pointer_cast<gfx::d12::IDevice>(pDevice))
-			);
+			auto pPane = ioc::Get().Resolve<gfx::IRenderPane>(gfx::IRenderPane::IocParams{
+				.hWnd = pWindow->GetHandle(),
+				.dims = outputDims,
+			});
 			// make sprite batchers
 			constexpr size_t nBatches = 4;
-			std::vector<std::unique_ptr<gfx::ISpriteBatcher>> batchers;
+			std::vector<std::shared_ptr<gfx::ISpriteBatcher>> batchers;
 			for (auto dum : vi::iota(0u, nBatches)) {
-				batchers.push_back(std::make_unique<gfx::d12::SpriteBatcher>(
-					outputDims, pDevice, pSpriteCodex, UINT(nCharacters / nBatches + 1)
-				));
+				auto pBatcher = ioc::Get().Resolve<gfx::ISpriteBatcher>(gfx::ISpriteBatcher::IocParams{
+					.targetDimensions = outputDims,
+					.pSpriteCodex = pSpriteCodex,
+					.maxSpriteCount = UINT(nCharacters / nBatches + 1)
+				});
+				batchers.push_back(std::move(pBatcher));
 			}
 			// signal completion of construction phase
 			// TODO: catch exceptions, use std::exception_ptr to signal to ctor (marshall)
@@ -131,7 +131,7 @@ int WINAPI wWinMain(
 			auto batches = vi::zip(batchers, characters | vi::chunk(characters.size() / batchers.size() + 1));
 
 			// do render loop while window not closing
-			while (!pWindow_->IsClosing()) {
+			while (!pWindow->IsClosing()) {
 				// camera movement controls
 				if (keyboard->KeyIsPressed('W')) {
 					constexpr auto deg90 = float(std::numbers::pi / 2.);
@@ -183,9 +183,9 @@ int WINAPI wWinMain(
 				const auto spriteUpdateMs = std::chrono::duration<float, std::milli>(durationSpriteUpdate).count();
 
 				// render frame
-				pPane_->BeginFrame();
+				pPane->BeginFrame();
 				for (auto& pBatcher : batchers) {
-					pBatcher->StartBatch(*pPane_);
+					pBatcher->StartBatch(*pPane);
 				}
 
 				const auto markStartSpriteDraw = hrclock::now();
@@ -203,14 +203,14 @@ int WINAPI wWinMain(
 				const auto spriteDrawMs = std::chrono::duration<float, std::milli>(durationSpriteDraw).count();
 
 				for (auto& pBatcher : batchers) {
-					pBatcher->EndBatch(*pPane_);
+					pBatcher->EndBatch(*pPane);
 				}
-				pPane_->EndFrame();
+				pPane->EndFrame();
 
 				// output benching information
 				OutputDebugStringA(std::format("s-up [{:>8.4f}ms]  s-draw [{:>8.4f}ms]\n", spriteUpdateMs, spriteDrawMs).c_str());
 			}
-			pPane_->FlushQueues();
+			pPane->FlushQueues();
 
 			chilog.info(std::format(L"sprites: {}", characters.size()));
 
@@ -230,19 +230,13 @@ int WINAPI wWinMain(
 
 		Boot();
 
-		// create device
-		std::shared_ptr<gfx::IDevice> pDevice = std::make_shared<gfx::d12::Device>();
 		// create sprite codex
-		std::shared_ptr<gfx::ISpriteCodex> pSpriteCodex = std::make_shared<gfx::d12::SpriteCodex>(
-			std::dynamic_pointer_cast<gfx::d12::IDevice>(pDevice), nSheets);
-		// load texture into sprite codex
-		std::shared_ptr<gfx::IResourceLoader> pLoader = std::make_shared<gfx::d12::ResourceLoader>(
-			pDevice, [](gfx::d12::ITexture::IoCParams params) {
-				return std::make_shared<gfx::d12::Texture>(std::move(params));
-			}
-		);
+		auto pSpriteCodex = ioc::Get().Resolve<gfx::ISpriteCodex>({ nSheets });
+		// create resource loader
+		auto pLoader = ioc::Get().Resolve<gfx::IResourceLoader>();
+		// load sprite atlases (textures) into sprite codex
 		{
-			std::vector<decltype(pLoader->LoadTexture(L""))> futures;
+			std::vector<std::future<std::shared_ptr<gfx::ITexture>>> futures;
 			for (int i = 0; i < nSheets; i++) {
 				futures.push_back(pLoader->LoadTexture(std::format(L"sprote-shiet-{}.png", i)));
 			}
@@ -253,7 +247,7 @@ int WINAPI wWinMain(
 
 		std::vector<std::unique_ptr<ActiveWindow>> windows;
 		for (int i = 0; i < 1; i++) {
-			windows.push_back(std::make_unique<ActiveWindow>(i, pDevice, pSpriteCodex));
+			windows.push_back(std::make_unique<ActiveWindow>(i, pSpriteCodex));
 		}
 
 		float c = 0;

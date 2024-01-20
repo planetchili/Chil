@@ -14,7 +14,7 @@ namespace chil::gfx::d12
 	{
 	public:
 		// types
-		using TextureFactory = std::function<std::shared_ptr<d12::ITexture>(d12::ITexture::IoCParams params)>;
+		using TextureFactory = std::function<std::shared_ptr<d12::ITexture>(d12::ITexture::IocParams params)>;
 		// functions
 		ResourceLoader(std::shared_ptr<gfx::IDevice> pDevice, TextureFactory textureFactory);
 		std::future<std::shared_ptr<gfx::ITexture>> LoadTexture(std::wstring path) override;

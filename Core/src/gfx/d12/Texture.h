@@ -12,7 +12,7 @@ namespace chil::gfx::d12
 	{
 	public:
 		// types
-		struct IoCParams
+		struct IocParams
 		{
 			spa::DimensionsI pixelDimensions;
 			uint16_t mipLevels;
@@ -27,7 +27,7 @@ namespace chil::gfx::d12
 	class Texture : public ITexture
 	{
 	public:
-		Texture(IoCParams&& params);
+		Texture(IocParams&& params);
 		void WriteDescriptor(ID3D12Device* pDevice, D3D12_CPU_DESCRIPTOR_HANDLE handle) const override;
 		ID3D12Resource& GetResource() override;
 		spa::DimensionsI GetDimensions() const override;

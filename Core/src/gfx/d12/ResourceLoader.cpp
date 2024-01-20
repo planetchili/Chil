@@ -46,7 +46,7 @@ namespace chil::gfx::d12
 			}) | rn::to<std::vector>();
 			// create texture object
 			const auto& chainBase = *mipChain.GetImages();
-			d12::ITexture::IoCParams texParams{
+			d12::ITexture::IocParams texParams{
 				.pixelDimensions = { (int)chainBase.width, (int)chainBase.height },
 				.mipLevels = (UINT16)mipChain.GetImageCount(),
 				.format = chainBase.format,
