@@ -1,9 +1,6 @@
 #pragma once
 #include "SpriteBatcher.h"
-#pragma warning(push)
-#pragma warning(disable : 26495)
-#include "d3dx12.h"
-#pragma warning(pop)
+#include "WrapD3DX.h"
 #include "SpriteCodex.h"
 #include "RenderPane.h"
 #include <Core/src/log/Log.h>

@@ -1,8 +1,7 @@
 #pragma once
 #include "../IDevice.h"
-#include <Core/src/win/IWindow.h>
-#include <d3d12.h> 
-#include <dxgi1_6.h>
+#include "WrapD3D.h"
+#include "WrapDXGI.h"
 #include <wrl/client.h>
 
 

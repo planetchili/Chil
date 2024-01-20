@@ -3,6 +3,7 @@
 #include "Texture.h"
 #include "../ISpriteCodex.h"
 #include <memory>
+#include <vector>
 
 
 namespace chil::gfx::d12

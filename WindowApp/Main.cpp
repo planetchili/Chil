@@ -47,8 +47,8 @@ int WINAPI wWinMain(
 	{
 	public:
 		ActiveWindow(int index,
-			std::shared_ptr<gfx::d12::Device> pDevice,
-			std::shared_ptr<gfx::d12::SpriteCodex> pSpriteCodex)
+			std::shared_ptr<gfx::IDevice> pDevice,
+			std::shared_ptr<gfx::ISpriteCodex> pSpriteCodex)
 			:
 			thread_{ &ActiveWindow::Kernel_, this, index, std::move(pDevice), std::move(pSpriteCodex) }
 		{
@@ -61,8 +61,8 @@ int WINAPI wWinMain(
 	private:
 		// functions
 		void Kernel_(int index,
-			std::shared_ptr<gfx::d12::Device> pDevice,
-			std::shared_ptr<gfx::d12::SpriteCodex> pSpriteCodex)
+			std::shared_ptr<gfx::IDevice> pDevice,
+			std::shared_ptr<gfx::ISpriteCodex> pSpriteCodex)
 		{
 #ifdef NDEBUG
 			const unsigned int nCharacters = 250'000;
@@ -80,11 +80,11 @@ int WINAPI wWinMain(
 				}
 			);
 			// make graphics pane
-			std::shared_ptr<gfx::d12::IRenderPane> pPane_ = std::make_shared<gfx::d12::RenderPane>(
+			std::shared_ptr<gfx::IRenderPane> pPane_ = std::make_shared<gfx::d12::RenderPane>(
 				pWindow_->GetHandle(),
 				outputDims,
-				pDevice,
-				std::make_shared<gfx::d12::CommandQueue>(pDevice)
+				std::dynamic_pointer_cast<gfx::d12::IDevice>(pDevice),
+				std::make_shared<gfx::d12::CommandQueue>(std::dynamic_pointer_cast<gfx::d12::IDevice>(pDevice))
 			);
 			// make sprite batchers
 			constexpr size_t nBatches = 4;
@@ -231,15 +231,20 @@ int WINAPI wWinMain(
 		Boot();
 
 		// create device
-		auto pDevice = std::make_shared<gfx::d12::Device>();
+		std::shared_ptr<gfx::IDevice> pDevice = std::make_shared<gfx::d12::Device>();
 		// create sprite codex
-		auto pSpriteCodex = std::make_shared<gfx::d12::SpriteCodex>(pDevice, nSheets);
+		std::shared_ptr<gfx::ISpriteCodex> pSpriteCodex = std::make_shared<gfx::d12::SpriteCodex>(
+			std::dynamic_pointer_cast<gfx::d12::IDevice>(pDevice), nSheets);
 		// load texture into sprite codex
-		gfx::d12::ResourceLoader loader{ pDevice };
+		std::shared_ptr<gfx::IResourceLoader> pLoader = std::make_shared<gfx::d12::ResourceLoader>(
+			pDevice, [](gfx::d12::ITexture::IoCParams params) {
+				return std::make_shared<gfx::d12::Texture>(std::move(params));
+			}
+		);
 		{
-			std::vector<decltype(loader.LoadTexture(L""))> futures;
+			std::vector<decltype(pLoader->LoadTexture(L""))> futures;
 			for (int i = 0; i < nSheets; i++) {
-				futures.push_back(loader.LoadTexture(std::format(L"sprote-shiet-{}.png", i)));
+				futures.push_back(pLoader->LoadTexture(std::format(L"sprote-shiet-{}.png", i)));
 			}
 			for (auto& f : futures) {
 				pSpriteCodex->AddSpriteAtlas(f.get());

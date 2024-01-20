@@ -2,10 +2,10 @@
 #include "../IRenderPane.h"
 #include "CommandQueue.h"
 #include "Device.h"
-#include <Core/src/win/IWindow.h>
-#include <array>
+#include <Core/src/win/ChilWin.h>
 #include "Texture.h"
 #include <DirectXMath.h>
+#include <array>
 #include <optional>
 
 namespace chil::gfx::d12
@@ -13,13 +13,10 @@ namespace chil::gfx::d12
 	class IRenderPane : public gfx::IRenderPane
 	{
 	public:
-		virtual void BeginFrame() = 0;
 		virtual CommandListPair GetCommandList() = 0;
 		virtual void SubmitCommandList(CommandListPair commands) = 0;
 		virtual uint64_t GetFrameFenceValue() const = 0;
 		virtual uint64_t GetSignalledFenceValue() const = 0;
-		virtual void EndFrame() = 0;
-		virtual void FlushQueues() const = 0;
 	};
 
 	class RenderPane : public IRenderPane

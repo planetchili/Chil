@@ -1,6 +1,5 @@
 #pragma once
-#include <Core/src/win/ChilWin.h>
-#include <d3d12.h>
+#include "WrapD3D.h"
 #include <wrl/client.h>
 #include <cstdint>
 #include "CommandListPair.h"

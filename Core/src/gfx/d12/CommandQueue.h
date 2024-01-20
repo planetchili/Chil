@@ -1,11 +1,14 @@
 #pragma once
 #include "Device.h"
-#include <Core/src/win/ChilWin.h>
-#include <d3d12.h>
+#include "WrapD3D.h"
 #include <wrl/client.h>
-#include <deque>
 #include "CommandListPair.h"
 #include "ICommandQueue.h"
+#include <memory>
+#include <vector>
+#include <deque>
+#include <thread>
+#include <mutex>
 
 namespace chil::gfx::d12
 {

@@ -2,11 +2,9 @@
 #include <Core/src/utl/HrChecker.h>
 #include <Core/src/log/Log.h>
 #include <Core/src/utl/String.h>
-#pragma warning(push)
-#pragma warning(disable : 26495)
-#include "d3dx12.h"
-#pragma warning(pop)
 #include "ResourceLoader.h"
+#include "WrapD3DX.h"
+#include "WrapDXGI.h"
 #include <d3dcompiler.h>
 #include <ranges>
 

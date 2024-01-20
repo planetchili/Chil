@@ -2,14 +2,13 @@
 #include "../IRenderPane.h"
 #include "CommandQueue.h"
 #include "Device.h"
-#include <Core/src/win/IWindow.h>
-#include <array>
 #include "Texture.h"
 #include <DirectXMath.h>
 #include <Core/src/spa/Rect.h>
 #include "SpriteCodex.h"
 #include "../FrameResourcePool.h"
 #include "../ISpriteBatcher.h"
+#include <array>
 
 
 namespace chil::gfx::d12
