@@ -25,6 +25,21 @@ using hrclock = std::chrono::high_resolution_clock;
 namespace rn = std::ranges;
 namespace vi = rn::views;
 
+
+namespace Global
+{
+#ifdef NDEBUG
+	constexpr unsigned int nCharacters = 250'000;
+#else
+	constexpr unsigned int nCharacters = 500;
+#endif
+	constexpr size_t nBatches = 4;
+	constexpr int nSheets = 32;
+	constexpr auto outputDims = spa::DimensionsI{ 1280, 720 };
+	constexpr int nWindows = 1;
+}
+
+
 void Boot()
 {
 	log::Boot();
@@ -37,7 +52,179 @@ void Boot()
 	gfx::d12::Boot();
 }
 
-constexpr int nSheets = 32;
+class ActiveWindow
+{
+public:
+	ActiveWindow(int index,
+		std::shared_ptr<gfx::ISpriteCodex> pSpriteCodex)
+		:
+		thread_{ &ActiveWindow::Kernel_, this, index, std::move(pSpriteCodex) }
+	{
+		constructionSemaphore_.acquire();
+	}
+	bool IsLive() const
+	{
+		return isLive;
+	}
+private:
+	// functions
+	void Kernel_(int index,
+		std::shared_ptr<gfx::ISpriteCodex> pSpriteCodex)
+	{
+		// ioc container shortcut
+		auto& C = ioc::Get();
+		//// do construction
+		// make window
+		auto keyboard = std::make_shared<win::Keyboard>();
+		auto pWindow = C.Resolve<win::IWindow>(win::IWindow::IocParams{
+			.pKeySink = keyboard,
+			.name = std::format(L"Window #{}", index),
+			.size = Global::outputDims,
+			});
+		// make graphics pane
+		auto pPane = C.Resolve<gfx::IRenderPane>(gfx::IRenderPane::IocParams{
+			.hWnd = pWindow->GetHandle(),
+			.dims = Global::outputDims,
+			});
+		// make sprite batchers
+		std::vector<std::shared_ptr<gfx::ISpriteBatcher>> batchers;
+		for (int i = 0; i < Global::nBatches; i++) {
+			auto pBatcher = C.Resolve<gfx::ISpriteBatcher>(gfx::ISpriteBatcher::IocParams{
+				.targetDimensions = Global::outputDims,
+				.pSpriteCodex = pSpriteCodex,
+				.maxSpriteCount = UINT(Global::nCharacters / Global::nBatches + 1)
+				});
+			batchers.push_back(std::move(pBatcher));
+		}
+		// signal completion of construction phase
+		// TODO: catch exceptions, use std::exception_ptr to signal to ctor (marshall)
+		// and also catch below this point and signal/marshall somehow
+		constructionSemaphore_.release();
+
+		// random engine
+		std::minstd_rand0 rne;
+		// sprite blueprints
+		std::vector<std::shared_ptr<ISpriteBlueprint>> blueprints;
+		for (int i = 0; i < Global::nSheets; i++) {
+			blueprints.push_back(std::make_shared<SpriteBlueprint>(pSpriteCodex, i, 8, 4));
+		}
+		// sprite instances
+		const auto characters =
+			vi::iota(0u, Global::nCharacters) |
+			vi::transform([
+				&blueprints,
+				&rne,
+				posDist = std::uniform_real_distribution<float>{ -360.f, 360.f },
+				speedDist = std::uniform_real_distribution<float>{ 240.f, 600.f },
+				angleDist = std::uniform_real_distribution<float>{ 0.f, 2.f * std::numbers::pi_v<float> }
+			] (uint32_t i) mutable -> std::unique_ptr<ISpriteInstance> {
+				return std::make_unique<SpriteInstance>(blueprints[i % Global::nSheets],
+					spa::Vec2F{ posDist(rne), posDist(rne) },
+					spa::Vec2F{ 1.f, 0.f }.GetRotated(angleDist(rne)) * speedDist(rne)
+				);
+			}) | rn::to<std::vector>();
+
+		// camera state variables
+		spa::Vec2F pos{};
+		float rot = 0.f;
+		float scale = 1.f;
+		// pair batchers together with a set of characters to draw to each batch
+		auto batches = vi::zip(batchers, characters | vi::chunk(characters.size() / batchers.size() + 1));
+
+		// do render loop while window not closing
+		while (!pWindow->IsClosing()) {
+			// camera movement controls
+			if (keyboard->KeyIsPressed('W')) {
+				constexpr auto deg90 = float(std::numbers::pi / 2.);
+				auto up = spa::Vec2F{ std::cos(rot + deg90), std::sin(rot + deg90) };
+				pos += up * 10.f;
+			}
+			else if (keyboard->KeyIsPressed('S')) {
+				constexpr auto deg90 = float(std::numbers::pi / 2.);
+				auto up = spa::Vec2F{ std::cos(rot + deg90), std::sin(rot + deg90) };
+				pos -= up * 10.f;
+			}
+			if (keyboard->KeyIsPressed('D')) {
+				auto right = spa::Vec2F{ std::cos(rot), std::sin(rot) };
+				pos += right * 10.f;
+			}
+			else if (keyboard->KeyIsPressed('A')) {
+				auto right = spa::Vec2F{ std::cos(rot), std::sin(rot) };
+				pos -= right * 10.f;
+			}
+			if (keyboard->KeyIsPressed('Q')) {
+				rot += 0.02f;
+			}
+			else if (keyboard->KeyIsPressed('E')) {
+				rot -= 0.02f;
+			}
+			if (keyboard->KeyIsPressed('R')) {
+				scale *= 1.02f;
+			}
+			else if (keyboard->KeyIsPressed('F')) {
+				scale /= 1.02f;
+			}
+			for (auto& pBatcher : batchers) {
+				pBatcher->SetCamera(pos, rot, scale);
+			}
+
+			// update sprites
+			const auto markStartSpriteUpdate = hrclock::now();
+			{
+				auto drawFutures = batches | vi::transform([&](auto&& batch) {
+					return std::async([&](auto&& batch) {
+						auto&& [pBatcher, spritePtrRange] = batch;
+						for (const auto& ps : spritePtrRange) {
+							ps->Update(0.001f, rne);
+						}
+					}, batch);
+				}) | rn::to<std::vector>();
+			}
+			const auto durationSpriteUpdate = hrclock::now() - markStartSpriteUpdate;
+			const auto spriteUpdateMs = std::chrono::duration<float, std::milli>(durationSpriteUpdate).count();
+
+			// begin frame
+			pPane->BeginFrame();
+			// prepare each batcher to draw to
+			for (auto& pBatcher : batchers) {
+				pBatcher->StartBatch(*pPane);
+			}
+			// spawn a thread for each batch to draw sprites to batchers
+			const auto markStartSpriteDraw = hrclock::now();
+			{
+				auto drawFutures = batches | vi::transform([&](auto&& batch) {
+					return std::async([&](auto&& batch) {
+						auto&& [pBatcher, spritePtrRange] = batch;
+						for (const auto& ps : spritePtrRange) {
+							ps->Draw(*pBatcher);
+						}
+					}, batch);
+				}) | rn::to<std::vector>();
+			}
+			const auto durationSpriteDraw = hrclock::now() - markStartSpriteDraw;
+			const auto spriteDrawMs = std::chrono::duration<float, std::milli>(durationSpriteDraw).count();
+			// finish all batcher batches and submit resulting command list to the pane
+			for (auto& pBatcher : batchers) {
+				pBatcher->EndBatch(*pPane);
+			}
+			// finish and present the frame
+			pPane->EndFrame();
+
+			// output benching information
+			OutputDebugStringA(std::format("s-up [{:>8.4f}ms]  s-draw [{:>8.4f}ms]\n", spriteUpdateMs, spriteDrawMs).c_str());
+		}
+		pPane->FlushQueues();
+
+		chilog.info(std::format(L"sprites: {}", characters.size()));
+
+		isLive = false;
+	}
+	// data
+	std::binary_semaphore constructionSemaphore_{ 0 };
+	std::atomic<bool> isLive{ true };
+	std::jthread thread_;
+};
+
 
 int WINAPI wWinMain(
 	HINSTANCE hInstance,
@@ -45,199 +232,25 @@ int WINAPI wWinMain(
 	PWSTR pCmdLine,
 	int nCmdShow)
 {
-	class ActiveWindow
-	{
-	public:
-		ActiveWindow(int index,
-			std::shared_ptr<gfx::ISpriteCodex> pSpriteCodex)
-			:
-			thread_{ &ActiveWindow::Kernel_, this, index, std::move(pSpriteCodex) }
-		{
-			constructionSemaphore_.acquire();
-		}
-		bool IsLive() const
-		{
-			return isLive;
-		}
-	private:
-		// functions
-		void Kernel_(int index,
-			std::shared_ptr<gfx::ISpriteCodex> pSpriteCodex)
-		{
-#ifdef NDEBUG
-			const unsigned int nCharacters = 250'000;
-#else
-			const unsigned int nCharacters = 500;
-#endif
-			const auto outputDims = spa::DimensionsI{ 1280, 720 };
-			//// do construction
-			// make window
-			auto keyboard = std::make_shared<win::Keyboard>();
-			auto pWindow = ioc::Get().Resolve<win::IWindow>(win::IWindow::IocParams{
-				.pKeySink = keyboard,
-				.name = std::format(L"Window #{}", index),
-				.size = outputDims,
-			});
-			// make graphics pane
-			auto pPane = ioc::Get().Resolve<gfx::IRenderPane>(gfx::IRenderPane::IocParams{
-				.hWnd = pWindow->GetHandle(),
-				.dims = outputDims,
-			});
-			// make sprite batchers
-			constexpr size_t nBatches = 4;
-			std::vector<std::shared_ptr<gfx::ISpriteBatcher>> batchers;
-			for (auto dum : vi::iota(0u, nBatches)) {
-				auto pBatcher = ioc::Get().Resolve<gfx::ISpriteBatcher>(gfx::ISpriteBatcher::IocParams{
-					.targetDimensions = outputDims,
-					.pSpriteCodex = pSpriteCodex,
-					.maxSpriteCount = UINT(nCharacters / nBatches + 1)
-				});
-				batchers.push_back(std::move(pBatcher));
-			}
-			// signal completion of construction phase
-			// TODO: catch exceptions, use std::exception_ptr to signal to ctor (marshall)
-			// and also catch below this point and signal/marshall somehow
-			constructionSemaphore_.release();
-
-			// random engine
-			std::minstd_rand0 rne;
-			// sprite blueprints
-			std::vector<std::shared_ptr<ISpriteBlueprint>> blueprints;
-			for (int i = 0; i < nSheets; i++) {
-				blueprints.push_back(std::make_shared<SpriteBlueprint>(pSpriteCodex, i, 8, 4));
-			}
-			// sprite instances
-			const auto characters =
-				vi::iota(0u, nCharacters) |
-				vi::transform([
-					&blueprints,
-					&rne,
-					posDist = std::uniform_real_distribution<float>{ -360.f, 360.f },
-					speedDist = std::uniform_real_distribution<float>{ 240.f, 600.f },
-					angleDist = std::uniform_real_distribution<float>{ 0.f, 2.f * std::numbers::pi_v<float> }
-				] (uint32_t i) mutable -> std::unique_ptr<ISpriteInstance> {
-					return std::make_unique<SpriteInstance>(blueprints[i % nSheets],
-						spa::Vec2F{ posDist(rne), posDist(rne) },
-						spa::Vec2F{ 1.f, 0.f }.GetRotated(angleDist(rne)) * speedDist(rne)
-					);
-				}) |
-				rn::to<std::vector>();
-
-			// camera state variables
-			spa::Vec2F pos{};
-			float rot = 0.f;
-			float scale = 1.f;
-
-			auto batches = vi::zip(batchers, characters | vi::chunk(characters.size() / batchers.size() + 1));
-
-			// do render loop while window not closing
-			while (!pWindow->IsClosing()) {
-				// camera movement controls
-				if (keyboard->KeyIsPressed('W')) {
-					constexpr auto deg90 = float(std::numbers::pi / 2.);
-					auto up = spa::Vec2F{ std::cos(rot + deg90), std::sin(rot + deg90) };
-					pos += up * 10.f;
-				}
-				else if (keyboard->KeyIsPressed('S')) {
-					constexpr auto deg90 = float(std::numbers::pi / 2.);
-					auto up = spa::Vec2F{ std::cos(rot + deg90), std::sin(rot + deg90) };
-					pos -= up * 10.f;
-				}
-				if (keyboard->KeyIsPressed('D')) {
-					auto right = spa::Vec2F{ std::cos(rot), std::sin(rot) };
-					pos += right * 10.f;
-				}
-				else if (keyboard->KeyIsPressed('A')) {
-					auto right = spa::Vec2F{ std::cos(rot), std::sin(rot) };
-					pos -= right * 10.f;
-				}
-				if (keyboard->KeyIsPressed('Q')) {
-					rot += 0.02f;
-				}
-				else if (keyboard->KeyIsPressed('E')) {
-					rot -= 0.02f;
-				}
-				if (keyboard->KeyIsPressed('R')) {
-					scale *= 1.02f;
-				}
-				else if (keyboard->KeyIsPressed('F')) {
-					scale /= 1.02f;
-				}
-				for (auto& pBatcher : batchers) {
-					pBatcher->SetCamera(pos, rot, scale);
-				}
-
-				// update sprites
-				const auto markStartSpriteUpdate = hrclock::now();
-				{
-					auto drawFutures = batches | vi::transform([&](auto&& batch) {
-						return std::async([&](auto&& batch) {
-							auto&& [pBatcher, spritePtrRange] = batch;
-							for (const auto& ps : spritePtrRange) {
-								ps->Update(0.001f, rne);
-							}
-						}, batch);
-					}) | rn::to<std::vector>();
-				}
-				const auto durationSpriteUpdate = hrclock::now() - markStartSpriteUpdate;
-				const auto spriteUpdateMs = std::chrono::duration<float, std::milli>(durationSpriteUpdate).count();
-
-				// render frame
-				pPane->BeginFrame();
-				for (auto& pBatcher : batchers) {
-					pBatcher->StartBatch(*pPane);
-				}
-
-				const auto markStartSpriteDraw = hrclock::now();
-				{
-					auto drawFutures = batches | vi::transform([&](auto&& batch) {
-						return std::async([&](auto&& batch) {
-							auto&& [pBatcher, spritePtrRange] = batch;
-							for (const auto& ps : spritePtrRange) {
-								ps->Draw(*pBatcher);
-							}
-						}, batch);
-					}) | rn::to<std::vector>();
-				}
-				const auto durationSpriteDraw = hrclock::now() - markStartSpriteDraw;
-				const auto spriteDrawMs = std::chrono::duration<float, std::milli>(durationSpriteDraw).count();
-
-				for (auto& pBatcher : batchers) {
-					pBatcher->EndBatch(*pPane);
-				}
-				pPane->EndFrame();
-
-				// output benching information
-				OutputDebugStringA(std::format("s-up [{:>8.4f}ms]  s-draw [{:>8.4f}ms]\n", spriteUpdateMs, spriteDrawMs).c_str());
-			}
-			pPane->FlushQueues();
-
-			chilog.info(std::format(L"sprites: {}", characters.size()));
-
-			isLive = false;
-		}
-		// data
-		std::binary_semaphore constructionSemaphore_{ 0 };
-		std::atomic<bool> isLive{ true };
-		std::jthread thread_;
-	};
-
 	try {
 		// init COM
 		if (FAILED(CoInitializeEx(nullptr, COINIT_MULTITHREADED))) {
 			throw std::runtime_error{ "COM farked" };
 		}
 
+		// initialize services in ioc containers
 		Boot();
 
+		// shortcut for ioc container
+		auto& C = ioc::Get();
 		// create sprite codex
-		auto pSpriteCodex = ioc::Get().Resolve<gfx::ISpriteCodex>({ nSheets });
+		auto pSpriteCodex = C.Resolve<gfx::ISpriteCodex>({ Global::nSheets });
 		// create resource loader
-		auto pLoader = ioc::Get().Resolve<gfx::IResourceLoader>();
+		auto pLoader = C.Resolve<gfx::IResourceLoader>();
 		// load sprite atlases (textures) into sprite codex
 		{
-			std::vector<std::future<std::shared_ptr<gfx::ITexture>>> futures;
-			for (int i = 0; i < nSheets; i++) {
+			std::vector<gfx::IResourceLoader::FutureTexture> futures;
+			for (int i = 0; i < Global::nSheets; i++) {
 				futures.push_back(pLoader->LoadTexture(std::format(L"sprote-shiet-{}.png", i)));
 			}
 			for (auto& f : futures) {
@@ -245,12 +258,10 @@ int WINAPI wWinMain(
 			}
 		}
 
-		std::vector<std::unique_ptr<ActiveWindow>> windows;
-		for (int i = 0; i < 1; i++) {
-			windows.push_back(std::make_unique<ActiveWindow>(i, pSpriteCodex));
-		}
+		auto windows = vi::iota(0, Global::nWindows) |
+			vi::transform([&](int i) {return std::make_unique<ActiveWindow>(i, pSpriteCodex); }) |
+			rn::to<std::vector>();
 
-		float c = 0;
 		while (!windows.empty()) {
 			std::erase_if(windows, [](auto& p) {return !p->IsLive(); });
 			std::this_thread::sleep_for(50ms);

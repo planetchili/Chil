@@ -8,7 +8,10 @@ namespace chil::gfx
 	class IResourceLoader
 	{
 	public:
+		// types
+		using FutureTexture = std::future<std::shared_ptr<ITexture>>;
+		// functions
 		virtual ~IResourceLoader() = default;
-		virtual std::future<std::shared_ptr<ITexture>> LoadTexture(std::wstring path) = 0;
+		virtual FutureTexture LoadTexture(std::wstring path) = 0;
 	};
 }
