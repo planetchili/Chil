@@ -55,8 +55,7 @@ void Boot()
 class ActiveWindow
 {
 public:
-	ActiveWindow(int index,
-		std::shared_ptr<gfx::ISpriteCodex> pSpriteCodex)
+	ActiveWindow(int index, std::shared_ptr<gfx::ISpriteCodex> pSpriteCodex)
 		:
 		thread_{ &ActiveWindow::Kernel_, this, index, std::move(pSpriteCodex) }
 	{
@@ -74,23 +73,20 @@ public:
 	}
 private:
 	// functions
-	void Kernel_(int index,
-		std::shared_ptr<gfx::ISpriteCodex> pSpriteCodex)
+	void Kernel_(int index, std::shared_ptr<gfx::ISpriteCodex> pSpriteCodex)
 	{
 		try {
 			// ioc container shortcut
 			auto& C = ioc::Get();
 			//// do construction
 			// make sprite batchers
-			std::vector<std::shared_ptr<gfx::ISpriteBatcher>> batchers;
-			for (int i = 0; i < Global::nBatches; i++) {
-				auto pBatcher = C.Resolve<gfx::ISpriteBatcher>(gfx::ISpriteBatcher::IocParams{
+			auto batchers = vi::iota(0ull, Global::nBatches) | vi::transform([&](auto i) {
+				return C.Resolve<gfx::ISpriteBatcher>(gfx::ISpriteBatcher::IocParams{
 					.targetDimensions = Global::outputDims,
 					.pSpriteCodex = pSpriteCodex,
 					.maxSpriteCount = UINT(Global::nCharacters / Global::nBatches + 1)
-					});
-				batchers.push_back(std::move(pBatcher));
-			}
+				});
+			}) | rn::to<std::vector>();
 			// make window
 			auto keyboard = std::make_shared<win::Keyboard>();
 			auto pWindow = C.Resolve<win::IWindow>(win::IWindow::IocParams{
