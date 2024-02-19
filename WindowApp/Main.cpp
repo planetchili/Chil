@@ -274,7 +274,7 @@ int WINAPI wWinMain(
 		}
 	}
 	catch (const std::exception& e) {
-		chilog.error(utl::ToWide(e.what())).no_trace();
+		chilog.error(L"Error caught at top level: " + utl::ToWide(e.what())).no_trace();
 		return -1;
 	}
 
