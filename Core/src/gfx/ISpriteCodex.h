@@ -1,5 +1,6 @@
 #pragma once
 #include <memory>
+#include <cstdint>
 #include <Core/src/spa/Dimensions.h>
 #include "ITexture.h"
 
@@ -12,7 +13,7 @@ namespace chil::gfx
 		// types
 		struct IocParams
 		{
-			UINT maxAtlases;
+			uint32_t maxAtlases;
 		};
 		// functions
 		virtual ~ISpriteCodex() = default;
