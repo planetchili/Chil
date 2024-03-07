@@ -115,7 +115,7 @@ namespace chil::gfx::d12
 	RenderPane::~RenderPane()
 	{
 		// wait for queue to become completely empty
-		pCommandQueue_->Flush();
+		try { FlushQueues(); } catch (...) {}
 	}
 
 	void RenderPane::BeginFrame()

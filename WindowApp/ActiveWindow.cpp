@@ -5,6 +5,7 @@
 #include <Core/src/gfx/IRenderPane.h>
 #include <ranges>
 #include <numbers>
+#include <numeric>
 #include "Sprite.h"
 #include "Global.h"
 
@@ -12,6 +13,52 @@ using namespace chil;
 using hrclock = std::chrono::high_resolution_clock;
 namespace rn = std::ranges;
 namespace vi = rn::views;
+
+
+class BenchData
+{
+public:
+	BenchData(size_t initial)
+	{
+		datapoints_.reserve(initial);
+	}
+	void Push(float data) { datapoints_.push_back(data); }
+	float GetPercentile(float percentile)
+	{
+		if (datapoints_.empty()) {
+			return std::numeric_limits<float>::quiet_NaN();
+		}
+		Sort_();
+		return datapoints_[(size_t)std::round(float(datapoints_.size()) * (percentile / 100.f))];
+	}
+	float GetAverage()
+	{
+		if (datapoints_.empty()) {
+			return std::numeric_limits<float>::quiet_NaN();
+		}
+		return float(std::accumulate(datapoints_.begin(), datapoints_.end(), 0.)
+			/ double(datapoints_.size()));
+	}
+	int GetCount() const
+	{
+		return (int)datapoints_.size();
+	}
+	void DitchFirstPercent(float percent)
+	{
+		const auto n = int(float(datapoints_.size()) * (percent / 100.f));
+		datapoints_ = datapoints_ | vi::drop(n) | rn::to<std::vector>();
+	}
+private:
+	void Sort_()
+	{
+		if (!sorted) {
+			rn::sort(datapoints_);
+			sorted = true;
+		}
+	}
+	bool sorted = false;
+	std::vector<float> datapoints_;
+};
 
 
 ActiveWindow::ActiveWindow(int index, std::shared_ptr<gfx::ISpriteCodex> pSpriteCodex)
@@ -35,6 +82,10 @@ bool ActiveWindow::IsLive() const
 void ActiveWindow::Kernel_(int index, std::shared_ptr<gfx::ISpriteCodex> pSpriteCodex)
 {
 	try {
+		// setup benching data
+		BenchData updates{ 10'000 };
+		BenchData draws{ 10'000 };
+
 		// ioc container shortcut
 		auto& C = ioc::Get();
 		//// do construction
@@ -44,7 +95,7 @@ void ActiveWindow::Kernel_(int index, std::shared_ptr<gfx::ISpriteCodex> pSprite
 				.targetDimensions = Global::outputDims,
 				.pSpriteCodex = pSpriteCodex,
 				.maxSpriteCount = UINT(Global::nCharacters / Global::nBatches + 1)
-				});
+			});
 		}) | rn::to<std::vector>();
 		// make window
 		auto keyboard = std::make_shared<win::Keyboard>();
@@ -52,17 +103,17 @@ void ActiveWindow::Kernel_(int index, std::shared_ptr<gfx::ISpriteCodex> pSprite
 			.pKeySink = keyboard,
 			.name = std::format(L"Window #{}", index),
 			.size = Global::outputDims,
-			});
+		});
 		// make graphics pane
 		auto pPane = C.Resolve<gfx::IRenderPane>(gfx::IRenderPane::IocParams{
 			.hWnd = pWindow->GetHandle(),
 			.dims = Global::outputDims,
-			});
+		});
 		// signal completion of construction phase
 		constructionSemaphore_.release();
 
 		// random engine
-		std::minstd_rand0 rne;
+		std::minstd_rand0 rne{ Global::seed };
 		// sprite blueprints
 		std::vector<std::shared_ptr<ISpriteBlueprint>> blueprints;
 		for (int i = 0; i < Global::nSheets; i++) {
@@ -170,9 +221,22 @@ void ActiveWindow::Kernel_(int index, std::shared_ptr<gfx::ISpriteCodex> pSprite
 			// finish and present the frame
 			pPane->EndFrame();
 
-			// output benching information
-			OutputDebugStringA(std::format("s-up [{:>8.4f}ms]  s-draw [{:>8.4f}ms]\n", spriteUpdateMs, spriteDrawMs).c_str());
+			// accumulate benching information
+			updates.Push(spriteUpdateMs);
+			draws.Push(spriteDrawMs);
+
+			if constexpr (Global::framesToRunFor) {
+				if (updates.GetCount() >= Global::framesToRunFor) {
+					break;
+				}
+			}
 		}
+		updates.DitchFirstPercent(10.f);
+		draws.DitchFirstPercent(10.f);
+		OutputDebugStringA(std::format("spr-upd | avg [{:>8.4f}ms] 99% [{:>8.4f}ms] 90% [{:>8.4f}ms]\n",
+			updates.GetAverage(), updates.GetPercentile(99.f), updates.GetPercentile(90.f)).c_str());
+		OutputDebugStringA(std::format("spr-drw | avg [{:>8.4f}ms] 99% [{:>8.4f}ms] 90% [{:>8.4f}ms]\n",
+			draws.GetAverage(), draws.GetPercentile(99.f), draws.GetPercentile(90.f)).c_str());
 		pPane->FlushQueues();
 		isLive = false;
 	}
