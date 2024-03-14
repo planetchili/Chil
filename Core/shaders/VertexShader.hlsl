@@ -11,12 +11,16 @@ struct Camera
 };
 ConstantBuffer<Camera> cam : register(b0);
 
+
 Output main(
-    float3 pos : POSITION,
-    float2 uv : TEXCOORD,
+    // Per-vertex data
+    float2 pos : POSITION,
+    // Instance data
     float2 tl : TRANSLATION,
-    float2 scale : SCALE,
     float rot : ROTATION,
+    float2 scale : SCALE,
+    float4 texRect : TEXRECT,
+    uint2 destDims : DEST_DIMS,
     uint atlasIndex : ATLASINDEX)
 {
     // generate the per-sprite (object) transform matrix

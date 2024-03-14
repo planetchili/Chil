@@ -33,36 +33,42 @@ namespace chil::gfx::d12
 		// types
 		struct Vertex_
 		{
-			DirectX::XMFLOAT3 position;
-			DirectX::XMFLOAT2 tc;
+			DirectX::XMFLOAT2 position;
+		};
+		struct Instance_
+		{
 			DirectX::XMFLOAT2 translation;
-			DirectX::XMFLOAT2 scale;
 			float rotation;
+			DirectX::XMFLOAT2 scale;		
+			// x: left, y: top, z: right, a: bottom
+			DirectX::XMFLOAT4 texRect;
+			DirectX::XMFLOAT2 destDimensions;
 			USHORT atlasIndex;
 		};
 		struct FrameResource_
 		{
-			Microsoft::WRL::ComPtr<ID3D12Resource> pVertexBuffer;
-			D3D12_VERTEX_BUFFER_VIEW vertexBufferView{};
+			Microsoft::WRL::ComPtr<ID3D12Resource> pBuffer;
+			D3D12_VERTEX_BUFFER_VIEW bufferView{};
 		};
 		// functions
 		FrameResource_ GetFrameResource_(uint64_t frameFenceValue);
-		void WriteIndexBufferFillCommands_(CommandListPair& cmd);
+		void WriteStaticBufferFillCommands_(CommandListPair& cmd);
 		// connection to other gfx components
 		std::shared_ptr<d12::IDevice> pDevice_;
 		// vertex stuff
-		UINT maxVertices_;
-		UINT maxIndices_;
-		UINT nVertices_ = 0; 
-		UINT nIndices_ = 0;
-		Vertex_* pVertexUpload_ = nullptr;
+		UINT maxInstances_;
+		UINT nInstances_ = 0;
+		Instance_* pInstanceUpload_ = nullptr;
 		std::optional<FrameResource_> currentFrameResource_;
 		FrameResourcePool<FrameResource_> frameResourcePool_;
 		Microsoft::WRL::ComPtr<ID3D12Resource> pIndexBuffer_;
 		D3D12_INDEX_BUFFER_VIEW indexBufferView_{};
-		bool indexBufferFilled_ = false;
 		Microsoft::WRL::ComPtr<ID3D12Resource> pIndexUploadBuffer_;
-		uint64_t indexBufferUploadFenceValue_ = 0;
+		Microsoft::WRL::ComPtr<ID3D12Resource> pVertexBuffer_;
+		D3D12_VERTEX_BUFFER_VIEW vertexBufferView_{};
+		Microsoft::WRL::ComPtr<ID3D12Resource> pVertexUploadBuffer_;
+		bool staticBuffersFilled_ = false;
+		uint64_t staticBufferUploadFenceValue_ = 0;
 		// sprite atlas codex
 		std::shared_ptr<d12::SpriteCodex> pSpriteCodex_;
 		// command list (moved in/out)

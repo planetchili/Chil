@@ -21,8 +21,7 @@ namespace chil::gfx::d12
 		pDevice_{ std::dynamic_pointer_cast<decltype(pDevice_)::element_type>(std::move(pDevice)) },
 		outputDims_{ (spa::DimensionsF)targetDimensions },
 		pSpriteCodex_{ std::dynamic_pointer_cast<decltype(pSpriteCodex_)::element_type>(std::move(pSpriteCodex)) },
-		maxIndices_{ 6 * maxSpriteCount },
-		maxVertices_{ 4 * maxSpriteCount },
+		maxInstances_{ maxSpriteCount },
 		cameraTransform_{ DirectX::XMMatrixIdentity() }
 	{		
 		auto pDeviceInterface = pDevice_->GetD3D12DeviceInterface();
@@ -86,12 +85,14 @@ namespace chil::gfx::d12
 
 			// define the Vertex input layout 
 			const D3D12_INPUT_ELEMENT_DESC inputLayout[] = {
-				{ "POSITION",		0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-				{ "TEXCOORD",		0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-				{ "TRANSLATION",	0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-				{ "SCALE",			0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-				{ "ROTATION",		0, DXGI_FORMAT_R32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-				{ "ATLASINDEX",		0, DXGI_FORMAT_R16_UINT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+				{ "POSITION",		0, DXGI_FORMAT_R32G32_FLOAT,		0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+
+				{ "TRANSLATION",	0, DXGI_FORMAT_R32G32_FLOAT,		1, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1 },
+				{ "ROTATION",		0, DXGI_FORMAT_R32_FLOAT,			1, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1 },
+				{ "SCALE",			0, DXGI_FORMAT_R32G32_FLOAT,		1, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1 },
+				{ "TEXRECT",		0, DXGI_FORMAT_R32G32B32A32_FLOAT,	1, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1 },
+				{ "DEST_DIMS",		0, DXGI_FORMAT_R16G16_UINT,			1, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1 },
+				{ "ATLASINDEX",		0, DXGI_FORMAT_R16_UINT,			1, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1 },
 			};
 
 			// Load the vertex shader. 
@@ -123,7 +124,7 @@ namespace chil::gfx::d12
 			// create index buffer resource
 			{
 				const CD3DX12_HEAP_PROPERTIES heapProps{ D3D12_HEAP_TYPE_DEFAULT };
-				const auto resourceDesc = CD3DX12_RESOURCE_DESC::Buffer(sizeof(UINT) * maxIndices_);
+				const auto resourceDesc = CD3DX12_RESOURCE_DESC::Buffer(sizeof(USHORT[6]));
 				pDeviceInterface->CreateCommittedResource(
 					&heapProps,
 					D3D12_HEAP_FLAG_NONE,
@@ -135,8 +136,26 @@ namespace chil::gfx::d12
 			// index buffer view
 			indexBufferView_ = {
 				.BufferLocation = pIndexBuffer_->GetGPUVirtualAddress(),
-				.SizeInBytes = (UINT)sizeof(UINT) * maxIndices_,
-				.Format = DXGI_FORMAT_R32_UINT,
+				.SizeInBytes = (UINT)sizeof(USHORT[6]),
+				.Format = DXGI_FORMAT_R16_UINT,
+			};
+			// create vertex buffer resource
+			{
+				const CD3DX12_HEAP_PROPERTIES heapProps{ D3D12_HEAP_TYPE_DEFAULT };
+				const auto resourceDesc = CD3DX12_RESOURCE_DESC::Buffer(sizeof(Vertex_[4]));
+				pDeviceInterface->CreateCommittedResource(
+					&heapProps,
+					D3D12_HEAP_FLAG_NONE,
+					&resourceDesc,
+					D3D12_RESOURCE_STATE_COPY_DEST,
+					nullptr, IID_PPV_ARGS(&pIndexBuffer_)
+				) >> chk;
+			}
+			// vertex buffer view
+			vertexBufferView_ = {
+				.BufferLocation = pIndexBuffer_->GetGPUVirtualAddress(),
+				.SizeInBytes = (UINT)sizeof(Vertex_[4]),
+				.StrideInBytes = (UINT)sizeof(Vertex_),
 			};
 		}
 	}
@@ -151,12 +170,11 @@ namespace chil::gfx::d12
 		// frame resource stuff
 		currentFrameResource_ = GetFrameResource_(signaledFenceValue_);
 		const auto mapReadRangeNone = CD3DX12_RANGE{ 0, 0 };
-		// vertex buffer
-		currentFrameResource_->pVertexBuffer->Map(0, &mapReadRangeNone,
-			reinterpret_cast<void**>(&pVertexUpload_)) >> chk;
-		// write indices reset
-		nVertices_ = 0;
-		nIndices_ = 0;
+		// instance buffer
+		currentFrameResource_->pBuffer->Map(0, &mapReadRangeNone,
+			reinterpret_cast<void**>(&pInstanceUpload_)) >> chk;
+		// write index reset
+		nInstances_ = 0;
 	}
 
 	void SpriteBatcher::SetCamera(const spa::Vec2F& pos, float rot, float scale)
@@ -184,47 +202,23 @@ namespace chil::gfx::d12
 	{
 		using namespace DirectX;
 
-		chilass(nVertices_ + 4 <= maxVertices_);
-		chilass(nIndices_ + 6 <= maxIndices_);
-		
-		// atlas index 32-bit
-		const auto atlasIndex32 = (UINT)atlasIndex;
+		chilass(nInstances_ <= maxInstances_);
 
-		// starting dest vertice vectors
-		const DirectX::XMFLOAT3 posArray[4]{
-			{ 0.f, 0.f, 0.f },
-			{ destPixelDims.width, 0.f, 0.f },
-			{ 0.f, -destPixelDims.height, 0.f },
-			{ destPixelDims.width, -destPixelDims.height, 0.f },
+		// use a system memory cache for building instance struct before writing to UWCM
+		Instance_ instanceCache{
+			.translation = { pos.x, pos.y },
+			.rotation = rot,
+			.scale = { scale.x, scale.y },
+			.texRect = { srcInTexcoords.left, srcInTexcoords.top, srcInTexcoords.right, srcInTexcoords.bottom },
+			.destDimensions = { (float)destPixelDims.width, (float)destPixelDims.height },
+			.atlasIndex = (USHORT)atlasIndex,
 		};
 
-		// use a system memory cache for building vertices before writing to UWCM
-		Vertex_ vertexCache[4];
-		
-		// update index count
-		nIndices_ += 6;
-
-		// write vertex source coordinates
-		vertexCache[0].tc = { srcInTexcoords.left, srcInTexcoords.top };
-		vertexCache[1].tc = { srcInTexcoords.right, srcInTexcoords.top };
-		vertexCache[2].tc = { srcInTexcoords.left, srcInTexcoords.bottom };
-		vertexCache[3].tc = { srcInTexcoords.right, srcInTexcoords.bottom };
-
-		// write vertex destination and atlas index
-		for (int i = 0; i < 4; i++) {
-			auto& vtx = vertexCache[i];
-			vtx.position = posArray[i];
-			vtx.rotation = rot;
-			vtx.scale = { scale.x, scale.y };
-			vtx.translation = { pos.x, pos.y };
-			vtx.atlasIndex = atlasIndex32;
-		}
-
 		// copy from system cache to write-combining memory
-		memcpy(&pVertexUpload_[nVertices_], vertexCache, sizeof(vertexCache));
+		memcpy(&pInstanceUpload_[nInstances_], &instanceCache, sizeof(instanceCache));
 
-		// increment vertex write index / count
-		nVertices_ += 4;
+		// increment instance write index / count
+		nInstances_++;
 	}
 
 	void SpriteBatcher::EndBatch(gfx::IRenderPane& pane)
@@ -233,18 +227,19 @@ namespace chil::gfx::d12
 		chilass(cmd_.pCommandList);
 
 		// fill index buffer if not already filled
-		if (!indexBufferFilled_) {
-			WriteIndexBufferFillCommands_(cmd_);
+		if (!staticBuffersFilled_) {
+			WriteStaticBufferFillCommands_(cmd_);
 		}
-		else if (pIndexUploadBuffer_ && signaledFenceValue_ >= indexBufferUploadFenceValue_) {
-			// remove upload buffer when upload is finished
+		else if (signaledFenceValue_ >= staticBufferUploadFenceValue_) {
+			// remove upload buffers when upload is finished
 			pIndexUploadBuffer_.Reset();
+			pVertexUploadBuffer_.Reset();
 		}
-		// unmap upload vertex
+		// unmap upload instance buffer
 		{
-			const auto mapWrittenRange = CD3DX12_RANGE{ 0, nVertices_ * sizeof(Vertex_) };
-			currentFrameResource_->pVertexBuffer->Unmap(0, &mapWrittenRange);
-			pVertexUpload_ = nullptr;
+			const auto mapWrittenRange = CD3DX12_RANGE{ 0, nInstances_ * sizeof(Instance_) };
+			currentFrameResource_->pBuffer->Unmap(0, &mapWrittenRange);
+			pInstanceUpload_ = nullptr;
 		}
 
 		// set pipeline state 
@@ -252,7 +247,10 @@ namespace chil::gfx::d12
 		cmd_.pCommandList->SetGraphicsRootSignature(pRootSignature_.Get());
 		// configure IA 
 		cmd_.pCommandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-		cmd_.pCommandList->IASetVertexBuffers(0, 1, &currentFrameResource_->vertexBufferView);
+		{
+			const std::array views = { vertexBufferView_, currentFrameResource_->bufferView };
+			cmd_.pCommandList->IASetVertexBuffers(0, 2, views.data());
+		}
 		cmd_.pCommandList->IASetIndexBuffer(&indexBufferView_);
 		// bind the heap containing the texture descriptor
 		{
@@ -264,7 +262,7 @@ namespace chil::gfx::d12
 		// bind the camera transform matrix
 		cmd_.pCommandList->SetGraphicsRoot32BitConstants(1, sizeof(cameraTransform_) / 4, &cameraTransform_, 0);
 		// draw vertices
-		cmd_.pCommandList->DrawIndexedInstanced(nIndices_, 1, 0, 0, 0);
+		cmd_.pCommandList->DrawIndexedInstanced(6, nInstances_, 0, 0, 0);
 
 		// return frame resource to pool
 		frameResourcePool_.PutResource(std::move(*currentFrameResource_), frameFenceValue_);
@@ -274,55 +272,92 @@ namespace chil::gfx::d12
 		dynamic_cast<d12::IRenderPane&>(pane).SubmitCommandList(std::move(cmd_));
 	}
 
-	void SpriteBatcher::WriteIndexBufferFillCommands_(CommandListPair& cmd)
+	void SpriteBatcher::WriteStaticBufferFillCommands_(CommandListPair& cmd)
 	{
-		// create array of index data
-		std::vector<UINT> indexData(maxIndices_);
+		// initializing the static index buffer
 		{
-			UINT baseVertexIndex_ = 0;
-			for (size_t i = 0; i < maxIndices_; i += 6) {
-				indexData[i + 0] = baseVertexIndex_ + 0;
-				indexData[i + 1] = baseVertexIndex_ + 1;
-				indexData[i + 2] = baseVertexIndex_ + 2;
-				indexData[i + 3] = baseVertexIndex_ + 1;
-				indexData[i + 4] = baseVertexIndex_ + 3;
-				indexData[i + 5] = baseVertexIndex_ + 2;
-				baseVertexIndex_ += 4;
+			// create array of index data
+			const USHORT indexData[6]{
+				0,
+				1,
+				2,
+				1,
+				3,
+				2,
+			};
+			// create committed resource for cpu upload of index data
+			{
+				const CD3DX12_HEAP_PROPERTIES heapProps{ D3D12_HEAP_TYPE_UPLOAD };
+				const auto resourceDesc = CD3DX12_RESOURCE_DESC::Buffer(sizeof(indexData));
+				pDevice_->GetD3D12DeviceInterface()->CreateCommittedResource(
+					&heapProps,
+					D3D12_HEAP_FLAG_NONE,
+					&resourceDesc,
+					D3D12_RESOURCE_STATE_GENERIC_READ,
+					nullptr, IID_PPV_ARGS(&pIndexUploadBuffer_)
+				) >> chk;
+			}
+			// copy array of index data to upload buffer  
+			{
+				UINT* mappedIndexData = nullptr;
+				pIndexUploadBuffer_->Map(0, nullptr, reinterpret_cast<void**>(&mappedIndexData)) >> chk;
+				rn::copy(indexData, mappedIndexData);
+				pIndexUploadBuffer_->Unmap(0, nullptr);
+			}
+			// copy upload buffer to index buffer  
+			cmd.pCommandList->CopyResource(pIndexBuffer_.Get(), pIndexUploadBuffer_.Get());
+			// transition index buffer to index buffer state 
+			{
+				const auto barrier = CD3DX12_RESOURCE_BARRIER::Transition(
+					pIndexBuffer_.Get(),
+					D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_INDEX_BUFFER);
+				cmd.pCommandList->ResourceBarrier(1, &barrier);
 			}
 		}
-		// create committed resource for cpu upload of index data
+
+		// initializing static vertex buffer
 		{
-			const CD3DX12_HEAP_PROPERTIES heapProps{ D3D12_HEAP_TYPE_UPLOAD };
-			const auto resourceDesc = CD3DX12_RESOURCE_DESC::Buffer(indexData.size() * sizeof(UINT));
-			pDevice_->GetD3D12DeviceInterface()->CreateCommittedResource(
-				&heapProps,
-				D3D12_HEAP_FLAG_NONE,
-				&resourceDesc,
-				D3D12_RESOURCE_STATE_GENERIC_READ,
-				nullptr, IID_PPV_ARGS(&pIndexUploadBuffer_)
-			) >> chk;
-		}
-		// copy array of index data to upload buffer  
-		{
-			UINT* mappedIndexData = nullptr;
-			pIndexUploadBuffer_->Map(0, nullptr, reinterpret_cast<void**>(&mappedIndexData)) >> chk;
-			rn::copy(indexData, mappedIndexData);
-			pIndexUploadBuffer_->Unmap(0, nullptr);
-		}
-		// copy upload buffer to index buffer  
-		cmd.pCommandList->CopyResource(pIndexBuffer_.Get(), pIndexUploadBuffer_.Get());
-		// transition index buffer to index buffer state 
-		{
-			const auto barrier = CD3DX12_RESOURCE_BARRIER::Transition(
-				pIndexBuffer_.Get(),
-				D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_INDEX_BUFFER);
-			cmd.pCommandList->ResourceBarrier(1, &barrier);
+			// create array of vertex data
+			const Vertex_ vertexData[4] {
+				{ { -0.5f,  0.5f  } },
+				{ {  0.5f,  0.5f  } },
+				{ { -0.5f, -0.5f  } },
+				{ {  0.5f, -0.5f  } },
+			};
+			// create committed resource for cpu upload of vertex data
+			{
+				const CD3DX12_HEAP_PROPERTIES heapProps{ D3D12_HEAP_TYPE_UPLOAD };
+				const auto resourceDesc = CD3DX12_RESOURCE_DESC::Buffer(sizeof(vertexData));
+				pDevice_->GetD3D12DeviceInterface()->CreateCommittedResource(
+					&heapProps,
+					D3D12_HEAP_FLAG_NONE,
+					&resourceDesc,
+					D3D12_RESOURCE_STATE_GENERIC_READ,
+					nullptr, IID_PPV_ARGS(&pVertexUploadBuffer_)
+				) >> chk;
+			}
+			// copy array of vertex data to upload buffer  
+			{
+				Vertex_* mappedVertexData = nullptr;
+				pVertexUploadBuffer_->Map(0, nullptr, reinterpret_cast<void**>(&mappedVertexData)) >> chk;
+				rn::copy(vertexData, mappedVertexData);
+				pVertexUploadBuffer_->Unmap(0, nullptr);
+			}
+			// copy upload buffer to vertex buffer  
+			cmd.pCommandList->CopyResource(pVertexBuffer_.Get(), pVertexUploadBuffer_.Get());
+			// transition vertex buffer to vertex buffer state 
+			{
+				const auto barrier = CD3DX12_RESOURCE_BARRIER::Transition(
+					pVertexBuffer_.Get(),
+					D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
+				cmd.pCommandList->ResourceBarrier(1, &barrier);
+			}
 		}
 
-		// set index buffer filled flag
-		indexBufferFilled_ = true;
+		// set static buffer filled flag
+		staticBuffersFilled_ = true;
 		// set fence value for upload complete
-		indexBufferUploadFenceValue_ = frameFenceValue_;
+		staticBufferUploadFenceValue_ = frameFenceValue_;
 	}
 
 	// SpriteBatcher::FrameResource_
@@ -340,20 +375,20 @@ namespace chil::gfx::d12
 		// vertex buffer
 		{
 			const CD3DX12_HEAP_PROPERTIES heapProps{ D3D12_HEAP_TYPE_UPLOAD };
-			const auto resourceDesc = CD3DX12_RESOURCE_DESC::Buffer(sizeof(Vertex_) * maxVertices_);
+			const auto resourceDesc = CD3DX12_RESOURCE_DESC::Buffer(sizeof(Instance_) * maxInstances_);
 			pDeviceInterface->CreateCommittedResource(
 				&heapProps,
 				D3D12_HEAP_FLAG_NONE,
 				&resourceDesc,
 				D3D12_RESOURCE_STATE_GENERIC_READ,
-				nullptr, IID_PPV_ARGS(&fr.pVertexBuffer)
+				nullptr, IID_PPV_ARGS(&fr.pBuffer)
 			) >> chk;
 		}
 		// vertex buffer view
-		fr.vertexBufferView = {
-			.BufferLocation = fr.pVertexBuffer->GetGPUVirtualAddress(),
-			.SizeInBytes = (UINT)sizeof(Vertex_) * maxVertices_,
-			.StrideInBytes = sizeof(Vertex_),
+		fr.bufferView = {
+			.BufferLocation = fr.pBuffer->GetGPUVirtualAddress(),
+			.SizeInBytes = (UINT)sizeof(Instance_) * maxInstances_,
+			.StrideInBytes = sizeof(Instance_),
 		};
 
 		return fr;
