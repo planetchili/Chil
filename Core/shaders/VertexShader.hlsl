@@ -14,7 +14,7 @@ ConstantBuffer<Camera> cam : register(b0);
 
 Output main(
     // Per-vertex data
-    float2 pos : POSITION,
+    float2 unitPos : POSITION,
     // Instance data
     float2 tl : TRANSLATION,
     float rot : ROTATION,
@@ -36,10 +36,18 @@ Output main(
     // concatenate object and camera matrices
     const matrix transform = mul(objTransform, cam.transform);
     
+    // geometry generate
+    const float2 pos = unitPos * destDims;
+    
+    // recover texcoords
+    float2 texTopLeft = texRect.xy;
+    float2 texDims = float2(texRect.z - texRect.x, texRect.a - texRect.y);
+    float2 texAxes = unitPos + float2(0.5, 0.5);
+    
     // generate output to pixel shader
 	Output vertexOut;
-    vertexOut.position = mul(float4(pos, 1.f), transform);
-	vertexOut.uv = uv;
+    vertexOut.position = mul(float4(pos, 0.f, 1.f), transform);
+    vertexOut.uv = texTopLeft + texDims * texAxes;
     vertexOut.atlasIndex = atlasIndex;
 
 	return vertexOut;
