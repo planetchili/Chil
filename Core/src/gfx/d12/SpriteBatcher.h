@@ -42,8 +42,8 @@ namespace chil::gfx::d12
 			DirectX::XMFLOAT2 scale;		
 			// x: left, y: top, z: right, a: bottom
 			DirectX::XMFLOAT4 texRect;
-			DirectX::XMFLOAT2 destDimensions;
-			USHORT atlasIndex;
+			uint16_t destDimensions[2];
+			uint16_t atlasIndex;
 		};
 		struct FrameResource_
 		{

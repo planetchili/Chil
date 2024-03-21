@@ -41,8 +41,9 @@ Output main(
     
     // recover texcoords
     float2 texTopLeft = texRect.xy;
+    // flips occur here because differences in x/y sign in world, and differences between world and tex directions
     float2 texDims = float2(texRect.z - texRect.x, texRect.a - texRect.y);
-    float2 texAxes = unitPos + float2(0.5, 0.5);
+    float2 texAxes = float2(unitPos.x + 0.5f, 0.5f - unitPos.y);
     
     // generate output to pixel shader
 	Output vertexOut;

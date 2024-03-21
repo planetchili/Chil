@@ -210,8 +210,8 @@ namespace chil::gfx::d12
 			.rotation = rot,
 			.scale = { scale.x, scale.y },
 			.texRect = { srcInTexcoords.left, srcInTexcoords.top, srcInTexcoords.right, srcInTexcoords.bottom },
-			.destDimensions = { (float)destPixelDims.width, (float)destPixelDims.height },
-			.atlasIndex = (USHORT)atlasIndex,
+			.destDimensions = { (uint16_t)destPixelDims.width, (uint16_t)destPixelDims.height },
+			.atlasIndex = (uint16_t)atlasIndex,
 		};
 
 		// copy from system cache to write-combining memory
@@ -299,7 +299,7 @@ namespace chil::gfx::d12
 			}
 			// copy array of index data to upload buffer  
 			{
-				UINT* mappedIndexData = nullptr;
+				USHORT* mappedIndexData = nullptr;
 				pIndexUploadBuffer_->Map(0, nullptr, reinterpret_cast<void**>(&mappedIndexData)) >> chk;
 				rn::copy(indexData, mappedIndexData);
 				pIndexUploadBuffer_->Unmap(0, nullptr);
