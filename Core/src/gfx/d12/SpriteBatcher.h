@@ -27,7 +27,7 @@ namespace chil::gfx::d12
 			const spa::DimensionsF& destPixelDims,
 			const spa::Vec2F& pos,
 			const float rot = 0.f,
-			const spa::Vec2F& scale = { 1.f, 1.f }) override;
+			const spa::DimensionsF& scale = { 1.f, 1.f }) override;
 		void EndBatch(gfx::IRenderPane& pane) override;
 	private:		
 		// types
@@ -37,12 +37,12 @@ namespace chil::gfx::d12
 		};
 		struct Instance_
 		{
-			DirectX::XMFLOAT2 translation;
+			spa::Vec2F translation;
 			float rotation;
-			DirectX::XMFLOAT2 scale;		
-			// x: left, y: top, z: right, a: bottom
-			DirectX::XMFLOAT4 texRect;
-			uint16_t destDimensions[2];
+			spa::DimensionsF scale;
+			spa::Vec2F frameTexPos;
+			spa::DimensionsF frameTexDims;
+			spa::DimensionsT<uint16_t> destPixelDims;
 			uint16_t atlasIndex;
 		};
 		struct FrameResource_

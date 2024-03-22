@@ -13,6 +13,6 @@ namespace Global
 	inline constexpr auto outputDims = chil::spa::DimensionsI{ 1280, 720 };
 	inline constexpr int nWindows = 1;
 	inline constexpr unsigned int seed = 42069;
-	inline constexpr int framesToRunFor = 4'000;
-	//inline constexpr int framesToRunFor = 0;
+	//inline constexpr int framesToRunFor = 4'000;
+	inline constexpr int framesToRunFor = 0;
 }

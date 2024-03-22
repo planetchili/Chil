@@ -90,8 +90,9 @@ namespace chil::gfx::d12
 				{ "TRANSLATION",	0, DXGI_FORMAT_R32G32_FLOAT,		1, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1 },
 				{ "ROTATION",		0, DXGI_FORMAT_R32_FLOAT,			1, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1 },
 				{ "SCALE",			0, DXGI_FORMAT_R32G32_FLOAT,		1, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1 },
-				{ "TEXRECT",		0, DXGI_FORMAT_R32G32B32A32_FLOAT,	1, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1 },
-				{ "DEST_DIMS",		0, DXGI_FORMAT_R16G16_UINT,			1, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1 },
+				{ "TEXPOS",			0, DXGI_FORMAT_R32G32_FLOAT,		1, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1 },
+				{ "TEXDIMS",		0, DXGI_FORMAT_R32G32_FLOAT,		1, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1 },
+				{ "DESTDIMS",		0, DXGI_FORMAT_R16G16_UINT,			1, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1 },
 				{ "ATLASINDEX",		0, DXGI_FORMAT_R16_UINT,			1, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1 },
 			};
 
@@ -198,7 +199,7 @@ namespace chil::gfx::d12
 		const spa::DimensionsF& destPixelDims,
 		const spa::Vec2F& pos,
 		const float rot,
-		const spa::Vec2F& scale)
+		const spa::DimensionsF& scale)
 	{
 		using namespace DirectX;
 
@@ -206,11 +207,12 @@ namespace chil::gfx::d12
 
 		// use a system memory cache for building instance struct before writing to UWCM
 		Instance_ instanceCache{
-			.translation = { pos.x, pos.y },
+			.translation = pos,
 			.rotation = rot,
-			.scale = { scale.x, scale.y },
-			.texRect = { srcInTexcoords.left, srcInTexcoords.top, srcInTexcoords.right, srcInTexcoords.bottom },
-			.destDimensions = { (uint16_t)destPixelDims.width, (uint16_t)destPixelDims.height },
+			.scale = scale,
+			.frameTexPos = srcInTexcoords.GetTopLeft(),
+			.frameTexDims = srcInTexcoords.GetDimensions(),
+			.destPixelDims = destPixelDims,
 			.atlasIndex = (uint16_t)atlasIndex,
 		};
 

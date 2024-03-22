@@ -19,8 +19,9 @@ Output main(
     float2 tl : TRANSLATION,
     float rot : ROTATION,
     float2 scale : SCALE,
-    float4 texRect : TEXRECT,
-    uint2 destDims : DEST_DIMS,
+    float2 frameTexPos : TEXPOS,
+    float2 frameTexDims : TEXDIMS,
+    uint2 destPixelDims : DESTDIMS,
     uint atlasIndex : ATLASINDEX)
 {
     // generate the per-sprite (object) transform matrix
@@ -36,19 +37,16 @@ Output main(
     // concatenate object and camera matrices
     const matrix transform = mul(objTransform, cam.transform);
     
-    // geometry generate
-    const float2 pos = unitPos * destDims;
+    // recover output position
+    const float2 pos = unitPos * destPixelDims;
     
-    // recover texcoords
-    float2 texTopLeft = texRect.xy;
-    // flips occur here because differences in x/y sign in world, and differences between world and tex directions
-    float2 texDims = float2(texRect.z - texRect.x, texRect.a - texRect.y);
-    float2 texAxes = float2(unitPos.x + 0.5f, 0.5f - unitPos.y);
+    // recover selector for which texcoord corresponds to this vertex
+    const float2 texAxes = float2(unitPos.x + 0.5f, 0.5f - unitPos.y);
     
     // generate output to pixel shader
 	Output vertexOut;
     vertexOut.position = mul(float4(pos, 0.f, 1.f), transform);
-    vertexOut.uv = texTopLeft + texDims * texAxes;
+    vertexOut.uv = frameTexPos + frameTexDims * texAxes;
     vertexOut.atlasIndex = atlasIndex;
 
 	return vertexOut;

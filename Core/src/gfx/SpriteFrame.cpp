@@ -39,7 +39,7 @@ namespace chil::gfx
 		};
 	}
 
-	void SpriteFrame::DrawToBatch(ISpriteBatcher& batch, const spa::Vec2F& pos, float rotation, const spa::Vec2F& scale) const
+	void SpriteFrame::DrawToBatch(ISpriteBatcher& batch, const spa::Vec2F& pos, float rotation, const spa::DimensionsF& scale) const
 	{
 		// deriving dest in pixel coordinates from texcoord source frame and source atlas dimensions
 		const auto destPixelDims = frameInTexcoords_.GetDimensions() * atlasDimensions_;

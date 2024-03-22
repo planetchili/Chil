@@ -51,6 +51,7 @@
     <ClInclude Include="src\spa\Dimensions.h" />
     <ClInclude Include="src\spa\Rect.h" />
     <ClInclude Include="src\spa\Vec2.h" />
+    <ClInclude Include="src\spa\XmConv.h" />
     <ClInclude Include="src\utl\Assert.h" />
     <ClInclude Include="src\utl\Exception.h" />
     <ClInclude Include="src\utl\HrChecker.h" />
