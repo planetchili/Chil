@@ -19,6 +19,8 @@ Output main(
     float2 tl : TRANSLATION,
     float rot : ROTATION,
     float2 scale : SCALE,
+    // pivot is expected to be in pixel units, with 0,0 at center of sprite frame and +ve up/right
+    float2 pivot : PIVOT,
     float2 frameTexPos : TEXPOS,
     float2 frameTexDims : TEXDIMS,
     uint2 destPixelDims : DESTDIMS,
@@ -31,7 +33,7 @@ Output main(
         scale.x * c, scale.x * s, 0, 0,
         -scale.y * s, scale.y * c, 0, 0,
         0, 0, 1, 0,
-        tl.x, tl.y, 0, 1
+        scale.y * pivot.y * s - c * scale.x * pivot.x + tl.x, -scale.y * pivot.y * c - s * scale.x * pivot.x + tl.y, 0, 1
     };
     
     // concatenate object and camera matrices

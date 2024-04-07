@@ -15,6 +15,10 @@ namespace chil::gfx
 			.right = frameInPixels.right / atlasDimensions_.width,
 			.bottom = frameInPixels.bottom / atlasDimensions_.height,
 		};
+		pivotInPixelCoordinates_ = {
+			0.f,
+			-(frameInPixels.bottom - frameInPixels.top) / 2.f,
+		};
 	}
 
 	SpriteFrame::SpriteFrame(const spa::DimensionsI& cellGridDimensions, const spa::Vec2I& cellCoordinates, size_t atlasIndex, std::shared_ptr<ISpriteCodex> pCodex)
@@ -37,12 +41,16 @@ namespace chil::gfx
 			.right = frameInPixels.right / atlasDimensions_.width,
 			.bottom = frameInPixels.bottom / atlasDimensions_.height,
 		};
+		pivotInPixelCoordinates_ = {
+			0.f,
+			-(frameInPixels.bottom - frameInPixels.top) / 2.f,
+		};
 	}
 
 	void SpriteFrame::DrawToBatch(ISpriteBatcher& batch, const spa::Vec2F& pos, float rotation, const spa::DimensionsF& scale) const
 	{
 		// deriving dest in pixel coordinates from texcoord source frame and source atlas dimensions
 		const auto destPixelDims = frameInTexcoords_.GetDimensions() * atlasDimensions_;
-		batch.Draw(atlasIndex_, frameInTexcoords_, destPixelDims, pos, rotation, scale);
+		batch.Draw(atlasIndex_, pivotInPixelCoordinates_, frameInTexcoords_, destPixelDims, pos, rotation, scale);
 	}
 }

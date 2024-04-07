@@ -23,6 +23,7 @@ namespace chil::gfx::d12
 		void StartBatch(gfx::IRenderPane& pane) override;
 		void SetCamera(const spa::Vec2F& pos, float rot, float scale) override;
 		void Draw(size_t atlasIndex,
+			const spa::Vec2F& pivotInPixelCoords,
 			const spa::RectF& srcInTexcoords,
 			const spa::DimensionsF& destPixelDims,
 			const spa::Vec2F& pos,
@@ -40,6 +41,7 @@ namespace chil::gfx::d12
 			spa::Vec2F translation;
 			float rotation;
 			spa::DimensionsF scale;
+			spa::Vec2F pivotPixelCoords;
 			spa::Vec2F frameTexPos;
 			spa::DimensionsF frameTexDims;
 			spa::DimensionsT<uint16_t> destPixelDims;

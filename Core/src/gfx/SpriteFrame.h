@@ -27,6 +27,7 @@ namespace chil::gfx
 		// we might want the flexibility of doing scale/rotate in the vertex shader, keep it in mind when placing things
 		spa::RectF frameInTexcoords_;
 		spa::DimensionsF atlasDimensions_;
+		spa::Vec2F pivotInPixelCoordinates_;
 		size_t atlasIndex_;
 		std::shared_ptr<ISpriteCodex> pCodex_;
 		// we need a handle that connects to a SRV in a heap of the batch

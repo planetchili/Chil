@@ -22,6 +22,7 @@ namespace chil::gfx
 		virtual void StartBatch(IRenderPane& pane) = 0;
 		virtual void SetCamera(const spa::Vec2F& pos, float rot, float scale) = 0;
 		virtual void Draw(size_t atlasIndex,
+			const spa::Vec2F& pivotInPixelCoords,
 			const spa::RectF& srcInTexcoords,
 			const spa::DimensionsF& destPixelDims,
 			const spa::Vec2F& pos,
