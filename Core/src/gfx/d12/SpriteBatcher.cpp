@@ -22,7 +22,16 @@ namespace chil::gfx::d12
 		outputDims_{ (spa::DimensionsF)targetDimensions },
 		pSpriteCodex_{ std::dynamic_pointer_cast<decltype(pSpriteCodex_)::element_type>(std::move(pSpriteCodex)) },
 		maxInstances_{ maxSpriteCount },
-		cameraTransform_{ DirectX::XMMatrixIdentity() }
+		cameraTransform_{ DirectX::XMMatrixIdentity() },
+		vertexBuffer_{ *pDevice_, std::vector<Vertex_>{
+			{ { -0.5f,  0.5f  } },
+			{ {  0.5f,  0.5f  } },
+			{ { -0.5f, -0.5f  } },
+			{ {  0.5f, -0.5f  } },
+		} },
+		indexBuffer_{ *pDevice_, std::vector<USHORT>{
+			0, 1, 2, 1, 3, 2,
+		} }
 	{		
 		auto pDeviceInterface = pDevice_->GetD3D12DeviceInterface();
 		// root signature
@@ -122,43 +131,6 @@ namespace chil::gfx::d12
 				sizeof(PipelineStateStream), &pipelineStateStream
 			};
 			pDeviceInterface->CreatePipelineState(&pipelineStateStreamDesc, IID_PPV_ARGS(&pPipelineState_)) >> chk;
-
-			// create index buffer resource
-			{
-				const CD3DX12_HEAP_PROPERTIES heapProps{ D3D12_HEAP_TYPE_DEFAULT };
-				const auto resourceDesc = CD3DX12_RESOURCE_DESC::Buffer(sizeof(USHORT[6]));
-				pDeviceInterface->CreateCommittedResource(
-					&heapProps,
-					D3D12_HEAP_FLAG_NONE,
-					&resourceDesc,
-					D3D12_RESOURCE_STATE_COPY_DEST,
-					nullptr, IID_PPV_ARGS(&pIndexBuffer_)
-				) >> chk;
-			}
-			// index buffer view
-			indexBufferView_ = {
-				.BufferLocation = pIndexBuffer_->GetGPUVirtualAddress(),
-				.SizeInBytes = (UINT)sizeof(USHORT[6]),
-				.Format = DXGI_FORMAT_R16_UINT,
-			};
-			// create vertex buffer resource
-			{
-				const CD3DX12_HEAP_PROPERTIES heapProps{ D3D12_HEAP_TYPE_DEFAULT };
-				const auto resourceDesc = CD3DX12_RESOURCE_DESC::Buffer(sizeof(Vertex_[4]));
-				pDeviceInterface->CreateCommittedResource(
-					&heapProps,
-					D3D12_HEAP_FLAG_NONE,
-					&resourceDesc,
-					D3D12_RESOURCE_STATE_COPY_DEST,
-					nullptr, IID_PPV_ARGS(&pVertexBuffer_)
-				) >> chk;
-			}
-			// vertex buffer view
-			vertexBufferView_ = {
-				.BufferLocation = pVertexBuffer_->GetGPUVirtualAddress(),
-				.SizeInBytes = (UINT)sizeof(Vertex_[4]),
-				.StrideInBytes = (UINT)sizeof(Vertex_),
-			};
 		}
 	}
 
@@ -237,8 +209,8 @@ namespace chil::gfx::d12
 		}
 		else if (signaledFenceValue_ >= staticBufferUploadFenceValue_) {
 			// remove upload buffers when upload is finished
-			pIndexUploadBuffer_.Reset();
-			pVertexUploadBuffer_.Reset();
+			indexBuffer_.CollectGarbage(signaledFenceValue_);
+			vertexBuffer_.CollectGarbage(signaledFenceValue_);
 		}
 		// unmap upload instance buffer
 		{
@@ -253,10 +225,10 @@ namespace chil::gfx::d12
 		// configure IA 
 		cmd_.pCommandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 		{
-			const std::array views = { vertexBufferView_, currentFrameResource_->bufferView };
+			const std::array views = { vertexBuffer_.GetView(), currentFrameResource_->bufferView};
 			cmd_.pCommandList->IASetVertexBuffers(0, 2, views.data());
 		}
-		cmd_.pCommandList->IASetIndexBuffer(&indexBufferView_);
+		cmd_.pCommandList->IASetIndexBuffer(&indexBuffer_.GetView());
 		// bind the heap containing the texture descriptor
 		{
 			ID3D12DescriptorHeap* heapArray[1] = { pSpriteCodex_->GetHeap() };
@@ -280,84 +252,10 @@ namespace chil::gfx::d12
 	void SpriteBatcher::WriteStaticBufferFillCommands_(CommandListPair& cmd)
 	{
 		// initializing the static index buffer
-		{
-			// create array of index data
-			const USHORT indexData[6]{
-				0,
-				1,
-				2,
-				1,
-				3,
-				2,
-			};
-			// create committed resource for cpu upload of index data
-			{
-				const CD3DX12_HEAP_PROPERTIES heapProps{ D3D12_HEAP_TYPE_UPLOAD };
-				const auto resourceDesc = CD3DX12_RESOURCE_DESC::Buffer(sizeof(indexData));
-				pDevice_->GetD3D12DeviceInterface()->CreateCommittedResource(
-					&heapProps,
-					D3D12_HEAP_FLAG_NONE,
-					&resourceDesc,
-					D3D12_RESOURCE_STATE_GENERIC_READ,
-					nullptr, IID_PPV_ARGS(&pIndexUploadBuffer_)
-				) >> chk;
-			}
-			// copy array of index data to upload buffer  
-			{
-				USHORT* mappedIndexData = nullptr;
-				pIndexUploadBuffer_->Map(0, nullptr, reinterpret_cast<void**>(&mappedIndexData)) >> chk;
-				rn::copy(indexData, mappedIndexData);
-				pIndexUploadBuffer_->Unmap(0, nullptr);
-			}
-			// copy upload buffer to index buffer  
-			cmd.pCommandList->CopyResource(pIndexBuffer_.Get(), pIndexUploadBuffer_.Get());
-			// transition index buffer to index buffer state 
-			{
-				const auto barrier = CD3DX12_RESOURCE_BARRIER::Transition(
-					pIndexBuffer_.Get(),
-					D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_INDEX_BUFFER);
-				cmd.pCommandList->ResourceBarrier(1, &barrier);
-			}
-		}
+		indexBuffer_.WriteCopyCommands(cmd, frameFenceValue_);
 
 		// initializing static vertex buffer
-		{
-			// create array of vertex data
-			const Vertex_ vertexData[4] {
-				{ { -0.5f,  0.5f  } },
-				{ {  0.5f,  0.5f  } },
-				{ { -0.5f, -0.5f  } },
-				{ {  0.5f, -0.5f  } },
-			};
-			// create committed resource for cpu upload of vertex data
-			{
-				const CD3DX12_HEAP_PROPERTIES heapProps{ D3D12_HEAP_TYPE_UPLOAD };
-				const auto resourceDesc = CD3DX12_RESOURCE_DESC::Buffer(sizeof(vertexData));
-				pDevice_->GetD3D12DeviceInterface()->CreateCommittedResource(
-					&heapProps,
-					D3D12_HEAP_FLAG_NONE,
-					&resourceDesc,
-					D3D12_RESOURCE_STATE_GENERIC_READ,
-					nullptr, IID_PPV_ARGS(&pVertexUploadBuffer_)
-				) >> chk;
-			}
-			// copy array of vertex data to upload buffer  
-			{
-				Vertex_* mappedVertexData = nullptr;
-				pVertexUploadBuffer_->Map(0, nullptr, reinterpret_cast<void**>(&mappedVertexData)) >> chk;
-				rn::copy(vertexData, mappedVertexData);
-				pVertexUploadBuffer_->Unmap(0, nullptr);
-			}
-			// copy upload buffer to vertex buffer  
-			cmd.pCommandList->CopyResource(pVertexBuffer_.Get(), pVertexUploadBuffer_.Get());
-			// transition vertex buffer to vertex buffer state 
-			{
-				const auto barrier = CD3DX12_RESOURCE_BARRIER::Transition(
-					pVertexBuffer_.Get(),
-					D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
-				cmd.pCommandList->ResourceBarrier(1, &barrier);
-			}
-		}
+		vertexBuffer_.WriteCopyCommands(cmd, frameFenceValue_);
 
 		// set static buffer filled flag
 		staticBuffersFilled_ = true;

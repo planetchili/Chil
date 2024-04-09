@@ -9,6 +9,7 @@
 #include "../FrameResourcePool.h"
 #include "../ISpriteBatcher.h"
 #include <array>
+#include "StaticBuffer.h"
 
 
 namespace chil::gfx::d12
@@ -55,6 +56,7 @@ namespace chil::gfx::d12
 		// functions
 		FrameResource_ GetFrameResource_(uint64_t frameFenceValue);
 		void WriteStaticBufferFillCommands_(CommandListPair& cmd);
+		static std::vector<Vertex_> MakeVertexData_();
 		// connection to other gfx components
 		std::shared_ptr<d12::IDevice> pDevice_;
 		// vertex stuff
@@ -63,12 +65,8 @@ namespace chil::gfx::d12
 		Instance_* pInstanceUpload_ = nullptr;
 		std::optional<FrameResource_> currentFrameResource_;
 		FrameResourcePool<FrameResource_> frameResourcePool_;
-		Microsoft::WRL::ComPtr<ID3D12Resource> pIndexBuffer_;
-		D3D12_INDEX_BUFFER_VIEW indexBufferView_{};
-		Microsoft::WRL::ComPtr<ID3D12Resource> pIndexUploadBuffer_;
-		Microsoft::WRL::ComPtr<ID3D12Resource> pVertexBuffer_;
-		D3D12_VERTEX_BUFFER_VIEW vertexBufferView_{};
-		Microsoft::WRL::ComPtr<ID3D12Resource> pVertexUploadBuffer_;
+		StaticCpuBuffer<D3D12_INDEX_BUFFER_VIEW> indexBuffer_;
+		StaticCpuBuffer<D3D12_VERTEX_BUFFER_VIEW> vertexBuffer_;
 		bool staticBuffersFilled_ = false;
 		uint64_t staticBufferUploadFenceValue_ = 0;
 		// sprite atlas codex

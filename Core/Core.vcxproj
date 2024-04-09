@@ -17,6 +17,8 @@
     <ClInclude Include="src\gfx\d12\CommandQueue.h" />
     <ClInclude Include="src\gfx\d12\d3dx12.h" />
     <ClInclude Include="src\gfx\d12\Device.h" />
+    <ClInclude Include="src\gfx\d12\StaticBuffer.h" />
+    <ClInclude Include="src\gfx\d12\Util.h" />
     <ClInclude Include="src\gfx\d12\WrapD3D.h" />
     <ClInclude Include="src\gfx\d12\WrapD3DX.h" />
     <ClInclude Include="src\gfx\d12\WrapDXGI.h" />
@@ -78,6 +80,7 @@
     <ClCompile Include="src\gfx\d12\ResourceLoader.cpp" />
     <ClCompile Include="src\gfx\d12\SpriteBatcher.cpp" />
     <ClCompile Include="src\gfx\d12\SpriteCodex.cpp" />
+    <ClCompile Include="src\gfx\d12\StaticBuffer.cpp" />
     <ClCompile Include="src\gfx\SpriteFrame.cpp" />
     <ClCompile Include="src\gfx\d12\Texture.cpp" />
     <ClCompile Include="src\ioc\Container.cpp" />
