@@ -33,8 +33,12 @@ namespace chil::gfx::d12
 		template<typename V>
 		void InitializeView_(V& view)
 		{
-			view.BufferLocation = pBuffer_->GetGPUVirtualAddress();
+			view.BufferLocation = GetGpuAddress_();
 			view.SizeInBytes = sizeInBytes_;
+		}
+		D3D12_GPU_VIRTUAL_ADDRESS GetGpuAddress_() const
+		{
+			return pBuffer_->GetGPUVirtualAddress();
 		}
 	private:
 		// functions
@@ -85,5 +89,19 @@ namespace chil::gfx::d12
 		}
 	private:
 		ViewType view;
+	};
+
+	class StaticConstantBuffer : public StaticBufferBase_
+	{
+	public:
+		using StaticBufferBase_::StaticBufferBase_;
+		void WriteCopyCommands(CommandListPair& cmd, uint64_t frameFenceValue)
+		{
+			WriteCopyCommands_(cmd, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER, frameFenceValue);
+		}
+		auto GetGpuAddress() const
+		{
+			return GetGpuAddress_();
+		}
 	};
 }

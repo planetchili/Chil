@@ -55,8 +55,6 @@ namespace chil::gfx::d12
 		};
 		// functions
 		FrameResource_ GetFrameResource_(uint64_t frameFenceValue);
-		void WriteStaticBufferFillCommands_(CommandListPair& cmd);
-		static std::vector<Vertex_> MakeVertexData_();
 		// connection to other gfx components
 		std::shared_ptr<d12::IDevice> pDevice_;
 		// vertex stuff

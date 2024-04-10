@@ -205,7 +205,12 @@ namespace chil::gfx::d12
 
 		// fill index buffer if not already filled
 		if (!staticBuffersFilled_) {
-			WriteStaticBufferFillCommands_(cmd_);
+			// initializing the static buffers
+			indexBuffer_.WriteCopyCommands(cmd_, frameFenceValue_);
+			vertexBuffer_.WriteCopyCommands(cmd_, frameFenceValue_);
+			// set static buffer filled flag and completion fence value
+			staticBuffersFilled_ = true;
+			staticBufferUploadFenceValue_ = frameFenceValue_;
 		}
 		else if (signaledFenceValue_ >= staticBufferUploadFenceValue_) {
 			// remove upload buffers when upload is finished
@@ -247,20 +252,6 @@ namespace chil::gfx::d12
 
 		// submit command list to the queue of the passed-in pane
 		dynamic_cast<d12::IRenderPane&>(pane).SubmitCommandList(std::move(cmd_));
-	}
-
-	void SpriteBatcher::WriteStaticBufferFillCommands_(CommandListPair& cmd)
-	{
-		// initializing the static index buffer
-		indexBuffer_.WriteCopyCommands(cmd, frameFenceValue_);
-
-		// initializing static vertex buffer
-		vertexBuffer_.WriteCopyCommands(cmd, frameFenceValue_);
-
-		// set static buffer filled flag
-		staticBuffersFilled_ = true;
-		// set fence value for upload complete
-		staticBufferUploadFenceValue_ = frameFenceValue_;
 	}
 
 	// SpriteBatcher::FrameResource_
