@@ -281,7 +281,7 @@
     <ClCompile Include="src\gfx\d12\SpriteCodex.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\gfx\d12\Boot2.cpp">
+    <ClCompile Include="src\gfx\d12\Boot.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\gfx\d12\StaticBuffer.cpp">
