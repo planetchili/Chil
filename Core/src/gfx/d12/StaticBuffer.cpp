@@ -54,7 +54,7 @@ namespace chil::gfx::d12
 
 	void StaticBufferBase_::CollectGarbage(uint64_t currentSignalledFenceValue)
 	{
-		assert(UploadComplete());
+		assert(UploadComplete(currentSignalledFenceValue));
 		pUploadBuffer_.Reset();
 	}
 
@@ -81,5 +81,15 @@ namespace chil::gfx::d12
 		rn::copy(data, mappedIndexData);
 		D3D12_RANGE writtenRange{ 0, data.size() };
 		pUploadBuffer_->Unmap(0, &writtenRange);
+	}
+	void StaticConstantBuffer::WriteDescriptor(ID3D12Device* pDevice, D3D12_CPU_DESCRIPTOR_HANDLE handle) const
+	{
+		D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc;
+		InitializeView_(cbvDesc);
+		pDevice->CreateConstantBufferView(&cbvDesc, handle);
+	}
+	auto StaticConstantBuffer::GetGpuAddress() const
+	{
+		return GetGpuAddress_();
 	}
 }

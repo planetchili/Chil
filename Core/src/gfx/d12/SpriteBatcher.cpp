@@ -40,9 +40,12 @@ namespace chil::gfx::d12
 			// in future to reduce root signature binding this should just be merged into a global root descriptor
 			// might want to use a bounded range, in which case the root signature will need to be updated when atlases are added
 			CD3DX12_ROOT_PARAMETER rootParameters[2]{};
-			const CD3DX12_DESCRIPTOR_RANGE descRange{ D3D12_DESCRIPTOR_RANGE_TYPE_SRV, UINT_MAX, 0 };
 			// sprite codex
-			rootParameters[0].InitAsDescriptorTable(1, &descRange);
+			const CD3DX12_DESCRIPTOR_RANGE descRanges[2] = { 
+				CD3DX12_DESCRIPTOR_RANGE{ D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 1 },
+				CD3DX12_DESCRIPTOR_RANGE{ D3D12_DESCRIPTOR_RANGE_TYPE_SRV, UINT_MAX, 0 },
+			};
+			rootParameters[0].InitAsDescriptorTable(2, descRanges);
 			// camera transform
 			rootParameters[1].InitAsConstants(sizeof(DirectX::XMMATRIX) / sizeof(float), 0, 0, D3D12_SHADER_VISIBILITY_VERTEX);
 			// Allow input layout and vertex shader and deny unnecessary access to certain pipeline stages.
@@ -99,11 +102,7 @@ namespace chil::gfx::d12
 				{ "TRANSLATION",	0, DXGI_FORMAT_R32G32_FLOAT,		1, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1 },
 				{ "ROTATION",		0, DXGI_FORMAT_R32_FLOAT,			1, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1 },
 				{ "SCALE",			0, DXGI_FORMAT_R32G32_FLOAT,		1, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1 },
-				{ "PIVOT",			0, DXGI_FORMAT_R32G32_FLOAT,		1, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1 },
-				{ "TEXPOS",			0, DXGI_FORMAT_R32G32_FLOAT,		1, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1 },
-				{ "TEXDIMS",		0, DXGI_FORMAT_R32G32_FLOAT,		1, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1 },
-				{ "DESTDIMS",		0, DXGI_FORMAT_R16G16_UINT,			1, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1 },
-				{ "ATLASINDEX",		0, DXGI_FORMAT_R16_UINT,			1, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1 },
+				{ "FRAMEINDEX",		0, DXGI_FORMAT_R32_UINT,			1, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1 },
 			};
 
 			// Load the vertex shader. 
@@ -167,10 +166,7 @@ namespace chil::gfx::d12
 		cameraTransform_ = XMMatrixTranspose(transform);
 	}
 
-	void SpriteBatcher::Draw(size_t atlasIndex,
-		const spa::Vec2F& pivotInPixelCoords,
-		const spa::RectF& srcInTexcoords,
-		const spa::DimensionsF& destPixelDims,
+	void SpriteBatcher::Draw(size_t frameIndex,
 		const spa::Vec2F& pos,
 		const float rot,
 		const spa::DimensionsF& scale)
@@ -184,11 +180,7 @@ namespace chil::gfx::d12
 			.translation = pos,
 			.rotation = rot,
 			.scale = scale,
-			.pivotPixelCoords = pivotInPixelCoords,
-			.frameTexPos = srcInTexcoords.GetTopLeft(),
-			.frameTexDims = srcInTexcoords.GetDimensions(),
-			.destPixelDims = destPixelDims,
-			.atlasIndex = (uint16_t)atlasIndex,
+			.frameIndex = (uint32_t)frameIndex,
 		};
 
 		// copy from system cache to write-combining memory
@@ -203,7 +195,7 @@ namespace chil::gfx::d12
 		chilass(cmd_.pCommandAllocator);
 		chilass(cmd_.pCommandList);
 
-		// fill index buffer if not already filled
+		// fill index/vertex buffers if not already filled
 		if (!staticBuffersFilled_) {
 			// initializing the static buffers
 			indexBuffer_.WriteCopyCommands(cmd_, frameFenceValue_);
@@ -216,6 +208,10 @@ namespace chil::gfx::d12
 			// remove upload buffers when upload is finished
 			indexBuffer_.CollectGarbage(signaledFenceValue_);
 			vertexBuffer_.CollectGarbage(signaledFenceValue_);
+		}
+		// write sprite codex buffers if necessary
+		if (pSpriteCodex_->NeedsFinalization()) {
+			pSpriteCodex_->Finalize(cmd_, frameFenceValue_);
 		}
 		// unmap upload instance buffer
 		{

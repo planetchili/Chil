@@ -11,6 +11,20 @@ struct Camera
 };
 ConstantBuffer<Camera> cam : register(b0);
 
+struct Frame
+{
+    float2 pivotPixelCoords;
+    float2 frameTexPos;
+    float2 frameTexDims;
+	uint destPixelDimsPacked;
+	uint atlasIndex;    
+};
+struct FrameArray
+{
+    Frame data[2048];
+};
+ConstantBuffer<FrameArray> frames : register(b1);
+
 
 Output main(
     // Per-vertex data
@@ -19,13 +33,11 @@ Output main(
     float2 tl : TRANSLATION,
     float rot : ROTATION,
     float2 scale : SCALE,
-    // pivot is expected to be in pixel units, with 0,0 at center of sprite frame and +ve up/right
-    float2 pivot : PIVOT,
-    float2 frameTexPos : TEXPOS,
-    float2 frameTexDims : TEXDIMS,
-    uint2 destPixelDims : DESTDIMS,
-    uint atlasIndex : ATLASINDEX)
+    uint frameIndex : FRAMEINDEX)
 {
+    // load the frame data
+    const Frame fd = frames.data[frameIndex];
+    
     // generate the per-sprite (object) transform matrix
     float s, c;
     sincos(rot, s, c);
@@ -33,8 +45,12 @@ Output main(
         scale.x * c, scale.x * s, 0, 0,
         -scale.y * s, scale.y * c, 0, 0,
         0, 0, 1, 0,
-        scale.y * pivot.y * s - c * scale.x * pivot.x + tl.x, -scale.y * pivot.y * c - s * scale.x * pivot.x + tl.y, 0, 1
+        scale.y * fd.pivotPixelCoords.y * s - c * scale.x * fd.pivotPixelCoords.x + tl.x,
+            -scale.y * fd.pivotPixelCoords.y * c - s * scale.x * fd.pivotPixelCoords.x + tl.y, 0, 1
     };
+    
+    // unpack dest pixel dims
+    const float2 destPixelDims = float2(fd.destPixelDimsPacked & 0xFFFF, fd.destPixelDimsPacked >> 16);
     
     // concatenate object and camera matrices
     const matrix transform = mul(objTransform, cam.transform);
@@ -48,8 +64,8 @@ Output main(
     // generate output to pixel shader
 	Output vertexOut;
     vertexOut.position = mul(float4(pos, 0.f, 1.f), transform);
-    vertexOut.uv = frameTexPos + frameTexDims * texAxes;
-    vertexOut.atlasIndex = atlasIndex;
+    vertexOut.uv = fd.frameTexPos + fd.frameTexDims * texAxes;
+    vertexOut.atlasIndex = fd.atlasIndex;
 
 	return vertexOut;
 }

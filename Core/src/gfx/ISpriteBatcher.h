@@ -7,6 +7,8 @@
 
 namespace chil::gfx
 {
+	class ISpriteCodex;
+
 	class ISpriteBatcher
 	{
 	public:
@@ -21,10 +23,7 @@ namespace chil::gfx
 		virtual ~ISpriteBatcher() = default;
 		virtual void StartBatch(IRenderPane& pane) = 0;
 		virtual void SetCamera(const spa::Vec2F& pos, float rot, float scale) = 0;
-		virtual void Draw(size_t atlasIndex,
-			const spa::Vec2F& pivotInPixelCoords,
-			const spa::RectF& srcInTexcoords,
-			const spa::DimensionsF& destPixelDims,
+		virtual void Draw(size_t frameIndex,
 			const spa::Vec2F& pos,
 			const float rot = 0.f,
 			const spa::DimensionsF& scale = { 1.f, 1.f }) = 0;

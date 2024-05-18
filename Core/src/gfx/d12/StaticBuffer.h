@@ -31,7 +31,7 @@ namespace chil::gfx::d12
 	protected:
 		void WriteCopyCommands_(CommandListPair& cmd, D3D12_RESOURCE_STATES endState, uint64_t frameFenceValue);
 		template<typename V>
-		void InitializeView_(V& view)
+		void InitializeView_(V& view) const
 		{
 			view.BufferLocation = GetGpuAddress_();
 			view.SizeInBytes = sizeInBytes_;
@@ -99,9 +99,7 @@ namespace chil::gfx::d12
 		{
 			WriteCopyCommands_(cmd, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER, frameFenceValue);
 		}
-		auto GetGpuAddress() const
-		{
-			return GetGpuAddress_();
-		}
+		void WriteDescriptor(ID3D12Device* pDevice, D3D12_CPU_DESCRIPTOR_HANDLE handle) const;
+		auto GetGpuAddress() const;
 	};
 }

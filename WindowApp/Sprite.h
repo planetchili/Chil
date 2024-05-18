@@ -1,6 +1,6 @@
 #pragma once
 #include <Core/src/gfx/ISpriteBatcher.h>
-#include <Core/src/gfx/SpriteFrame.h>
+#include <Core/src/gfx/ISpriteFrame.h>
 #include <Core/src/spa/Vec2.h>
 #include <vector>
 #include <array>
@@ -48,8 +48,9 @@ namespace chil
 			const auto sheetDims = pCodex->GetAtlasDimensions(atlasIndex);
 			for (int v = 0; v < vCells; v++) {
 				for (int h = 0; h < hCells; h++) {
-					auto pFrame = std::make_shared<gfx::SpriteFrame>(
-						spa::DimensionsI{ hCells, vCells }, spa::Vec2I{h, v}, atlasIndex, pCodex);
+					auto pFrame = pCodex->AddFrame(
+						spa::DimensionsI{ hCells, vCells },
+						spa::Vec2I{h, v}, atlasIndex);
 					animations_[v].push_back(AnimationFrame{
 						.pFrame_ = std::move(pFrame),
 						.holdSeconds_ = 0.016f,

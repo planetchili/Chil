@@ -23,10 +23,7 @@ namespace chil::gfx::d12
 			std::shared_ptr<gfx::ISpriteCodex> pSpriteCodex_, UINT maxSpriteCount = 4000);
 		void StartBatch(gfx::IRenderPane& pane) override;
 		void SetCamera(const spa::Vec2F& pos, float rot, float scale) override;
-		void Draw(size_t atlasIndex,
-			const spa::Vec2F& pivotInPixelCoords,
-			const spa::RectF& srcInTexcoords,
-			const spa::DimensionsF& destPixelDims,
+		void Draw(size_t frameIndex,
 			const spa::Vec2F& pos,
 			const float rot = 0.f,
 			const spa::DimensionsF& scale = { 1.f, 1.f }) override;
@@ -42,11 +39,7 @@ namespace chil::gfx::d12
 			spa::Vec2F translation;
 			float rotation;
 			spa::DimensionsF scale;
-			spa::Vec2F pivotPixelCoords;
-			spa::Vec2F frameTexPos;
-			spa::DimensionsF frameTexDims;
-			spa::DimensionsT<uint16_t> destPixelDims;
-			uint16_t atlasIndex;
+			uint32_t frameIndex;
 		};
 		struct FrameResource_
 		{

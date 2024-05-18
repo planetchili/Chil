@@ -150,7 +150,7 @@
     <ClInclude Include="src\win\Input.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\gfx\SpriteFrame.h">
+    <ClInclude Include="src\gfx\ISpriteFrame.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\gfx\d12\SpriteCodex.h">
@@ -273,9 +273,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\gfx\d12\SpriteBatcher.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\gfx\SpriteFrame.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\gfx\d12\SpriteCodex.cpp">
