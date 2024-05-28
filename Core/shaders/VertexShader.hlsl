@@ -19,12 +19,7 @@ struct Frame
 	uint destPixelDimsPacked;
 	uint atlasIndex;    
 };
-struct FrameArray
-{
-    Frame data[2048];
-};
-ConstantBuffer<FrameArray> frames : register(b1);
-
+StructuredBuffer<Frame> frames : register(t0);
 
 Output main(
     // Per-vertex data
@@ -36,7 +31,7 @@ Output main(
     uint frameIndex : FRAMEINDEX)
 {
     // load the frame data
-    const Frame fd = frames.data[frameIndex];
+    const Frame fd = frames[frameIndex];
     
     // generate the per-sprite (object) transform matrix
     float s, c;

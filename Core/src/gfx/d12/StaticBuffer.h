@@ -16,7 +16,7 @@ namespace chil::gfx::d12
 		template<typename T>
 		StaticBufferBase_(IDevice& device, const std::vector<T>& data)
 			:
-			StaticBufferBase_{ device, data.size() * sizeof(T) }
+			StaticBufferBase_{ device, sizeof(T), data.size()}
 		{
 			FillUploadBuffer(data);
 		}
@@ -33,23 +33,31 @@ namespace chil::gfx::d12
 		template<typename V>
 		void InitializeView_(V& view) const
 		{
-			view.BufferLocation = GetGpuAddress_();
-			view.SizeInBytes = sizeInBytes_;
+			if constexpr (std::same_as<V, D3D12_BUFFER_SRV>) {
+				auto& v = static_cast<D3D12_BUFFER_SRV&>(view);
+				v.NumElements = numElements_;
+				v.FirstElement = 0;
+				v.StructureByteStride = strideInBytes_;
+				v.Flags = D3D12_BUFFER_SRV_FLAGS(0);
+			}
+			else {
+				view.BufferLocation = pBuffer_->GetGPUVirtualAddress();
+				view.SizeInBytes = (UINT)GetTotalSize_();
+			}
 		}
-		D3D12_GPU_VIRTUAL_ADDRESS GetGpuAddress_() const
-		{
-			return pBuffer_->GetGPUVirtualAddress();
-		}
+		ID3D12Resource* GetResource_() const;
 	private:
 		// functions
 		void FillUploadBuffer_(std::span<const char>);
-		StaticBufferBase_(IDevice& device, size_t sizeInBytes);
+		StaticBufferBase_(IDevice& device, size_t strideInBytes, size_t numElements);
+		size_t GetTotalSize_() const;
 		// data
 		static constexpr uint64_t emptyFenceValue = std::numeric_limits<uint64_t>::max();
 		Microsoft::WRL::ComPtr<ID3D12Resource> pBuffer_;
 		Microsoft::WRL::ComPtr<ID3D12Resource> pUploadBuffer_;
 		uint64_t uploadCompletionFrameFenceValue_ = emptyFenceValue;
-		uint32_t sizeInBytes_;
+		uint32_t strideInBytes_;
+		uint32_t numElements_;
 	};
 
 	template<typename V>
@@ -95,11 +103,17 @@ namespace chil::gfx::d12
 	{
 	public:
 		using StaticBufferBase_::StaticBufferBase_;
-		void WriteCopyCommands(CommandListPair& cmd, uint64_t frameFenceValue)
-		{
-			WriteCopyCommands_(cmd, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER, frameFenceValue);
-		}
+		void WriteCopyCommands(CommandListPair& cmd, uint64_t frameFenceValue);
 		void WriteDescriptor(ID3D12Device* pDevice, D3D12_CPU_DESCRIPTOR_HANDLE handle) const;
-		auto GetGpuAddress() const;
+		D3D12_GPU_VIRTUAL_ADDRESS GetGpuAddress() const;
+	};
+
+	class StructuredBuffer : public StaticBufferBase_
+	{
+	public:
+		using StaticBufferBase_::StaticBufferBase_;
+		void WriteCopyCommands(CommandListPair& cmd, uint64_t frameFenceValue);
+		void WriteDescriptor(ID3D12Device* pDevice, D3D12_CPU_DESCRIPTOR_HANDLE handle) const;
+		D3D12_GPU_VIRTUAL_ADDRESS GetGpuAddress() const;
 	};
 }

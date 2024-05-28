@@ -75,7 +75,7 @@ namespace chil::gfx::d12
 
 	bool SpriteCodex::NeedsFinalization() const
 	{
-		return !pConstantBuffer_;
+		return !pStructuredBuffer_;
 	}
 
 	void SpriteCodex::Finalize(CommandListPair& clp, uint64_t frameFenceValue)
@@ -86,10 +86,10 @@ namespace chil::gfx::d12
 		for (auto f : spriteFrames_) {
 			data.push_back(f->PoopData());
 		}
-		pConstantBuffer_ = std::make_unique<StaticConstantBuffer>(*pDevice_, data);
-		pConstantBuffer_->WriteCopyCommands(clp, frameFenceValue);
+		pStructuredBuffer_ = std::make_unique<StructuredBuffer>(*pDevice_, data);
+		pStructuredBuffer_->WriteCopyCommands(clp, frameFenceValue);
 		// write descriptor
-		pConstantBuffer_->WriteDescriptor(
+		pStructuredBuffer_->WriteDescriptor(
 			pDevice_->GetD3D12DeviceInterface().Get(),
 			pHeap_->GetCPUDescriptorHandleForHeapStart()
 		);

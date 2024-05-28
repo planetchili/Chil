@@ -82,7 +82,7 @@ namespace chil::gfx::d12
 		UINT maxNumAtlases_;
 		UINT curNumAtlases_ = 0;
 		Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> pHeap_;
-		std::unique_ptr<StaticConstantBuffer> pConstantBuffer_;
+		std::unique_ptr<StructuredBuffer> pStructuredBuffer_;
 		std::vector<std::unique_ptr<SpriteAtlas_>> spriteAtlases_;
 		std::vector<std::shared_ptr<SpriteFrame>> spriteFrames_;
 	};

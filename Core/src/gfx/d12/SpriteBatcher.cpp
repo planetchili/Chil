@@ -42,8 +42,8 @@ namespace chil::gfx::d12
 			CD3DX12_ROOT_PARAMETER rootParameters[2]{};
 			// sprite codex
 			const CD3DX12_DESCRIPTOR_RANGE descRanges[2] = { 
-				CD3DX12_DESCRIPTOR_RANGE{ D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 1 },
-				CD3DX12_DESCRIPTOR_RANGE{ D3D12_DESCRIPTOR_RANGE_TYPE_SRV, UINT_MAX, 0 },
+				CD3DX12_DESCRIPTOR_RANGE{ D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0 },
+				CD3DX12_DESCRIPTOR_RANGE{ D3D12_DESCRIPTOR_RANGE_TYPE_SRV, UINT_MAX, 1 },
 			};
 			rootParameters[0].InitAsDescriptorTable(2, descRanges);
 			// camera transform
