@@ -113,17 +113,18 @@ namespace chil
 	{
 	public:
 		SpriteInstance(std::shared_ptr<ISpriteBlueprint> pBlueprint,
-			const spa::Vec2F& pos, const spa::Vec2F& vel)
+			const spa::Vec2F& pos, float zOrder, const spa::Vec2F& vel)
 			:
 			pBlueprint_{ std::move(pBlueprint) },
 			pos_{ pos },
-			vel_{ vel }
+			vel_{ vel },
+			zOrder_{ zOrder }
 		{
 			pBlueprint_->ChangeDirection(animationState_, vel_);
 		}
 		void Draw(gfx::ISpriteBatcher& batcher) const override
 		{
-			pBlueprint_->GetFrame(animationState_).DrawToBatch(batcher, pos_);
+			pBlueprint_->GetFrame(animationState_).DrawToBatch(batcher, pos_, 0.f, zOrder_);
 		}
 		void Update(float dt, std::minstd_rand0& rng) override
 		{
@@ -147,6 +148,7 @@ namespace chil
 		ISpriteBlueprint::State animationState_{};
 		spa::Vec2F pos_;
 		spa::Vec2F vel_;
+		float zOrder_;
 		float timeUntilChangeDirection_ = directionChangePeriod_;
 	};
 }

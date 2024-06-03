@@ -8,7 +8,7 @@ namespace Global
 #else
 	inline constexpr unsigned int nCharacters = 500;
 #endif
-	inline constexpr size_t nBatches = 4;
+	inline constexpr size_t nBatches = 1;
 	inline constexpr int nSheets = 32;
 	inline constexpr auto outputDims = chil::spa::DimensionsI{ 1280, 720 };
 	inline constexpr int nWindows = 1;

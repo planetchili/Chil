@@ -131,6 +131,7 @@ void ActiveWindow::Kernel_(int index, std::shared_ptr<gfx::ISpriteCodex> pSprite
 			] (uint32_t i) mutable -> std::unique_ptr<ISpriteInstance> {
 			return std::make_unique<SpriteInstance>(blueprints[i % Global::nSheets],
 				spa::Vec2F{ posDist(rne), posDist(rne) },
+				std::abs(posDist(rne)) / 360.f,
 				spa::Vec2F{ 1.f, 0.f }.GetRotated(angleDist(rne)) * speedDist(rne)
 			);
 		}) | rn::to<std::vector>();

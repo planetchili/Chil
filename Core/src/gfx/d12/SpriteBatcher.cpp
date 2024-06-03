@@ -93,7 +93,16 @@ namespace chil::gfx::d12
 				CD3DX12_PIPELINE_STATE_STREAM_PS PS;
 				CD3DX12_PIPELINE_STATE_STREAM_RENDER_TARGET_FORMATS RTVFormats;
 				CD3DX12_PIPELINE_STATE_STREAM_DEPTH_STENCIL_FORMAT DSVFormat;
+				CD3DX12_PIPELINE_STATE_STREAM_DEPTH_STENCIL DepthStencilState;
 			} pipelineStateStream;
+
+			// depth stencil state
+			const D3D12_DEPTH_STENCIL_DESC depthStencilDesc = {
+				.DepthEnable = TRUE,
+				.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL,
+				.DepthFunc = D3D12_COMPARISON_FUNC_LESS,
+				.StencilEnable = FALSE,
+			};
 
 			// define the Vertex input layout 
 			const D3D12_INPUT_ELEMENT_DESC inputLayout[] = {
@@ -101,6 +110,7 @@ namespace chil::gfx::d12
 
 				{ "TRANSLATION",	0, DXGI_FORMAT_R32G32_FLOAT,		1, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1 },
 				{ "ROTATION",		0, DXGI_FORMAT_R32_FLOAT,			1, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1 },
+				{ "ZORDER",			0, DXGI_FORMAT_R32_FLOAT,			1, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1 },
 				{ "SCALE",			0, DXGI_FORMAT_R32G32_FLOAT,		1, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1 },
 				{ "FRAMEINDEX",		0, DXGI_FORMAT_R32_UINT,			1, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1 },
 			};
@@ -124,6 +134,7 @@ namespace chil::gfx::d12
 				.NumRenderTargets = 1,
 			};
 			pipelineStateStream.DSVFormat = DXGI_FORMAT_D32_FLOAT;
+			pipelineStateStream.DepthStencilState = CD3DX12_DEPTH_STENCIL_DESC(depthStencilDesc);
 
 			// building the pipeline state object 
 			const D3D12_PIPELINE_STATE_STREAM_DESC pipelineStateStreamDesc = {
@@ -169,6 +180,7 @@ namespace chil::gfx::d12
 	void SpriteBatcher::Draw(size_t frameIndex,
 		const spa::Vec2F& pos,
 		const float rot,
+		const float zOrder,
 		const spa::DimensionsF& scale)
 	{
 		using namespace DirectX;
@@ -179,6 +191,7 @@ namespace chil::gfx::d12
 		Instance_ instanceCache{
 			.translation = pos,
 			.rotation = rot,
+			.zOrder = zOrder,
 			.scale = scale,
 			.frameIndex = (uint32_t)frameIndex,
 		};

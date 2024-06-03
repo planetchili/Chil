@@ -27,6 +27,7 @@ Output main(
     // Instance data
     float2 tl : TRANSLATION,
     float rot : ROTATION,
+    float zOrder : ZORDER,
     float2 scale : SCALE,
     uint frameIndex : FRAMEINDEX)
 {
@@ -58,7 +59,7 @@ Output main(
     
     // generate output to pixel shader
 	Output vertexOut;
-    vertexOut.position = mul(float4(pos, 0.f, 1.f), transform);
+    vertexOut.position = mul(float4(pos, zOrder, 1.f), transform);
     vertexOut.uv = fd.frameTexPos + fd.frameTexDims * texAxes;
     vertexOut.atlasIndex = fd.atlasIndex;
 

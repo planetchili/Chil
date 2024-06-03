@@ -26,6 +26,7 @@ namespace chil::gfx
 		virtual void Draw(size_t frameIndex,
 			const spa::Vec2F& pos,
 			const float rot = 0.f,
+			const float zOrder = 0.f,
 			const spa::DimensionsF& scale = { 1.f, 1.f }) = 0;
 		virtual void EndBatch(IRenderPane& pane) = 0;
 	};

@@ -9,6 +9,6 @@ namespace chil::gfx
 	{
 	public:
 		virtual ~ISpriteFrame() = default;
-		virtual void DrawToBatch(class ISpriteBatcher& batch, const spa::Vec2F& pos, float rotation = 0.f, const spa::DimensionsF& scale = { 1.f, 1.f }) const = 0;
+		virtual void DrawToBatch(class ISpriteBatcher& batch, const spa::Vec2F& pos, float rotation = 0.f, float zOrder = 0.f, const spa::DimensionsF& scale = { 1.f, 1.f }) const = 0;
 	};
 }

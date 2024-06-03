@@ -32,7 +32,7 @@ namespace chil::gfx::d12
 		SpriteFrame(uint16_t frameIndex, const spa::RectF& frameInPixels, size_t atlasIndex, std::shared_ptr<ISpriteCodex> pCodex);
 		SpriteFrame(uint16_t frameIndex, const spa::DimensionsI& cellDimension, const spa::Vec2I& cellCoordinates, size_t atlasIndex, std::shared_ptr<ISpriteCodex> pCodex);
 		virtual Data PoopData() const;
-		void DrawToBatch(ISpriteBatcher& batch, const spa::Vec2F& pos, float rotation = 0.f, const spa::DimensionsF& scale = { 1.f, 1.f }) const override;
+		void DrawToBatch(ISpriteBatcher& batch, const spa::Vec2F& pos, float rotation = 0.f, float zOrder = 0.f, const spa::DimensionsF& scale = { 1.f, 1.f }) const override;
 	private:
 		// we want to preserve pixels from src to dst
 		// we can then draw to dest using src and position ONLY (and optionally scale/rotate)

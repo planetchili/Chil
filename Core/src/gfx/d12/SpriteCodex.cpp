@@ -152,8 +152,8 @@ namespace chil::gfx::d12
 		};
 	}
 
-	void SpriteFrame::DrawToBatch(ISpriteBatcher& batch, const spa::Vec2F& pos, float rotation, const spa::DimensionsF& scale) const
+	void SpriteFrame::DrawToBatch(ISpriteBatcher& batch, const spa::Vec2F& pos, float rotation, float zOrder, const spa::DimensionsF& scale) const
 	{
-		batch.Draw(frameIndex_, pos, rotation, scale);
+		batch.Draw(frameIndex_, pos, rotation, zOrder, scale);
 	}
 }

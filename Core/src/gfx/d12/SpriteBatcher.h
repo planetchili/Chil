@@ -26,6 +26,7 @@ namespace chil::gfx::d12
 		void Draw(size_t frameIndex,
 			const spa::Vec2F& pos,
 			const float rot = 0.f,
+			const float zOrder = 0.f,
 			const spa::DimensionsF& scale = { 1.f, 1.f }) override;
 		void EndBatch(gfx::IRenderPane& pane) override;
 	private:		
@@ -38,6 +39,7 @@ namespace chil::gfx::d12
 		{
 			spa::Vec2F translation;
 			float rotation;
+			float zOrder;
 			spa::DimensionsF scale;
 			uint32_t frameIndex;
 		};
