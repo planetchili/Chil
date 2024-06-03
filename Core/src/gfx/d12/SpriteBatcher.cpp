@@ -98,8 +98,8 @@ namespace chil::gfx::d12
 
 			// depth stencil state
 			const D3D12_DEPTH_STENCIL_DESC depthStencilDesc = {
-				.DepthEnable = TRUE,
-				.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL,
+				.DepthEnable = FALSE,
+				.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ZERO,
 				.DepthFunc = D3D12_COMPARISON_FUNC_LESS,
 				.StencilEnable = FALSE,
 			};
