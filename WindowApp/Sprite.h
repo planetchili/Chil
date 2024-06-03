@@ -106,6 +106,7 @@ namespace chil
 	public:
 		virtual void Draw(gfx::ISpriteBatcher&) const = 0;
 		virtual void Update(float dt, std::minstd_rand0& rng) = 0;
+		virtual float GetZOrder() const = 0;
 		virtual ~ISpriteInstance() = default;
 	};
 
@@ -141,6 +142,10 @@ namespace chil
 				pBlueprint_->StepAnimation(animationState_, dt);
 				pos_ += vel_ * dt;
 			}
+		}
+		float GetZOrder() const override
+		{
+			return zOrder_;
 		}
 	private:
 		constexpr static float directionChangePeriod_ = 1.f;

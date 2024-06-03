@@ -120,7 +120,7 @@ void ActiveWindow::Kernel_(int index, std::shared_ptr<gfx::ISpriteCodex> pSprite
 			blueprints.push_back(std::make_shared<SpriteBlueprint>(pSpriteCodex, i, 8, 4));
 		}
 		// sprite instances
-		const auto characters =
+		auto characters =
 			vi::iota(0u, Global::nCharacters) |
 			vi::transform([
 				&blueprints,
@@ -135,6 +135,9 @@ void ActiveWindow::Kernel_(int index, std::shared_ptr<gfx::ISpriteCodex> pSprite
 				spa::Vec2F{ 1.f, 0.f }.GetRotated(angleDist(rne)) * speedDist(rne)
 			);
 		}) | rn::to<std::vector>();
+
+		// sort sprites by depth
+		rn::sort(characters, std::less<float>{}, &ISpriteInstance::GetZOrder);
 
 		// camera state variables
 		spa::Vec2F pos{};
