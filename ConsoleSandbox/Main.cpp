@@ -25,7 +25,7 @@ void f()
 	chilog.error(L"oops!");
 }
 
-int main()
+int main(int argc, const char** argv)
 {
 	Boot();
 
