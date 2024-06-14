@@ -1,0 +1,9 @@
+{
+  "$schema": "https://raw.githubusercontent.com/microsoft/vcpkg-tool/main/docs/vcpkg.schema.json",
+  "name": "chil-framework",
+  "version": "0.1.0",
+  "dependencies": [
+    "cli11"
+  ],
+  "builtin-baseline": "bb588985e37484d543fc849d0d79434e0d45bb3c"
+}
