@@ -2,6 +2,7 @@
 #include <CLI/CLI.hpp>
 #include <optional>
 #include <Core/src/utl/Assert.h>
+#include <sstream>
 
 
 namespace chil::cli
@@ -11,8 +12,9 @@ namespace chil::cli
 		friend class OptionsElementBase_;
 	protected:
 		// functions
-		std::optional<int> Init_() noexcept;
+		std::optional<int> Init_(bool captureDiagnostics) noexcept;
 		// data
+		std::ostringstream diagnostics_;
 		bool finalized_ = false;
 		CLI::App app_;
 	};
@@ -31,9 +33,13 @@ namespace chil::cli
 		{
 			return Get_().finalized_;
 		}
-		static std::optional<int> Init()
+		static std::string GetDiagnostics()
 		{
-			return Get_().Init_();
+			return Get_().diagnostics_.str();
+		}
+		static std::optional<int> Init(bool captureDiagnostics = true)
+		{
+			return Get_().Init_(captureDiagnostics);
 		}
 	private:
 		static T& Get_()

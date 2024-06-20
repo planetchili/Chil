@@ -3,6 +3,14 @@
   "Id": "a9d6eb69-a3e6-45a3-9f75-c7be8f8ab771",
   "Items": [
     {
+      "Id": "97be8113-317b-41b2-a3d8-822b2a26071b",
+      "Command": "--num-windows pubes"
+    },
+    {
+      "Id": "fa8c2edc-0f64-4215-afc3-e6a413f77d4c",
+      "Command": "--help"
+    },
+    {
       "Id": "52362f28-1cf7-4bda-8470-e2f4fddd71c9",
       "Command": "--shit-the-bed"
     },

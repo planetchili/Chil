@@ -3,7 +3,7 @@
 
 namespace chil::cli
 {
-	std::optional<int> OptionsContainerBase_::Init_() noexcept
+	std::optional<int> OptionsContainerBase_::Init_(bool captureDiagnostics) noexcept
 	{
 		try {
 			app_.parse(__argc, __argv);
@@ -11,6 +11,9 @@ namespace chil::cli
 			return {};
 		}
 		catch (const CLI::ParseError& e) {
+			if (captureDiagnostics) {
+				return app_.exit(e, diagnostics_, diagnostics_);
+			}
 			return app_.exit(e);
 		}
 	}

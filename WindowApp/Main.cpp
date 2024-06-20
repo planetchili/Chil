@@ -33,7 +33,7 @@ int WINAPI WinMain(
 	Boot();
 
 	if (auto code = opt::Init()) {
-		chilog.error(L"Failed to parse options");
+		chilog.error(utl::ToWide(opt::GetDiagnostics())).no_trace();
 		return *code;
 	}
 	auto& opts = opt::Get();
