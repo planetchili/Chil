@@ -6,6 +6,7 @@
 #include <Core/src/win/IWindow.h>
 #include <format>
 #include <ranges>
+#include "CliOptions.h"
 
 using namespace chil;
 using namespace std::string_literals;
@@ -31,7 +32,13 @@ int WINAPI WinMain(
 {
 	Boot();
 
-	auto windowPtrs = vi::iota(0, 10) |
+	if (auto code = opt::Init()) {
+		chilog.error(L"Failed to parse options");
+		return *code;
+	}
+	auto& opts = opt::Get();
+
+	auto windowPtrs = vi::iota(0, opts.numWindows ? *opts.numWindows : 2) |
 		vi::transform([](auto i) {return ioc::Get().Resolve<win::IWindow>(); }) |
 		rn::to<std::vector>();
 
