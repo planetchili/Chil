@@ -64,11 +64,27 @@ namespace chil::cli
 		{
 			pOption_ = GetApp_(pParent).add_option(std::move(names), data_, std::move(description));
 		}
+		Option(const Option&) = delete;
+		Option& operator=(const Option&) = delete;
+		Option(Option&&) = delete;
+		Option& operator=(Option&&) = delete;
 		const T& operator*() const
 		{
 			return data_;
 		}
 	private:
 		T data_{};
+	};
+
+	class Flag : public OptionsElementBase_
+	{
+	public:
+		Flag(OptionsContainerBase_* pParent, std::string names, std::string description);
+		Flag(const Flag&) = delete;
+		Flag& operator=(const Flag&) = delete;
+		Flag(Flag&&) = delete;
+		Flag& operator=(Flag&&) = delete;
+	private:
+		bool data_{};
 	};
 }

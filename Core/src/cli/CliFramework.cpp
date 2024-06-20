@@ -32,4 +32,10 @@ namespace chil::cli
 	{
 		return pContainer->app_;
 	}
+
+
+	Flag::Flag(OptionsContainerBase_* pParent, std::string names, std::string description)
+	{
+		pOption_ = GetApp_(pParent).add_flag(std::move(names), data_, std::move(description));
+	}
 }

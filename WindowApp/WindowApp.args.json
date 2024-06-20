@@ -3,6 +3,10 @@
   "Id": "a9d6eb69-a3e6-45a3-9f75-c7be8f8ab771",
   "Items": [
     {
+      "Id": "52362f28-1cf7-4bda-8470-e2f4fddd71c9",
+      "Command": "--shit-the-bed"
+    },
+    {
       "Id": "dc8c2858-98a2-4900-82b0-4ce68a1b57a6",
       "Command": "--num-windows 5"
     }

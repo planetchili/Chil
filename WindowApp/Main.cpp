@@ -38,6 +38,11 @@ int WINAPI WinMain(
 	}
 	auto& opts = opt::Get();
 
+	if (opts.shitTheBed) {
+		chilog.error(L"consider the bed thoroughly shat upon");
+		return -69;
+	}
+
 	auto windowPtrs = vi::iota(0, opts.numWindows ? *opts.numWindows : 2) |
 		vi::transform([](auto i) {return ioc::Get().Resolve<win::IWindow>(); }) |
 		rn::to<std::vector>();

@@ -7,6 +7,7 @@ namespace cli
 
 	struct Options : public OptionsContainer<Options>
 	{
+		Flag shitTheBed{ this, "--shit-the-bed", "poopy!" };
 		Option<int> numWindows{ this, "--num-windows", "Number of windows to spawn" };
 	};
 }
