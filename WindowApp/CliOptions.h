@@ -8,7 +8,8 @@ namespace cli
 	struct Options : public OptionsContainer<Options>
 	{
 		Flag shitTheBed{ this, "--shit-the-bed", "poopy!" };
-		Option<int> numWindows{ this, "--num-windows", "Number of windows to spawn" };
+		Option<int> numWindows{ this, "--num-windows", "Number of windows to spawn", 2 };
+		Option<int> nonDefault{ this, "--non-default", "Doesn't logically have a default" };
 	};
 }
 

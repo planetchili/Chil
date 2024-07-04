@@ -66,9 +66,14 @@ namespace chil::cli
 	class Option : public OptionsElementBase_
 	{
 	public:
-		Option(OptionsContainerBase_* pParent, std::string names, std::string description)
+		Option(OptionsContainerBase_* pParent, std::string names, std::string description, std::optional<T> def = {})
+			:
+			data_{ def ? std::move(*def) : T{} }
 		{
 			pOption_ = GetApp_(pParent).add_option(std::move(names), data_, std::move(description));
+			if (def) {
+				pOption_->default_val(data_);
+			}
 		}
 		Option(const Option&) = delete;
 		Option& operator=(const Option&) = delete;
@@ -77,6 +82,14 @@ namespace chil::cli
 		const T& operator*() const
 		{
 			return data_;
+		}
+		std::optional<T> Opt() const
+		{
+			return *this ? std::optional<T>{ data_ } : std::nullopt;
+		}
+		T operator||(const T& rhs) const
+		{
+			return Opt().value_or(rhs);
 		}
 	private:
 		T data_{};
