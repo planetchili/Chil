@@ -38,6 +38,20 @@ int WINAPI WinMain(
 	}
 	auto& opts = opt::Get();
 
+	if (opts.nonDefault) {
+		chilog.info(std::format(L"non-default: {}", *opts.nonDefault));
+	}
+
+	if (opts.list) {
+		for (auto i : *opts.list) {
+			chilog.info(std::format(L"listed: {}", i));
+		}
+	}
+
+	if (opts.pair) {
+		chilog.info(std::format(L"paired:[{}, {}]", opts.pair->first, utl::ToWide(opts.pair->second)));
+	}
+
 	if (opts.shitTheBed) {
 		chilog.error(L"consider the bed thoroughly shat upon");
 		return -69;

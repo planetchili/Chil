@@ -107,6 +107,10 @@ namespace chil::cli
 		{
 			return data_;
 		}
+		const T* operator->() const
+		{
+			return &data_;
+		}
 		std::optional<T> Opt() const
 		{
 			return *this ? std::optional<T>{ data_ } : std::nullopt;
