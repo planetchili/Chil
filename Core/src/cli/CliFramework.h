@@ -110,6 +110,18 @@ namespace chil::cli
 	{
 	public:
 		Flag(OptionsContainerBase_* pParent, std::string names, std::string description);
+		template<class C>
+		Flag(OptionsContainerBase_* pParent, std::string names, std::string description, const C& cust)
+			:
+			Flag{ pParent, std::move(names), std::move(description) }
+		{
+			if constexpr (std::invocable<C, CLI::Option*>) {
+				cust(pOption_);
+			}
+			else if constexpr (std::is_base_of_v<CLI::Validator, C>) {
+				pOption_->transform(cust);
+			}
+		}
 		Flag(const Flag&) = delete;
 		Flag& operator=(const Flag&) = delete;
 		Flag(Flag&&) = delete;
