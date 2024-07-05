@@ -3,6 +3,10 @@
   "Id": "a9d6eb69-a3e6-45a3-9f75-c7be8f8ab771",
   "Items": [
     {
+      "Id": "4c1b18ee-e8ca-48c6-944f-71b612e98110",
+      "Command": "--foobar"
+    },
+    {
       "Id": "25bec6ca-a5e9-443e-bc05-1f8581cbdd43",
       "Command": "--non-default 1337"
     },

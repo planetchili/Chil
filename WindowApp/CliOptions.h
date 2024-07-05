@@ -24,6 +24,7 @@ namespace cli
 		rule::MutualExclusion winMex_{ shitTheBed, numWindows };
 		rule::Dependency widDep_{ width, height };
 		rule::Dependency hgtDep_{ height, width };
+		rule::AllowExtras ext_{ this };
 	};
 }
 

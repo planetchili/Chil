@@ -185,5 +185,14 @@ namespace chil::cli
 				GetOption_(pivot)->needs(GetOption_(dependent));
 			}
 		};
+
+		class AllowExtras : public RuleBase_
+		{
+		public:
+			AllowExtras(OptionsContainerBase_* pParent)
+			{
+				GetApp_(pParent).allow_extras(true);
+			}
+		};
 	}
 }
