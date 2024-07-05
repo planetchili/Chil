@@ -28,8 +28,7 @@ namespace cli
 		CHIL_CLI_OPT(height, int, "tallification", 480);
 		CHIL_CLI_OPT(list, std::vector<int>, "listed");
 		CHIL_CLI_OPT(pair, MyPair, "paired");
-		CHIL_CLI_OPT(dinkum, Dinkum, "Dinkum enum option", std::nullopt, CLI::CheckedTransformer{ std::map<std::string, Dinkum>{
-			{"chart", Dinkum::chart}, {"fart", Dinkum::fart}, {"smart", Dinkum::smart } } });
+		CHIL_CLI_OPT(dinkum, Dinkum, "Dinkum enum option", std::nullopt, MakeEnumMap<Dinkum>());
 	private:
 		std::string GetDesc() const override { return "Pulling and pulling on my yellow leg"; };
 		rule::MutualExclusion ickMex_{ lick, brick, dick, rick };

@@ -3,7 +3,8 @@
   "name": "chil-framework",
   "version": "0.1.0",
   "dependencies": [
-    "cli11"
+    "cli11",
+    "magic-enum"
   ],
   "builtin-baseline": "bb588985e37484d543fc849d0d79434e0d45bb3c"
 }

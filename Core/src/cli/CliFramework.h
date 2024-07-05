@@ -3,10 +3,15 @@
 #include <optional>
 #include <Core/src/utl/Assert.h>
 #include <sstream>
+#include <Core/src/crn/Ranges.h>
+#include <magic_enum.hpp>
 
 
 namespace chil::cli
 {
+	namespace rn = std::ranges;
+	namespace vi = rn::views;
+
 	std::string OptionNameFromElementName(const std::string& ename);
 	std::string ComposeFlagName(const std::string& ename, const std::string& shortcut);
 
@@ -205,6 +210,19 @@ namespace chil::cli
 				GetApp_(pParent).allow_extras(true);
 			}
 		};
+	}
+
+	template<typename E>
+	CLI::Validator MakeEnumMap(bool ignoreCase = true)
+	{
+		using namespace magic_enum;
+		auto pairs = vi::zip(enum_names<E>() | crn::Cast<std::string>(), enum_values<E>()) | rn::to<std::map>();
+		if (ignoreCase) {
+			return CLI::CheckedTransformer(std::move(pairs), CLI::ignore_case);
+		}
+		else {
+			return CLI::CheckedTransformer(std::move(pairs));
+		}
 	}
 }
 
