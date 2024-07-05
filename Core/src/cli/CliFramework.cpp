@@ -1,8 +1,13 @@
 #include "CliFramework.h"
-
+#include <Core/src/utl/String.h>
 
 namespace chil::cli
 {
+	std::string OptionNameFromElementName(const std::string& ename)
+	{
+		return "--" + utl::CamelToKebab(ename);
+	}
+
 	std::optional<int> OptionsContainerBase_::Init_(bool captureDiagnostics) noexcept
 	{
 		try {

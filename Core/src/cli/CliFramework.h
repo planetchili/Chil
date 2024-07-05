@@ -7,6 +7,8 @@
 
 namespace chil::cli
 {
+	std::string OptionNameFromElementName(const std::string& ename);
+
 	namespace rule
 	{
 		struct RuleBase_;
@@ -200,3 +202,5 @@ namespace chil::cli
 		};
 	}
 }
+
+#define CHIL_CLI_OPT(name, type, ...) ::chil::cli::Option<type> name{ this, ::chil::cli::OptionNameFromElementName(#name), __VA_ARGS__ }
