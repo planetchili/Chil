@@ -22,8 +22,8 @@ namespace cli
 		rule::MutualExclusion ickMex_{ lick, brick, dick, rick };
 		rule::MutualExclusion bedMex_{ shitTheBed, funtimeInBed };
 		rule::MutualExclusion winMex_{ shitTheBed, numWindows };
-		rule::Need widNeed_{ width, height };
-		rule::Need hgtNeed_{ height, width };
+		rule::Dependency widDep_{ width, height };
+		rule::Dependency hgtDep_{ height, width };
 	};
 }
 

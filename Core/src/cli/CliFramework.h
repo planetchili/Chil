@@ -170,17 +170,17 @@ namespace chil::cli
 			}
 		};
 
-		class Need : public RuleBase_
+		class Dependency : public RuleBase_
 		{
 		public:
 			template<class Pivot, class...Dependents>
-			Need(Pivot& pivot, Dependents&...dependents)
+			Dependency(Pivot& pivot, Dependents&...dependents)
 			{
-				(NeedImpl_(pivot, dependents), ...);
+				(DependencyImpl_(pivot, dependents), ...);
 			}
 		private:
 			template<class Pivot, class Dependent>
-			void NeedImpl_(Pivot& pivot, Dependent& dependent)
+			void DependencyImpl_(Pivot& pivot, Dependent& dependent)
 			{
 				GetOption_(pivot)->needs(GetOption_(dependent));
 			}
