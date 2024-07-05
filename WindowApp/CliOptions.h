@@ -16,10 +16,14 @@ namespace cli
 		Flag brick{ this, "--brick,-b", "bricking" };
 		Flag dick{ this, "--dick,-d", "dicking" };
 		Flag rick{ this, "--rick,-r", "never gonna" };
+		Option<int> width{ this, "--width", "wideification", 640 };
+		Option<int> height{ this, "--height", "tallification", 480 };
 	private:
 		rule::MutualExclusion ickMex_{ lick, brick, dick, rick };
 		rule::MutualExclusion bedMex_{ shitTheBed, funtimeInBed };
 		rule::MutualExclusion winMex_{ shitTheBed, numWindows };
+		rule::Need widNeed_{ width, height };
+		rule::Need hgtNeed_{ height, width };
 	};
 }
 

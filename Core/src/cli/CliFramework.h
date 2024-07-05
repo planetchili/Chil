@@ -169,5 +169,21 @@ namespace chil::cli
 				}
 			}
 		};
+
+		class Need : public RuleBase_
+		{
+		public:
+			template<class Pivot, class...Dependents>
+			Need(Pivot& pivot, Dependents&...dependents)
+			{
+				(NeedImpl_(pivot, dependents), ...);
+			}
+		private:
+			template<class Pivot, class Dependent>
+			void NeedImpl_(Pivot& pivot, Dependent& dependent)
+			{
+				GetOption_(pivot)->needs(GetOption_(dependent));
+			}
+		};
 	}
 }
