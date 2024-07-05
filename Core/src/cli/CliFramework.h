@@ -7,6 +7,11 @@
 
 namespace chil::cli
 {
+	namespace rule
+	{
+		struct RuleBase_;
+	}
+
 	class OptionsContainerBase_
 	{
 		friend class OptionsElementBase_;
@@ -53,13 +58,14 @@ namespace chil::cli
 	class OptionsElementBase_
 	{
 		friend OptionsContainerBase_;
+		friend rule::RuleBase_;
 	public:
 		operator bool() const;
 		bool operator!() const;
 		std::string GetName() const;
 	protected:
 		// functions
-		CLI::App& GetApp_(OptionsContainerBase_* pContainer);
+		static CLI::App& GetApp_(OptionsContainerBase_* pContainer);
 		// data
 		CLI::Option* pOption_ = nullptr;
 	};
@@ -129,4 +135,39 @@ namespace chil::cli
 	private:
 		bool data_{};
 	};
+
+	namespace rule
+	{
+		struct RuleBase_
+		{
+		protected:
+			static CLI::Option* GetOption_(OptionsElementBase_& element)
+			{
+				return element.pOption_;
+			}
+			static CLI::App& GetApp_(OptionsContainerBase_* pParent)
+			{
+				return OptionsElementBase_::GetApp_(pParent);
+			}
+		};
+
+		class MutualExclusion : public RuleBase_
+		{
+		public:
+			template<class...T>
+			MutualExclusion(T&...elements)
+			{
+				ExcludeRecursive_(elements...);
+			}
+		private:
+			template<class T, class...Rest>
+			void ExcludeRecursive_(T& pivot, Rest&...rest)
+			{
+				if constexpr (sizeof...(rest) > 0) {
+					GetOption_(pivot)->excludes(GetOption_(rest)...);
+					ExcludeRecursive_(rest...);
+				}
+			}
+		};
+	}
 }
