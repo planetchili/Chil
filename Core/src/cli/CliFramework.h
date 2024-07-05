@@ -13,6 +13,7 @@ namespace chil::cli
 	protected:
 		// functions
 		std::optional<int> Init_(bool captureDiagnostics) noexcept;
+		CLI::Option* GetOpt_(class OptionsElementBase_&);
 		// data
 		std::ostringstream diagnostics_;
 		bool finalized_ = false;
@@ -51,6 +52,7 @@ namespace chil::cli
 
 	class OptionsElementBase_
 	{
+		friend OptionsContainerBase_;
 	public:
 		operator bool() const;
 		bool operator!() const;
@@ -62,17 +64,26 @@ namespace chil::cli
 		CLI::Option* pOption_ = nullptr;
 	};
 
+	struct EmptyCustomizer {};
+
 	template<typename T>
 	class Option : public OptionsElementBase_
 	{
 	public:
-		Option(OptionsContainerBase_* pParent, std::string names, std::string description, std::optional<T> def = {})
+		template<class C = EmptyCustomizer>
+		Option(OptionsContainerBase_* pParent, std::string names, std::string description, std::optional<T> def = {}, const C& cust = EmptyCustomizer{})
 			:
 			data_{ def ? std::move(*def) : T{} }
 		{
 			pOption_ = GetApp_(pParent).add_option(std::move(names), data_, std::move(description));
 			if (def) {
 				pOption_->default_val(data_);
+			}
+			if constexpr (std::invocable<C, CLI::Option*>) {
+				cust(pOption_);
+			}
+			else if constexpr (std::is_base_of_v<CLI::Validator, C>) {
+				pOption_->transform(cust);
 			}
 		}
 		Option(const Option&) = delete;

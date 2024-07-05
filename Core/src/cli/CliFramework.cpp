@@ -18,6 +18,11 @@ namespace chil::cli
 		}
 	}
 
+	CLI::Option* OptionsContainerBase_::GetOpt_(OptionsElementBase_& el)
+	{
+		return el.pOption_;
+	}
+
 
 	OptionsElementBase_::operator bool() const
 	{

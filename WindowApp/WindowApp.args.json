@@ -3,6 +3,14 @@
   "Id": "a9d6eb69-a3e6-45a3-9f75-c7be8f8ab771",
   "Items": [
     {
+      "Id": "25bec6ca-a5e9-443e-bc05-1f8581cbdd43",
+      "Command": "--non-default 1337"
+    },
+    {
+      "Id": "ab35275b-cdb1-4473-af63-aee0bdaaa450",
+      "Command": "--path C:\\Windows"
+    },
+    {
       "Id": "97be8113-317b-41b2-a3d8-822b2a26071b",
       "Command": "--num-windows pubes"
     },
