@@ -8,6 +8,15 @@ namespace chil::cli
 		return "--" + utl::CamelToKebab(ename);
 	}
 
+	std::string ComposeFlagName(const std::string& ename, const std::string& shortcut)
+	{
+		auto fullname = OptionNameFromElementName(ename);
+		if (!shortcut.empty()) {
+			fullname += ",-" + shortcut;
+		}
+		return fullname;
+	}
+
 	std::optional<int> OptionsContainerBase_::Init_(bool captureDiagnostics) noexcept
 	{
 		try {

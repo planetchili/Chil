@@ -7,17 +7,17 @@ namespace cli
 
 	struct Options : public OptionsContainer<Options>
 	{
-		Flag shitTheBed{ this, "--shit-the-bed,-s", "poopy!" };
-		Flag funtimeInBed{ this, "--funtime-in-bed,-f", "funtimes!" };
+		CHIL_CLI_FLG(shitTheBed, "s", "poopy!");
+		CHIL_CLI_FLG(funtimeInBed, "f", "funtimes!");
 		CHIL_CLI_OPT(numWindows, int, "Number of windows to spawn", 2);
-		Option<int> nonDefault{ this, "--non-default", "Doesn't logically have a default", {}, CLI::Range{ 69, 420 } };
-		Option<std::string> path{ this, "--path", "Path in the filesystem", {}, CLI::ExistingPath };
-		Flag lick{ this, "--lick,-l", "licking" };
-		Flag brick{ this, "--brick,-b", "bricking" };
-		Flag dick{ this, "--dick,-d", "dicking" };
-		Flag rick{ this, "--rick,-r", "never gonna" };
-		Option<int> width{ this, "--width", "wideification", 640 };
-		Option<int> height{ this, "--height", "tallification", 480 };
+		CHIL_CLI_OPT(nonDefault, int, "Doesn't logically have a default", {}, CLI::Range{ 69, 420 });
+		CHIL_CLI_OPT(path, std::string, "Path in the filesystem", {}, CLI::ExistingPath);
+		CHIL_CLI_FLG(lick, "l", "licking");
+		CHIL_CLI_FLG(brick, "b", "bricking");
+		CHIL_CLI_FLG(dick, "d", "dicking");
+		CHIL_CLI_FLG(rick, "r", "never gonna");
+		CHIL_CLI_OPT(width, int, "wideification", 640);
+		CHIL_CLI_OPT(height, int, "tallification", 480);
 	private:
 		std::string GetDesc() const override { return "Pulling and pulling on my yellow leg"; };
 		rule::MutualExclusion ickMex_{ lick, brick, dick, rick };

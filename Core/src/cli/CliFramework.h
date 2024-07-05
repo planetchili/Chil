@@ -8,6 +8,7 @@
 namespace chil::cli
 {
 	std::string OptionNameFromElementName(const std::string& ename);
+	std::string ComposeFlagName(const std::string& ename, const std::string& shortcut);
 
 	namespace rule
 	{
@@ -204,3 +205,4 @@ namespace chil::cli
 }
 
 #define CHIL_CLI_OPT(name, type, ...) ::chil::cli::Option<type> name{ this, ::chil::cli::OptionNameFromElementName(#name), __VA_ARGS__ }
+#define CHIL_CLI_FLG(name, shortcut, ...) ::chil::cli::Flag name{ this, ::chil::cli::ComposeFlagName(#name, shortcut), __VA_ARGS__ }
