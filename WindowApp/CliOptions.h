@@ -19,6 +19,7 @@ namespace cli
 		Option<int> width{ this, "--width", "wideification", 640 };
 		Option<int> height{ this, "--height", "tallification", 480 };
 	private:
+		std::string GetDesc() const override { return "Pulling and pulling on my yellow leg"; };
 		rule::MutualExclusion ickMex_{ lick, brick, dick, rick };
 		rule::MutualExclusion bedMex_{ shitTheBed, funtimeInBed };
 		rule::MutualExclusion winMex_{ shitTheBed, numWindows };

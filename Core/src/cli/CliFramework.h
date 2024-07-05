@@ -15,10 +15,14 @@ namespace chil::cli
 	class OptionsContainerBase_
 	{
 		friend class OptionsElementBase_;
+	public:
+		virtual ~OptionsContainerBase_() = default;
 	protected:
 		// functions
 		std::optional<int> Init_(bool captureDiagnostics) noexcept;
 		CLI::Option* GetOpt_(class OptionsElementBase_&);
+		virtual std::string GetName() const { return {}; }
+		virtual std::string GetDesc() const { return {}; }
 		// data
 		std::ostringstream diagnostics_;
 		bool finalized_ = false;

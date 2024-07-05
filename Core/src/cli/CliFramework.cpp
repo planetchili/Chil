@@ -6,6 +6,12 @@ namespace chil::cli
 	std::optional<int> OptionsContainerBase_::Init_(bool captureDiagnostics) noexcept
 	{
 		try {
+			if (auto name = GetName(); !name.empty()) {
+				app_.name(std::move(name));
+			}
+			if (auto desc = GetDesc(); !desc.empty()) {
+				app_.description(std::move(desc));
+			}
 			app_.parse(__argc, __argv);
 			finalized_ = true;
 			return {};
