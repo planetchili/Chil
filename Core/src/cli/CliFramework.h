@@ -1,5 +1,5 @@
 #pragma once
-#include <CLI/CLI.hpp>
+#include "WrapCli11.h"
 #include <optional>
 #include <Core/src/utl/Assert.h>
 #include <sstream>

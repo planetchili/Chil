@@ -33,7 +33,14 @@ int WINAPI WinMain(
 	Boot();
 
 	if (auto code = opt::Init()) {
-		chilog.error(utl::ToWide(opt::GetDiagnostics())).no_trace();
+		if (*code == 0) {
+			MessageBoxA(nullptr, opt::GetDiagnostics().c_str(), "Command Line Help",
+				MB_ICONINFORMATION | MB_APPLMODAL | MB_SETFOREGROUND);
+		}
+		else {
+			MessageBoxA(nullptr, opt::GetDiagnostics().c_str(), "Command Line Parse Error",
+				MB_ICONERROR | MB_APPLMODAL | MB_SETFOREGROUND);
+		}
 		return *code;
 	}
 	auto& opts = opt::Get();

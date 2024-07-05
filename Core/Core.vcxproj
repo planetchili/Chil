@@ -13,6 +13,7 @@
   <ItemGroup>
     <ClInclude Include="src\ccr\GenericTaskQueue.h" />
     <ClInclude Include="src\cli\CliFramework.h" />
+    <ClInclude Include="src\cli\WrapCli11.h" />
     <ClInclude Include="src\crn\Ranges.h" />
     <ClInclude Include="src\ioc\Container.h" />
     <ClInclude Include="src\ioc\Exception.h" />
