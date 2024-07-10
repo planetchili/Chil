@@ -1,4 +1,5 @@
 #include "CliFramework.h"
+#include "WrapCli11.h"
 #include <Core/src/utl/String.h>
 
 namespace chil::cli
@@ -17,24 +18,29 @@ namespace chil::cli
 		return fullname;
 	}
 
+	OptionsContainerBase_::OptionsContainerBase_()
+		:
+		pApp_{ std::make_shared<CLI::App>() }
+	{}
+
 	std::optional<int> OptionsContainerBase_::Init_(bool captureDiagnostics) noexcept
 	{
 		try {
 			if (auto name = GetName(); !name.empty()) {
-				app_.name(std::move(name));
+				pApp_->name(std::move(name));
 			}
 			if (auto desc = GetDesc(); !desc.empty()) {
-				app_.description(std::move(desc));
+				pApp_->description(std::move(desc));
 			}
-			app_.parse(__argc, __argv);
+			pApp_->parse(__argc, __argv);
 			finalized_ = true;
 			return {};
 		}
 		catch (const CLI::ParseError& e) {
 			if (captureDiagnostics) {
-				return app_.exit(e, diagnostics_, diagnostics_);
+				return pApp_->exit(e, diagnostics_, diagnostics_);
 			}
-			return app_.exit(e);
+			return pApp_->exit(e);
 		}
 	}
 
@@ -58,7 +64,7 @@ namespace chil::cli
 	}
 	CLI::App& OptionsElementBase_::GetApp_(OptionsContainerBase_* pContainer)
 	{
-		return pContainer->app_;
+		return *pContainer->pApp_;
 	}
 
 

@@ -1,11 +1,16 @@
 #pragma once
-#include "WrapCli11.h"
 #include <optional>
 #include <Core/src/utl/Assert.h>
 #include <sstream>
 #include <Core/src/crn/Ranges.h>
 #include <magic_enum.hpp>
+#include <memory>
 
+namespace CLI
+{
+	class App;
+	class Option;
+}
 
 namespace chil::cli
 {
@@ -24,6 +29,7 @@ namespace chil::cli
 	{
 		friend class OptionsElementBase_;
 	public:
+		OptionsContainerBase_();
 		virtual ~OptionsContainerBase_() = default;
 	protected:
 		// functions
@@ -34,7 +40,7 @@ namespace chil::cli
 		// data
 		std::ostringstream diagnostics_;
 		bool finalized_ = false;
-		CLI::App app_;
+		std::shared_ptr<CLI::App> pApp_;
 	};
 
 	template<class T>
@@ -60,11 +66,7 @@ namespace chil::cli
 			return Get_().Init_(captureDiagnostics);
 		}
 	private:
-		static T& Get_()
-		{
-			static T opts;
-			return opts;
-		}
+		static T& Get_();
 	};
 
 	class OptionsElementBase_
@@ -89,21 +91,7 @@ namespace chil::cli
 	{
 	public:
 		template<class C = EmptyCustomizer>
-		Option(OptionsContainerBase_* pParent, std::string names, std::string description, std::optional<T> def = {}, const C& cust = EmptyCustomizer{})
-			:
-			data_{ def ? std::move(*def) : T{} }
-		{
-			pOption_ = GetApp_(pParent).add_option(std::move(names), data_, std::move(description));
-			if (def) {
-				pOption_->default_val(data_);
-			}
-			if constexpr (std::invocable<C, CLI::Option*>) {
-				cust(pOption_);
-			}
-			else if constexpr (std::is_base_of_v<CLI::Validator, C>) {
-				pOption_->transform(cust);
-			}
-		}
+		Option(OptionsContainerBase_* pParent, std::string names, std::string description, std::optional<T> def = {}, const C& cust = EmptyCustomizer{});
 		Option(const Option&) = delete;
 		Option& operator=(const Option&) = delete;
 		Option(Option&&) = delete;
@@ -132,18 +120,18 @@ namespace chil::cli
 	{
 	public:
 		Flag(OptionsContainerBase_* pParent, std::string names, std::string description);
-		template<class C>
-		Flag(OptionsContainerBase_* pParent, std::string names, std::string description, const C& cust)
-			:
-			Flag{ pParent, std::move(names), std::move(description) }
-		{
-			if constexpr (std::invocable<C, CLI::Option*>) {
-				cust(pOption_);
-			}
-			else if constexpr (std::is_base_of_v<CLI::Validator, C>) {
-				pOption_->transform(cust);
-			}
-		}
+		//template<class C>
+		//Flag(OptionsContainerBase_* pParent, std::string names, std::string description, const C& cust)
+		//	:
+		//	Flag{ pParent, std::move(names), std::move(description) }
+		//{
+		//	if constexpr (std::invocable<C, CLI::Option*>) {
+		//		cust(pOption_);
+		//	}
+		//	else if constexpr (std::is_base_of_v<CLI::Validator, C>) {
+		//		pOption_->transform(cust);
+		//	}
+		//}
 		Flag(const Flag&) = delete;
 		Flag& operator=(const Flag&) = delete;
 		Flag(Flag&&) = delete;
@@ -152,78 +140,78 @@ namespace chil::cli
 		bool data_{};
 	};
 
-	namespace rule
-	{
-		struct RuleBase_
-		{
-		protected:
-			static CLI::Option* GetOption_(OptionsElementBase_& element)
-			{
-				return element.pOption_;
-			}
-			static CLI::App& GetApp_(OptionsContainerBase_* pParent)
-			{
-				return OptionsElementBase_::GetApp_(pParent);
-			}
-		};
+	//namespace rule
+	//{
+	//	struct RuleBase_
+	//	{
+	//	protected:
+	//		static CLI::Option* GetOption_(OptionsElementBase_& element)
+	//		{
+	//			return element.pOption_;
+	//		}
+	//		static CLI::App& GetApp_(OptionsContainerBase_* pParent)
+	//		{
+	//			return OptionsElementBase_::GetApp_(pParent);
+	//		}
+	//	};
 
-		class MutualExclusion : public RuleBase_
-		{
-		public:
-			template<class...T>
-			MutualExclusion(T&...elements)
-			{
-				ExcludeRecursive_(elements...);
-			}
-		private:
-			template<class T, class...Rest>
-			void ExcludeRecursive_(T& pivot, Rest&...rest)
-			{
-				if constexpr (sizeof...(rest) > 0) {
-					GetOption_(pivot)->excludes(GetOption_(rest)...);
-					ExcludeRecursive_(rest...);
-				}
-			}
-		};
+	//	class MutualExclusion : public RuleBase_
+	//	{
+	//	public:
+	//		template<class...T>
+	//		MutualExclusion(T&...elements)
+	//		{
+	//			ExcludeRecursive_(elements...);
+	//		}
+	//	private:
+	//		template<class T, class...Rest>
+	//		void ExcludeRecursive_(T& pivot, Rest&...rest)
+	//		{
+	//			if constexpr (sizeof...(rest) > 0) {
+	//				GetOption_(pivot)->excludes(GetOption_(rest)...);
+	//				ExcludeRecursive_(rest...);
+	//			}
+	//		}
+	//	};
 
-		class Dependency : public RuleBase_
-		{
-		public:
-			template<class Pivot, class...Dependents>
-			Dependency(Pivot& pivot, Dependents&...dependents)
-			{
-				(DependencyImpl_(pivot, dependents), ...);
-			}
-		private:
-			template<class Pivot, class Dependent>
-			void DependencyImpl_(Pivot& pivot, Dependent& dependent)
-			{
-				GetOption_(pivot)->needs(GetOption_(dependent));
-			}
-		};
+	//	class Dependency : public RuleBase_
+	//	{
+	//	public:
+	//		template<class Pivot, class...Dependents>
+	//		Dependency(Pivot& pivot, Dependents&...dependents)
+	//		{
+	//			(DependencyImpl_(pivot, dependents), ...);
+	//		}
+	//	private:
+	//		template<class Pivot, class Dependent>
+	//		void DependencyImpl_(Pivot& pivot, Dependent& dependent)
+	//		{
+	//			GetOption_(pivot)->needs(GetOption_(dependent));
+	//		}
+	//	};
 
-		class AllowExtras : public RuleBase_
-		{
-		public:
-			AllowExtras(OptionsContainerBase_* pParent)
-			{
-				GetApp_(pParent).allow_extras(true);
-			}
-		};
-	}
+	//	class AllowExtras : public RuleBase_
+	//	{
+	//	public:
+	//		AllowExtras(OptionsContainerBase_* pParent)
+	//		{
+	//			GetApp_(pParent).allow_extras(true);
+	//		}
+	//	};
+	//}
 
-	template<typename E>
-	CLI::Validator MakeEnumMap(bool ignoreCase = true)
-	{
-		using namespace magic_enum;
-		auto pairs = vi::zip(enum_names<E>() | crn::Cast<std::string>(), enum_values<E>()) | rn::to<std::map>();
-		if (ignoreCase) {
-			return CLI::CheckedTransformer(std::move(pairs), CLI::ignore_case);
-		}
-		else {
-			return CLI::CheckedTransformer(std::move(pairs));
-		}
-	}
+	//template<typename E>
+	//CLI::Validator MakeEnumMap(bool ignoreCase = true)
+	//{
+	//	using namespace magic_enum;
+	//	auto pairs = vi::zip(enum_names<E>() | crn::Cast<std::string>(), enum_values<E>()) | rn::to<std::map>();
+	//	if (ignoreCase) {
+	//		return CLI::CheckedTransformer(std::move(pairs), CLI::ignore_case);
+	//	}
+	//	else {
+	//		return CLI::CheckedTransformer(std::move(pairs));
+	//	}
+	//}
 }
 
 #define CHIL_CLI_OPT(name, type, ...) ::chil::cli::Option<type> name{ this, ::chil::cli::OptionNameFromElementName(#name), __VA_ARGS__ }
