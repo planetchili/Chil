@@ -72,4 +72,23 @@ namespace chil::cli
 	{
 		pOption_ = GetApp_(pParent).add_flag(std::move(names), data_, std::move(description));
 	}
+
+
+	namespace rule
+	{
+		CLI::Option* chil::cli::rule::RuleBase_::GetOption_(OptionsElementBase_& element)
+		{
+			return element.pOption_;
+		}
+		CLI::App& RuleBase_::GetApp_(OptionsContainerBase_* pParent)
+		{
+			return OptionsElementBase_::GetApp_(pParent);
+		}
+
+
+		AllowExtras::AllowExtras(OptionsContainerBase_* pParent)
+		{
+			GetApp_(pParent).allow_extras(true);
+		}
+	}
 }

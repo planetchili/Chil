@@ -27,4 +27,22 @@ namespace chil::cli
 			pOption_->transform(cust);
 		}
 	}
+
+	namespace rule
+	{
+		template<class T, class...Rest>
+		void MutualExclusion::ExcludeRecursive_(T& pivot, Rest&...rest)
+		{
+			if constexpr (sizeof...(rest) > 0) {
+				GetOption_(pivot)->excludes(GetOption_(rest)...);
+				ExcludeRecursive_(rest...);
+			}
+		}
+
+		template<class Pivot, class Dependent>
+		void Dependency::DependencyImpl_(Pivot& pivot, Dependent& dependent)
+		{
+			GetOption_(pivot)->needs(GetOption_(dependent));
+		}
+	}
 }

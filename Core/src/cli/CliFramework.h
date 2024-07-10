@@ -140,65 +140,47 @@ namespace chil::cli
 		bool data_{};
 	};
 
-	//namespace rule
-	//{
-	//	struct RuleBase_
-	//	{
-	//	protected:
-	//		static CLI::Option* GetOption_(OptionsElementBase_& element)
-	//		{
-	//			return element.pOption_;
-	//		}
-	//		static CLI::App& GetApp_(OptionsContainerBase_* pParent)
-	//		{
-	//			return OptionsElementBase_::GetApp_(pParent);
-	//		}
-	//	};
+	namespace rule
+	{
+		struct RuleBase_
+		{
+		protected:
+			static CLI::Option* GetOption_(OptionsElementBase_& element);
+			static CLI::App& GetApp_(OptionsContainerBase_* pParent);
+		};
 
-	//	class MutualExclusion : public RuleBase_
-	//	{
-	//	public:
-	//		template<class...T>
-	//		MutualExclusion(T&...elements)
-	//		{
-	//			ExcludeRecursive_(elements...);
-	//		}
-	//	private:
-	//		template<class T, class...Rest>
-	//		void ExcludeRecursive_(T& pivot, Rest&...rest)
-	//		{
-	//			if constexpr (sizeof...(rest) > 0) {
-	//				GetOption_(pivot)->excludes(GetOption_(rest)...);
-	//				ExcludeRecursive_(rest...);
-	//			}
-	//		}
-	//	};
+		class MutualExclusion : public RuleBase_
+		{
+		public:
+			template<class...T>
+			MutualExclusion(T&...elements)
+			{
+				ExcludeRecursive_(elements...);
+			}
+		private:
+			template<class T, class...Rest>
+			void ExcludeRecursive_(T& pivot, Rest&...rest);
+		};
 
-	//	class Dependency : public RuleBase_
-	//	{
-	//	public:
-	//		template<class Pivot, class...Dependents>
-	//		Dependency(Pivot& pivot, Dependents&...dependents)
-	//		{
-	//			(DependencyImpl_(pivot, dependents), ...);
-	//		}
-	//	private:
-	//		template<class Pivot, class Dependent>
-	//		void DependencyImpl_(Pivot& pivot, Dependent& dependent)
-	//		{
-	//			GetOption_(pivot)->needs(GetOption_(dependent));
-	//		}
-	//	};
+		class Dependency : public RuleBase_
+		{
+		public:
+			template<class Pivot, class...Dependents>
+			Dependency(Pivot& pivot, Dependents&...dependents)
+			{
+				(DependencyImpl_(pivot, dependents), ...);
+			}
+		private:
+			template<class Pivot, class Dependent>
+			void DependencyImpl_(Pivot& pivot, Dependent& dependent);
+		};
 
-	//	class AllowExtras : public RuleBase_
-	//	{
-	//	public:
-	//		AllowExtras(OptionsContainerBase_* pParent)
-	//		{
-	//			GetApp_(pParent).allow_extras(true);
-	//		}
-	//	};
-	//}
+		class AllowExtras : public RuleBase_
+		{
+		public:
+			AllowExtras(OptionsContainerBase_* pParent);
+		};
+	}
 
 	//template<typename E>
 	//CLI::Validator MakeEnumMap(bool ignoreCase = true)

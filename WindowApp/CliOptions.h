@@ -31,12 +31,12 @@ namespace cli
 		// CHIL_CLI_OPT(dinkum, Dinkum, "Dinkum enum option", std::nullopt, MakeEnumMap<Dinkum>());
 	private:
 		std::string GetDesc() const override { return "Pulling and pulling on my yellow leg"; };
-		//rule::MutualExclusion ickMex_{ lick, brick, dick, rick };
-		//rule::MutualExclusion bedMex_{ shitTheBed, funtimeInBed };
-		//rule::MutualExclusion winMex_{ shitTheBed, numWindows };
-		//rule::Dependency widDep_{ width, height };
-		//rule::Dependency hgtDep_{ height, width };
-		//rule::AllowExtras ext_{ this };
+		rule::MutualExclusion ickMex_{ lick, brick, dick, rick };
+		rule::MutualExclusion bedMex_{ shitTheBed, funtimeInBed };
+		rule::MutualExclusion winMex_{ shitTheBed, numWindows };
+		rule::Dependency widDep_{ width, height };
+		rule::Dependency hgtDep_{ height, width };
+		rule::AllowExtras ext_{ this };
 	};
 }
 
