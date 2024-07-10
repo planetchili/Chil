@@ -119,8 +119,8 @@ namespace chil::cli
 		Customizer In(std::initializer_list<T> values);
 		template<bool IgnoreCase = true, typename T>
 		Customizer In(T&& container);
-		template<typename T, bool IgnoreCase = true>
-		Customizer EnumMap();
+		template<typename E>
+		Customizer EnumMap(bool ignoreCase = true);
 	}
 
 	template<typename T>

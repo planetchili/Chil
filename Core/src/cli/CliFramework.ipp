@@ -60,6 +60,7 @@ namespace chil::cli
 			{
 				return Adapt_(V{ args... });
 			}
+			std::string NullModifier_(std::string) { return {}; }
 		}
 
 		Customizer ExistingPath() { return Adapt_(CLI::ExistingPath); }
@@ -96,17 +97,12 @@ namespace chil::cli
 			return In<IgnoreCase>(std::vector<T>(values));
 		}
 
-		template<typename T, bool IgnoreCase>
-		Customizer EnumMap()
+		template<typename E>
+		Customizer EnumMap(bool ignoreCase)
 		{
 			using namespace magic_enum;
-			auto map = vi::zip(enum_names<T>() | crn::Cast<std::string>(), enum_values<T>()) | rn::to<std::map>();
-			if constexpr (IgnoreCase) {
-				return Adapt_<CLI::CheckedTransformer>(std::move(map), CLI::ignore_case);
-			}
-			else {
-				return Adapt_<CLI::CheckedTransformer>(std::move(map));
-			}
+			auto map = vi::zip(enum_names<E>() | crn::Cast<std::string>(), enum_values<E>()) | rn::to<std::map>();
+			return Adapt_<CLI::CheckedTransformer>(std::move(map), ignoreCase ? CLI::ignore_case : NullModifier_);
 		}
 	}
 }
