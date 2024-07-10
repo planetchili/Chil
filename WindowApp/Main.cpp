@@ -45,14 +45,12 @@ int WINAPI WinMain(
 	}
 	auto& opts = opt::Get();
 
-	//if (opts.nonDefault) {
-	//	chilog.info(std::format(L"non-default: {}", *opts.nonDefault));
-	//}
+	if (opts.nonDefault) {
+		chilog.info(std::format(L"non-default: {}", *opts.nonDefault));
+	}
 
-	if (opts.list) {
-		for (auto i : *opts.list) {
-			chilog.info(std::format(L"listed: {}", i));
-		}
+	for (auto i : *opts.list) {
+		chilog.info(std::format(L"listed: {}", i));
 	}
 
 	if (opts.pair) {

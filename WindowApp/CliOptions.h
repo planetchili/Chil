@@ -20,6 +20,7 @@ namespace cli
 		CHIL_CLI_OPT(numWindows, int, "Number of windows to spawn", 2);
 		CHIL_CLI_OPT(nonDefault, int, "Doesn't logically have a default", std::nullopt, cust::Range(69, 420));
 		CHIL_CLI_OPT(path, std::string, "Path in the filesystem", std::nullopt, cust::ExistingPath());
+		CHIL_CLI_OPT(wammy, std::string, "wwwww", std::nullopt, cust::In<false>({"spig", "spog"}));
 		CHIL_CLI_FLG(lick, "l", "licking");
 		CHIL_CLI_FLG(brick, "b", "bricking");
 		CHIL_CLI_FLG(dick, "d", "dicking");

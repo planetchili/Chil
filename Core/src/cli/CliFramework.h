@@ -205,19 +205,6 @@ namespace chil::cli
 			AllowExtras(OptionsContainerBase_* pParent);
 		};
 	}
-
-	//template<typename E>
-	//CLI::Validator MakeEnumMap(bool ignoreCase = true)
-	//{
-	//	using namespace magic_enum;
-	//	auto pairs = vi::zip(enum_names<E>() | crn::Cast<std::string>(), enum_values<E>()) | rn::to<std::map>();
-	//	if (ignoreCase) {
-	//		return CLI::CheckedTransformer(std::move(pairs), CLI::ignore_case);
-	//	}
-	//	else {
-	//		return CLI::CheckedTransformer(std::move(pairs));
-	//	}
-	//}
 }
 
 #define CHIL_CLI_OPT(name, type, ...) ::chil::cli::Option<type> name{ this, ::chil::cli::OptionNameFromElementName(#name), __VA_ARGS__ }

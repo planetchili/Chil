@@ -3,6 +3,10 @@
   "Id": "a9d6eb69-a3e6-45a3-9f75-c7be8f8ab771",
   "Items": [
     {
+      "Id": "555bd923-944e-45a8-bcbb-e898c3a98334",
+      "Command": "--wammy spiG"
+    },
+    {
       "Id": "c8dc62c0-c195-4d47-a199-503f5cc3ac31",
       "Command": "--dinkum fart"
     },
