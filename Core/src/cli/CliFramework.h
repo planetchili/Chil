@@ -2,9 +2,8 @@
 #include <optional>
 #include <Core/src/utl/Assert.h>
 #include <sstream>
-#include <Core/src/crn/Ranges.h>
-#include <magic_enum.hpp>
 #include <memory>
+#include <functional>
 
 namespace CLI
 {
@@ -14,9 +13,6 @@ namespace CLI
 
 namespace chil::cli
 {
-	namespace rn = std::ranges;
-	namespace vi = rn::views;
-
 	std::string OptionNameFromElementName(const std::string& ename);
 	std::string ComposeFlagName(const std::string& ename, const std::string& shortcut);
 
@@ -84,14 +80,54 @@ namespace chil::cli
 		CLI::Option* pOption_ = nullptr;
 	};
 
-	struct EmptyCustomizer {};
+	namespace cust
+	{
+		class Customizer
+		{
+		public:
+			Customizer(std::function<void(CLI::Option*)> f = [](CLI::Option* pOpt) {})
+			{
+				function_ = std::move(f);
+			}
+			Customizer operator|(const Customizer& other) const
+			{
+				return Customizer([f1 = function_, f2 = other.function_](CLI::Option* pOpt) {
+					f1(pOpt);
+					f2(pOpt);
+				});
+			}
+			void Invoke(CLI::Option* pOpt) const
+			{
+				function_(pOpt);
+			}
+		private:
+			std::function<void(CLI::Option*)> function_;
+		};
+
+		Customizer ExistingPath();
+		Customizer ExistingDirectory();
+		Customizer ExistingFile();
+		Customizer NonExistingPath();
+		Customizer Ipv4();
+		Customizer NonNegative();
+		Customizer Positive();
+		template<typename T>
+		Customizer Range(T min, T max);
+		template<typename T>
+		Customizer Clamp(T min, T max);
+		template<bool IgnoreCase = true, typename T>
+		Customizer In(std::initializer_list<T> values);
+		template<bool IgnoreCase = true, typename T>
+		Customizer In(T&& container);
+		template<typename T, bool IgnoreCase = true>
+		Customizer EnumMap();
+	}
 
 	template<typename T>
 	class Option : public OptionsElementBase_
 	{
 	public:
-		template<class C = EmptyCustomizer>
-		Option(OptionsContainerBase_* pParent, std::string names, std::string description, std::optional<T> def = {}, const C& cust = EmptyCustomizer{});
+		Option(OptionsContainerBase_* pParent, std::string names, std::string description, std::optional<T> def = {}, const cust::Customizer& customizer = {});
 		Option(const Option&) = delete;
 		Option& operator=(const Option&) = delete;
 		Option(Option&&) = delete;
@@ -119,19 +155,7 @@ namespace chil::cli
 	class Flag : public OptionsElementBase_
 	{
 	public:
-		Flag(OptionsContainerBase_* pParent, std::string names, std::string description);
-		//template<class C>
-		//Flag(OptionsContainerBase_* pParent, std::string names, std::string description, const C& cust)
-		//	:
-		//	Flag{ pParent, std::move(names), std::move(description) }
-		//{
-		//	if constexpr (std::invocable<C, CLI::Option*>) {
-		//		cust(pOption_);
-		//	}
-		//	else if constexpr (std::is_base_of_v<CLI::Validator, C>) {
-		//		pOption_->transform(cust);
-		//	}
-		//}
+		Flag(OptionsContainerBase_* pParent, std::string names, std::string description, const cust::Customizer& customizer = {});
 		Flag(const Flag&) = delete;
 		Flag& operator=(const Flag&) = delete;
 		Flag(Flag&&) = delete;

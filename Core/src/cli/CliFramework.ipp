@@ -1,5 +1,10 @@
 #include "CliFramework.h"
 #include "WrapCli11.h"
+#include <magic_enum.hpp>
+#include <Core/src/crn/Ranges.h>
+
+namespace rn = std::ranges;
+namespace vi = rn::views;
 
 namespace chil::cli
 {
@@ -11,8 +16,7 @@ namespace chil::cli
 	}
 
 	template<typename T>
-	template<class C>
-	Option<T>::Option(OptionsContainerBase_* pParent, std::string names, std::string description, std::optional<T> def, const C& cust)
+	Option<T>::Option(OptionsContainerBase_* pParent, std::string names, std::string description, std::optional<T> def, const cust::Customizer& customizer)
 		:
 		data_{ def ? std::move(*def) : T{} }
 	{
@@ -20,12 +24,7 @@ namespace chil::cli
 		if (def) {
 			pOption_->default_val(data_);
 		}
-		if constexpr (std::invocable<C, CLI::Option*>) {
-			cust(pOption_);
-		}
-		else if constexpr (std::is_base_of_v<CLI::Validator, C>) {
-			pOption_->transform(cust);
-		}
+		customizer.Invoke(pOption_);
 	}
 
 	namespace rule
@@ -43,6 +42,71 @@ namespace chil::cli
 		void Dependency::DependencyImpl_(Pivot& pivot, Dependent& dependent)
 		{
 			GetOption_(pivot)->needs(GetOption_(dependent));
+		}
+	}
+
+	namespace cust
+	{
+		namespace
+		{
+			Customizer Adapt_(CLI::Validator v)
+			{
+				return Customizer([=](CLI::Option* pOpt) {
+					pOpt->transform(v);
+				});
+			}
+			template<class V, typename...T>
+			Customizer Adapt_(T&&...args)
+			{
+				return Adapt_(V{ args... });
+			}
+		}
+
+		Customizer ExistingPath() { return Adapt_(CLI::ExistingPath); }
+		Customizer ExistingDirectory() { return Adapt_(CLI::ExistingDirectory); }
+		Customizer ExistingFile() { return Adapt_(CLI::ExistingFile); }
+		Customizer NonExistingPath() { return Adapt_(CLI::NonexistentPath); }
+		Customizer Ipv4() { return Adapt_(CLI::ValidIPV4); }
+		Customizer NonNegative() { return Adapt_(CLI::NonNegativeNumber); }
+		Customizer Positive() { return Adapt_(CLI::PositiveNumber); }
+
+		template<typename T>
+		Customizer Range(T min, T max) { return Adapt_<CLI::Range>(min, max); }
+
+		template<typename T>
+		Customizer Clamp(T min, T max) { return Adapt_<CLI::Bound>(min, max); }
+
+		template<bool IgnoreCase, typename T>
+		Customizer In(T&& container)
+		{
+			using ValueType = typename std::decay_t<T>::value_type;
+			constexpr bool IgnoreCaseOverride = std::same_as<std::string, ValueType> || std::same_as<const char*, ValueType> ?
+				IgnoreCase : false;
+			if constexpr (IgnoreCaseOverride) {
+				return Adapt_<CLI::IsMember>(container, CLI::ignore_case);
+			}
+			else {
+				return Adapt_<CLI::IsMember>(container);
+			}
+		}
+
+		template<bool IgnoreCase, typename T>
+		Customizer In(std::initializer_list<T> values)
+		{
+			return In<IgnoreCase>(std::vector<T>(values));
+		}
+
+		template<typename T, bool IgnoreCase>
+		Customizer EnumMap()
+		{
+			using namespace magic_enum;
+			auto map = vi::zip(enum_names<T>() | crn::Cast<std::string>(), enum_values<T>()) | rn::to<std::map>();
+			if constexpr (IgnoreCase) {
+				return Adapt_<CLI::CheckedTransformer>(std::move(map), CLI::ignore_case);
+			}
+			else {
+				return Adapt_<CLI::CheckedTransformer>(std::move(map));
+			}
 		}
 	}
 }

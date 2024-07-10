@@ -68,9 +68,10 @@ namespace chil::cli
 	}
 
 
-	Flag::Flag(OptionsContainerBase_* pParent, std::string names, std::string description)
+	Flag::Flag(OptionsContainerBase_* pParent, std::string names, std::string description, const cust::Customizer& customizer)
 	{
 		pOption_ = GetApp_(pParent).add_flag(std::move(names), data_, std::move(description));
+		customizer.Invoke(pOption_);
 	}
 
 
