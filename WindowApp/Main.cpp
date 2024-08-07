@@ -32,10 +32,10 @@ void Boot()
 	gfx::d12::Boot();
 }
 
-int WINAPI wWinMain(
+int WINAPI WinMain(
 	HINSTANCE hInstance,
 	HINSTANCE hPrevInstance,
-	PWSTR pCmdLine,
+	PSTR pCmdLine,
 	int nCmdShow)
 {
 	try {
