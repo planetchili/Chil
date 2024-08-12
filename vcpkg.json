@@ -4,6 +4,8 @@
   "version": "0.1.0",
   "dependencies": [
     "directxtex",
-    "concurrentqueue"
+    "concurrentqueue",
+    "cli11",
+    "magic-enum"
   ]
 }

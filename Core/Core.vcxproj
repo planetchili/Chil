@@ -12,6 +12,10 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ccr\GenericTaskQueue.h" />
+    <ClInclude Include="src\cli\CliFramework.h" />
+    <ClInclude Include="src\cli\CliFramework.ipp" />
+    <ClInclude Include="src\cli\WrapCli11.h" />
+    <ClInclude Include="src\crn\Ranges.h" />
     <ClInclude Include="src\gfx\d12\Boot.h" />
     <ClInclude Include="src\gfx\d12\CommandListPair.h" />
     <ClInclude Include="src\gfx\d12\CommandQueue.h" />
@@ -73,6 +77,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\ccr\GenericTaskQueue.cpp" />
+    <ClCompile Include="src\cli\CliFramework.cpp" />
     <ClCompile Include="src\gfx\d12\Boot2.cpp" />
     <ClCompile Include="src\gfx\d12\CommandQueue.cpp" />
     <ClCompile Include="src\gfx\d12\Device.cpp" />
@@ -149,10 +154,12 @@
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
     <Import Project="..\Baseline.props" />
+    <Import Project="..\vcpkg.props" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
     <Import Project="..\Baseline.props" />
+    <Import Project="..\vcpkg.props" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Label="Vcpkg">

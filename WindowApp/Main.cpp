@@ -11,6 +11,10 @@
 #include "ActiveWindow.h"
 #include <ranges>
 #include <chrono>
+#include <Core/src/log/Log.h> 
+#include <Core/src/win/IWindow.h>
+#include <format>
+#include "CliOptions.h"
 
 using namespace chil;
 using namespace std::string_literals;
@@ -32,10 +36,10 @@ void Boot()
 	gfx::d12::Boot();
 }
 
-int WINAPI wWinMain(
+int WINAPI WinMain(
 	HINSTANCE hInstance,
 	HINSTANCE hPrevInstance,
-	PWSTR pCmdLine,
+	PSTR pCmdLine,
 	int nCmdShow)
 {
 	try {

@@ -1,4 +1,10 @@
 #include "String.h"
+#include <ranges>
+#include <algorithm>
+#include <cctype>
+
+namespace rn = std::ranges;
+namespace vi = std::views;
 
 namespace chil::utl
 {
@@ -24,5 +30,12 @@ namespace chil::utl
 		wcstombs_s(&actual, narrow.data(), narrow.size(), wide.c_str(), _TRUNCATE);
 		narrow.resize(actual - 1);
 		return narrow;
+	}
+
+	std::string CamelToKebab(const std::string& camel)
+	{
+		const auto tf = [](char c) { return std::isupper(c) ?
+			std::string{ '-', (char)std::tolower(c) } : std::string{ c }; };
+		return camel | vi::transform(tf) | vi::join | rn::to<std::basic_string>();
 	}
 }

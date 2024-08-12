@@ -1,0 +1,50 @@
+{
+  "FileVersion": 2,
+  "Id": "a9d6eb69-a3e6-45a3-9f75-c7be8f8ab771",
+  "Items": [
+    {
+      "Id": "555bd923-944e-45a8-bcbb-e898c3a98334",
+      "Command": "--wammy spiG"
+    },
+    {
+      "Id": "c8dc62c0-c195-4d47-a199-503f5cc3ac31",
+      "Command": "--dinkum fart"
+    },
+    {
+      "Id": "c7ec432e-9d40-4d55-9573-c93491ee60d3",
+      "Command": "--pair 69bruh nice"
+    },
+    {
+      "Id": "c0545d6b-d04c-4025-84b3-70652dce17ce",
+      "Command": "--list 69 420 1337"
+    },
+    {
+      "Id": "4c1b18ee-e8ca-48c6-944f-71b612e98110",
+      "Command": "--foobar"
+    },
+    {
+      "Id": "25bec6ca-a5e9-443e-bc05-1f8581cbdd43",
+      "Command": "--non-default 0xFF"
+    },
+    {
+      "Id": "ab35275b-cdb1-4473-af63-aee0bdaaa450",
+      "Command": "--path C:\\Windows"
+    },
+    {
+      "Id": "97be8113-317b-41b2-a3d8-822b2a26071b",
+      "Command": "--num-windows pubes"
+    },
+    {
+      "Id": "fa8c2edc-0f64-4215-afc3-e6a413f77d4c",
+      "Command": "--help"
+    },
+    {
+      "Id": "52362f28-1cf7-4bda-8470-e2f4fddd71c9",
+      "Command": "--shit-the-bed"
+    },
+    {
+      "Id": "dc8c2858-98a2-4900-82b0-4ce68a1b57a6",
+      "Command": "--num-windows 5"
+    }
+  ]
+}
