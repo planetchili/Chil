@@ -15,6 +15,7 @@ namespace cli
 	using MyPair = std::pair<int, std::string>;
 	struct Options : public OptionsContainer<Options>
 	{
+		CHIL_CLI_OPT(numCharacters, int, "Number of characters to spawn", 2);
 		CHIL_CLI_FLG(shitTheBed, "s", "poopy!");
 		CHIL_CLI_FLG(funtimeInBed, "f", "funtimes!");
 		CHIL_CLI_OPT(numWindows, int, "Number of windows to spawn", 2);

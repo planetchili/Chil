@@ -54,7 +54,7 @@ namespace chil::gfx::d12
 
 	void StaticBufferBase_::CollectGarbage(uint64_t currentSignalledFenceValue)
 	{
-		assert(UploadComplete());
+		assert(UploadComplete(currentSignalledFenceValue))  ;
 		pUploadBuffer_.Reset();
 	}
 
