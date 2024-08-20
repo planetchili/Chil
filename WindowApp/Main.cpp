@@ -7,7 +7,6 @@
 #include <Core/src/gfx/IResourceLoader.h>
 #include <Core/src/gfx/ISpriteBatcher.h>
 #include <Core/src/gfx/d12/Boot.h>
-#include "Global.h"
 #include "ActiveWindow.h"
 #include <ranges>
 #include <chrono>
@@ -47,20 +46,32 @@ int WINAPI WinMain(
 		if (FAILED(CoInitializeEx(nullptr, COINIT_MULTITHREADED))) {
 			throw std::runtime_error{ "COM farked" };
 		}
-
 		// initialize services in ioc containers
 		Boot();
+		// parse the command line 
+		if (auto code = opt::Init()) {
+			if (*code == 0) {
+				MessageBoxA(nullptr, opt::GetDiagnostics().c_str(), "Command Line Help",
+					MB_ICONINFORMATION | MB_APPLMODAL | MB_SETFOREGROUND);
+			}
+			else {
+				MessageBoxA(nullptr, opt::GetDiagnostics().c_str(), "Command Line Parse Error",
+					MB_ICONERROR | MB_APPLMODAL | MB_SETFOREGROUND);
+			}
+			return *code;
+		}
+		auto& opts = opt::Get();
 
 		// shortcut for ioc container
 		auto& C = ioc::Get();
 		// create sprite codex
-		auto pSpriteCodex = C.Resolve<gfx::ISpriteCodex>({ Global::nSheets });
+		auto pSpriteCodex = C.Resolve<gfx::ISpriteCodex>({ *opts.numSheets });
 		// create resource loader
 		auto pLoader = C.Resolve<gfx::IResourceLoader>();
 		// load sprite atlases (textures) into sprite codex
 		{
 			std::vector<gfx::IResourceLoader::FutureTexture> futures;
-			for (int i = 0; i < Global::nSheets; i++) {
+			for (uint32_t i = 0; i < *opts.numSheets; i++) {
 				futures.push_back(pLoader->LoadTexture(std::format(L"sprote-shiet-{}.png", i)));
 			}
 			for (auto& f : futures) {
@@ -68,7 +79,7 @@ int WINAPI WinMain(
 			}
 		}
 
-		auto windows = vi::iota(0, Global::nWindows) |
+		auto windows = vi::iota(0u, *opts.numWindows) |
 			vi::transform([&](int i) {return std::make_unique<ActiveWindow>(i, pSpriteCodex); }) |
 			rn::to<std::vector>();
 

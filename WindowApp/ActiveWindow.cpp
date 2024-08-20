@@ -7,7 +7,7 @@
 #include <numbers>
 #include <numeric>
 #include "Sprite.h"
-#include "Global.h"
+#include "CliOptions.h"
 
 using namespace chil;
 using hrclock = std::chrono::high_resolution_clock;
@@ -82,6 +82,7 @@ bool ActiveWindow::IsLive() const
 void ActiveWindow::Kernel_(int index, std::shared_ptr<gfx::ISpriteCodex> pSpriteCodex)
 {
 	try {
+		auto& opts = opt::Get();
 		// setup benching data
 		BenchData updates{ 10'000 };
 		BenchData draws{ 10'000 };
@@ -90,11 +91,11 @@ void ActiveWindow::Kernel_(int index, std::shared_ptr<gfx::ISpriteCodex> pSprite
 		auto& C = ioc::Get();
 		//// do construction
 		// make sprite batchers
-		auto batchers = vi::iota(0ull, Global::nBatches) | vi::transform([&](auto i) {
+		auto batchers = vi::iota(0u, *opts.numBatches) | vi::transform([&](auto i) {
 			return C.Resolve<gfx::ISpriteBatcher>(gfx::ISpriteBatcher::IocParams{
-				.targetDimensions = Global::outputDims,
+				.targetDimensions = { *opts.width, *opts.height },
 				.pSpriteCodex = pSpriteCodex,
-				.maxSpriteCount = UINT(Global::nCharacters / Global::nBatches + 1)
+				.maxSpriteCount = UINT(*opts.numCharacters / *opts.numBatches + 1)
 			});
 		}) | rn::to<std::vector>();
 		// make window
@@ -102,34 +103,35 @@ void ActiveWindow::Kernel_(int index, std::shared_ptr<gfx::ISpriteCodex> pSprite
 		auto pWindow = C.Resolve<win::IWindow>(win::IWindow::IocParams{
 			.pKeySink = keyboard,
 			.name = std::format(L"Window #{}", index),
-			.size = Global::outputDims,
+			.size = spa::DimensionsI{ *opts.width, *opts.height },
 		});
 		// make graphics pane
 		auto pPane = C.Resolve<gfx::IRenderPane>(gfx::IRenderPane::IocParams{
 			.hWnd = pWindow->GetHandle(),
-			.dims = Global::outputDims,
+			.dims = { *opts.width, *opts.height },
 		});
 		// signal completion of construction phase
 		constructionSemaphore_.release();
 
 		// random engine
-		std::minstd_rand0 rne{ Global::seed };
+		std::minstd_rand0 rne{ *opts.seed };
 		// sprite blueprints
 		std::vector<std::shared_ptr<ISpriteBlueprint>> blueprints;
-		for (int i = 0; i < Global::nSheets; i++) {
+		for (uint32_t i = 0; i < *opts.numSheets; i++) {
 			blueprints.push_back(std::make_shared<SpriteBlueprint>(pSpriteCodex, i, 8, 4));
 		}
 		// sprite instances
 		const auto characters =
-			vi::iota(0u, Global::nCharacters) |
+			vi::iota(0u, *opts.numCharacters) |
 			vi::transform([
+				&opts,
 				&blueprints,
 				&rne,
 				posDist = std::uniform_real_distribution<float>{ -360.f, 360.f },
 				speedDist = std::uniform_real_distribution<float>{ 240.f, 600.f },
 				angleDist = std::uniform_real_distribution<float>{ 0.f, 2.f * std::numbers::pi_v<float> }
 			] (uint32_t i) mutable -> std::unique_ptr<ISpriteInstance> {
-			return std::make_unique<SpriteInstance>(blueprints[i % Global::nSheets],
+			return std::make_unique<SpriteInstance>(blueprints[i % *opts.numSheets],
 				spa::Vec2F{ posDist(rne), posDist(rne) },
 				spa::Vec2F{ 1.f, 0.f }.GetRotated(angleDist(rne)) * speedDist(rne)
 			);
@@ -225,10 +227,8 @@ void ActiveWindow::Kernel_(int index, std::shared_ptr<gfx::ISpriteCodex> pSprite
 			updates.Push(spriteUpdateMs);
 			draws.Push(spriteDrawMs);
 
-			if constexpr (Global::framesToRunFor) {
-				if (updates.GetCount() >= Global::framesToRunFor) {
-					break;
-				}
+			if (opts.framesToRun && updates.GetCount() >= (int)*opts.framesToRun) {
+				break;
 			}
 		}
 		updates.DitchFirstPercent(10.f);

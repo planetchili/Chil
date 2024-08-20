@@ -1,11 +1,12 @@
-#pragma once 
+#pragma once
+#include <utility>
 
 namespace chil::spa
 {
     template<typename T>
     struct DimensionsT
     {
-        // functions 
+        // functions
         T GetArea() const
         {
             return width * height;
@@ -26,6 +27,10 @@ namespace chil::spa
         DimensionsT operator*(const DimensionsT& rhs) const
         {
             return { width * rhs.width, height * rhs.height };
+        }
+        static DimensionsT FromPair(const std::pair<T, T>& p)
+        {
+            return DimensionsT{ p.first, p.second };
         }
         // data 
         T width, height;

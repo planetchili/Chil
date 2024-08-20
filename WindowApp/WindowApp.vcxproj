@@ -93,7 +93,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ActiveWindow.h" />
-    <ClInclude Include="Global.h" />
     <ClInclude Include="Sprite.h" />
   </ItemGroup>
   <ItemGroup>

@@ -1,5 +1,7 @@
 #pragma once
 #include <Core/src/cli/CliFramework.h>
+#include <cstdint>
+#include <utility>
 
 namespace cli
 {
@@ -12,33 +14,21 @@ namespace cli
 		smart,
 	};
 
-	using MyPair = std::pair<int, std::string>;
+	using DimsPair = std::pair<int, int>;
 	struct Options : public OptionsContainer<Options>
 	{
-		CHIL_CLI_OPT(numCharacters, int, "Number of characters to spawn", 2);
-		CHIL_CLI_FLG(shitTheBed, "s", "poopy!");
-		CHIL_CLI_FLG(funtimeInBed, "f", "funtimes!");
-		CHIL_CLI_OPT(numWindows, int, "Number of windows to spawn", 2);
-		CHIL_CLI_OPT(nonDefault, int, "Doesn't logically have a default", std::nullopt, cust::Range(69, 420));
-		CHIL_CLI_OPT(path, std::string, "Path in the filesystem", std::nullopt, cust::ExistingPath());
-		CHIL_CLI_OPT(wammy, std::string, "wwwww", std::nullopt, cust::In<false>({"spig", "spog"}));
-		CHIL_CLI_FLG(lick, "l", "licking");
-		CHIL_CLI_FLG(brick, "b", "bricking");
-		CHIL_CLI_FLG(dick, "d", "dicking");
-		CHIL_CLI_FLG(rick, "r", "never gonna");
-		CHIL_CLI_OPT(width, int, "wideification", 640);
-		CHIL_CLI_OPT(height, int, "tallification", 480);
-		CHIL_CLI_OPT(list, std::vector<int>, "listed");
-		CHIL_CLI_OPT(pair, MyPair, "paired");
-		CHIL_CLI_OPT(dinkum, Dinkum, "Dinkum enum option", std::nullopt, cust::In({ Dinkum::chart, Dinkum::smart }) | cust::EnumMap<Dinkum>());
+		CHIL_CLI_OPT(numCharacters, uint32_t, "Number of sprite characters to spawn", DBG_TERN(250'000, 500));
+		CHIL_CLI_OPT(numBatches, uint32_t, "Number of batch threads to use", 4);
+		CHIL_CLI_OPT(numSheets, uint32_t, "Number of sprite sheet variations to use", 32);
+		CHIL_CLI_OPT(width, int, "Width of the output window(s)", 1280);
+		CHIL_CLI_OPT(height, int, "Height of the output window(s)", 720);
+		CHIL_CLI_OPT(numWindows, uint32_t, "Number of windows to run", 1);
+		CHIL_CLI_OPT(seed, uint32_t, "Value to seed random engine with", 42069);
+		CHIL_CLI_OPT(framesToRun, uint32_t, "Number of frames to run before automatic stop", 0);
 	private:
 		std::string GetDesc() const override { return "Pulling and pulling on my yellow leg"; };
-		rule::MutualExclusion ickMex_{ lick, brick, dick, rick };
-		rule::MutualExclusion bedMex_{ shitTheBed, funtimeInBed };
-		rule::MutualExclusion winMex_{ shitTheBed, numWindows };
 		rule::Dependency widDep_{ width, height };
 		rule::Dependency hgtDep_{ height, width };
-		rule::AllowExtras ext_{ this };
 	};
 }
 

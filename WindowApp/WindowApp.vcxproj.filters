@@ -32,9 +32,6 @@
     <ClInclude Include="ActiveWindow.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="Global.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="CliOptions.h">
