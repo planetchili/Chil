@@ -3,12 +3,11 @@
 
 namespace chil::gfx
 {
-	SpriteFrame::SpriteFrame(const spa::RectF& frameInPixels, size_t atlasIndex, std::shared_ptr<ISpriteCodex> pCodex)
+	SpriteFrame::SpriteFrame(const spa::RectF& frameInPixels, std::shared_ptr<ISpriteCodex::Atlas> pAtlas)
 		:
-		atlasIndex_{ atlasIndex },
-		pCodex_{ std::move(pCodex) }
+		pAtlas_{ std::move(pAtlas) }
 	{
-		atlasDimensions_ = pCodex_->GetAtlasDimensions(atlasIndex_);
+		atlasDimensions_ = pAtlas_->GetDimensions();
 		frameInTexcoords_ = {
 			.left = frameInPixels.left / atlasDimensions_.width,
 			.top = frameInPixels.top / atlasDimensions_.height,
@@ -21,12 +20,11 @@ namespace chil::gfx
 		};
 	}
 
-	SpriteFrame::SpriteFrame(const spa::DimensionsI& cellGridDimensions, const spa::Vec2I& cellCoordinates, size_t atlasIndex, std::shared_ptr<ISpriteCodex> pCodex)
+	SpriteFrame::SpriteFrame(const spa::DimensionsI& cellGridDimensions, const spa::Vec2I& cellCoordinates, std::shared_ptr<ISpriteCodex::Atlas> pAtlas)
 		:
-		atlasIndex_{ atlasIndex },
-		pCodex_{ std::move(pCodex) }
+		pAtlas_{ std::move(pAtlas) }
 	{
-		atlasDimensions_ = pCodex_->GetAtlasDimensions(atlasIndex_);
+		atlasDimensions_ = pAtlas_->GetDimensions();
 		const auto cellWidth = atlasDimensions_.width / float(cellGridDimensions.width);
 		const auto cellHeight = atlasDimensions_.height / float(cellGridDimensions.height);
 		const auto frameInPixels = spa::RectF{
@@ -51,6 +49,6 @@ namespace chil::gfx
 	{
 		// deriving dest in pixel coordinates from texcoord source frame and source atlas dimensions
 		const auto destPixelDims = frameInTexcoords_.GetDimensions() * atlasDimensions_;
-		batch.Draw(atlasIndex_, pivotInPixelCoordinates_, frameInTexcoords_, destPixelDims, pos, rotation, scale);
+		batch.Draw(pAtlas_->index, pivotInPixelCoordinates_, frameInTexcoords_, destPixelDims, pos, rotation, scale);
 	}
 }

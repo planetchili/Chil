@@ -117,8 +117,8 @@ void ActiveWindow::Kernel_(int index, std::shared_ptr<gfx::ISpriteCodex> pSprite
 		std::minstd_rand0 rne{ *opts.seed };
 		// sprite blueprints
 		std::vector<std::shared_ptr<ISpriteBlueprint>> blueprints;
-		for (uint32_t i = 0; i < *opts.numSheets; i++) {
-			blueprints.push_back(std::make_shared<SpriteBlueprint>(pSpriteCodex, i, 8, 4));
+		for (auto& pAtlas : pSpriteCodex->GetAtlases()) {
+			blueprints.push_back(std::make_shared<SpriteBlueprint>(pAtlas, 8, 4));
 		}
 		// sprite instances
 		const auto characters =

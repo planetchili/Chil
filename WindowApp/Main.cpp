@@ -75,7 +75,7 @@ int WINAPI WinMain(
 				futures.push_back(pLoader->LoadTexture(std::format(L"sprote-shiet-{}.png", i)));
 			}
 			for (auto& f : futures) {
-				pSpriteCodex->AddSpriteAtlas(f.get());
+				pSpriteCodex->AddAtlas(f.get());
 			}
 		}
 

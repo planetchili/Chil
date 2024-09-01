@@ -43,13 +43,13 @@ namespace chil
 	class SpriteBlueprint : public ISpriteBlueprint
 	{
 	public:
-		SpriteBlueprint(std::shared_ptr<gfx::ISpriteCodex> pCodex, size_t atlasIndex, int hCells, int vCells)
+		SpriteBlueprint(std::shared_ptr<gfx::ISpriteCodex::Atlas> pAtlas, int hCells, int vCells)
 		{
-			const auto sheetDims = pCodex->GetAtlasDimensions(atlasIndex);
+			const auto sheetDims = pAtlas->GetDimensions();
 			for (int v = 0; v < vCells; v++) {
 				for (int h = 0; h < hCells; h++) {
 					auto pFrame = std::make_shared<gfx::SpriteFrame>(
-						spa::DimensionsI{ hCells, vCells }, spa::Vec2I{h, v}, atlasIndex, pCodex);
+						spa::DimensionsI{ hCells, vCells }, spa::Vec2I{h, v}, pAtlas);
 					animations_[v].push_back(AnimationFrame{
 						.pFrame_ = std::move(pFrame),
 						.holdSeconds_ = 0.016f,

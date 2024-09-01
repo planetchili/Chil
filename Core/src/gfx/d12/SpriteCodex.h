@@ -6,6 +6,7 @@
 #include <vector>
 
 
+
 namespace chil::gfx::d12
 {
 	class ISpriteCodex : public gfx::ISpriteCodex
@@ -19,14 +20,16 @@ namespace chil::gfx::d12
 	{
 	public:
 		SpriteCodex(std::shared_ptr<IDevice> pDevice, UINT maxNumAtlases = 4);
-		void AddSpriteAtlas(std::shared_ptr<gfx::ITexture> pTexture) override;
+		std::shared_ptr<Atlas> AddAtlas(std::shared_ptr<gfx::ITexture> pTexture) override;
+		std::vector<std::shared_ptr<Atlas>> GetAtlases() const override;
 		ID3D12DescriptorHeap* GetHeap() const override;
 		D3D12_GPU_DESCRIPTOR_HANDLE GetTableHandle() const override;
-		spa::DimensionsI GetAtlasDimensions(size_t atlasIndex) const override;
 	private:
 		// types
-		struct SpriteAtlas_
+		struct Atlas_ : public Atlas
 		{
+			Atlas_(uint32_t index, D3D12_CPU_DESCRIPTOR_HANDLE srvHandle, std::shared_ptr<ITexture> pTexture);
+			spa::DimensionsI GetDimensions() const override;
 			D3D12_CPU_DESCRIPTOR_HANDLE srvHandle_;
 			std::shared_ptr<ITexture> pTexture_;
 		};
@@ -34,8 +37,7 @@ namespace chil::gfx::d12
 		std::shared_ptr<IDevice> pDevice_;
 		UINT descriptorSize_;
 		UINT maxNumAtlases_;
-		UINT curNumAtlases_ = 0;
 		Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> pSrvHeap_;
-		std::vector<std::unique_ptr<SpriteAtlas_>> spriteAtlases_;
+		std::vector<std::shared_ptr<Atlas_>> spriteAtlases_;
 	};
 }
