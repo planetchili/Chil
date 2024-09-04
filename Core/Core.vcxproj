@@ -15,8 +15,9 @@
     <ClInclude Include="src\cli\CliFramework.h" />
     <ClInclude Include="src\cli\CliFramework.ipp" />
     <ClInclude Include="src\cli\WrapCli11.h" />
+    <ClInclude Include="src\crn\RangeBits.h" />
     <ClInclude Include="src\crn\Ranges.h" />
-    <ClInclude Include="src\gfx\d12\Boot.h" />
+    <ClInclude Include="src\gfx\d12\BootD12.h" />
     <ClInclude Include="src\gfx\d12\CommandListPair.h" />
     <ClInclude Include="src\gfx\d12\CommandQueue.h" />
     <ClInclude Include="src\gfx\d12\d3dx12.h" />
@@ -54,6 +55,7 @@
     <ClInclude Include="src\log\SeverityLevelPolicy.h" />
     <ClInclude Include="src\log\SimpleFileDriver.h" />
     <ClInclude Include="src\log\TextFormatter.h" />
+    <ClInclude Include="src\simp\SimpleContext.h" />
     <ClInclude Include="src\spa\Dimensions.h" />
     <ClInclude Include="src\spa\Rect.h" />
     <ClInclude Include="src\spa\Vec2.h" />
@@ -65,7 +67,7 @@
     <ClInclude Include="src\utl\NoReturn.h" />
     <ClInclude Include="src\utl\StackTrace.h" />
     <ClInclude Include="src\utl\String.h" />
-    <ClInclude Include="src\win\Boot.h" />
+    <ClInclude Include="src\win\BootWin.h" />
     <ClInclude Include="src\win\ChilWin.h" />
     <ClInclude Include="src\win\Exception.h" />
     <ClInclude Include="src\win\Input.h" />
@@ -78,7 +80,7 @@
   <ItemGroup>
     <ClCompile Include="src\ccr\GenericTaskQueue.cpp" />
     <ClCompile Include="src\cli\CliFramework.cpp" />
-    <ClCompile Include="src\gfx\d12\Boot2.cpp" />
+    <ClCompile Include="src\gfx\d12\BootD12.cpp" />
     <ClCompile Include="src\gfx\d12\CommandQueue.cpp" />
     <ClCompile Include="src\gfx\d12\Device.cpp" />
     <ClCompile Include="src\gfx\d12\RenderPane.cpp" />
@@ -104,7 +106,7 @@
     <ClCompile Include="src\utl\NoReturn.cpp" />
     <ClCompile Include="src\utl\StackTrace.cpp" />
     <ClCompile Include="src\utl\String.cpp" />
-    <ClCompile Include="src\win\Boot.cpp" />
+    <ClCompile Include="src\win\BootWin.cpp" />
     <ClCompile Include="src\win\Utilities.cpp" />
     <ClCompile Include="src\win\Window.cpp" />
     <ClCompile Include="src\win\WindowClass.cpp" />
@@ -171,7 +173,6 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <ObjectFileName>$(IntDir)/%(RelativeDir)/</ObjectFileName>
     </ClCompile>
     <Link>
       <SubSystem>
@@ -188,7 +189,6 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <ObjectFileName>$(IntDir)/%(RelativeDir)/</ObjectFileName>
     </ClCompile>
     <Link>
       <SubSystem>

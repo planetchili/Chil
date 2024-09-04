@@ -1,0 +1,152 @@
+#pragma once
+#include <Core/src/win/ChilWin.h>
+#include <Core/src/ioc/Container.h> 
+#include <Core/src/log/SeverityLevelPolicy.h> 
+#include <Core/src/log/Log.h> 
+#include <Core/src/win/BootWin.h>
+#include <Core/src/gfx/IResourceLoader.h>
+#include <Core/src/gfx/ISpriteBatcher.h>
+#include <Core/src/gfx/d12/BootD12.h>
+#include <Core/src/log/Log.h> 
+#include <Core/src/win/IWindow.h>
+#include <Core/src/crn/RangeBits.h>
+#include <Core/src/win/BootWin.h>
+#include <Core/src/gfx/d12/BootD12.h>
+#include <objbase.h>
+
+namespace chil::simp
+{
+	class SimpleContext
+	{
+	public:
+		static void Init(const spa::DimensionsI& windowDims, std::wstring windowName)
+		{
+			if (auto& simp = SimpleContext::Get(); !simp.initialized_) {
+				// boot ioc components
+				Boot_();
+				// ioc container shortcut
+				auto& C = ioc::Get();
+				// make window
+				simp.pKeyboard_ = std::make_shared<win::Keyboard>();
+				simp.pWindow_ = C.Resolve<win::IWindow>(win::IWindow::IocParams{
+					.pKeySink = simp.pKeyboard_,
+					.name = std::move(windowName),
+					.size = windowDims,
+				});
+				// make graphics pane
+				simp.pPane_ = C.Resolve<gfx::IRenderPane>(gfx::IRenderPane::IocParams{
+					.hWnd = simp.pWindow_->GetHandle(),
+					.dims = windowDims,
+				});
+				// create sprite codex
+				simp.pSpriteCodex_ = C.Resolve<gfx::ISpriteCodex>({ 64 });
+				// create resource loader
+				simp.pResourceLoader_ = C.Resolve<gfx::IResourceLoader>();
+				// make sprite batcher
+				simp.pSpriteBatcher_ = C.Resolve<gfx::ISpriteBatcher>(gfx::ISpriteBatcher::IocParams{
+					.targetDimensions = windowDims,
+					.pSpriteCodex = simp.pSpriteCodex_,
+					.maxSpriteCount = 10'000,
+				});
+				// we are done
+				simp.initialized_ = true;
+			}
+			else {
+				chilog.warn(L"Multiple simp::Init calls detected");
+			}
+		}
+		~SimpleContext()
+		{
+			if (initialized_) {
+				pPane_->FlushQueues();
+			}
+		}
+		static SimpleContext& Get()
+		{
+			static SimpleContext ctx;
+			return ctx;
+		}
+		std::shared_ptr<gfx::ISpriteCodex::Atlas> LoadAtlas(const std::wstring& path)
+		{
+			auto pTex = pResourceLoader_->LoadTexture(path).get();
+			return pSpriteCodex_->AddAtlas(std::move(pTex));
+		}
+		gfx::ISpriteBatcher& GetBatcher()
+		{
+			return *pSpriteBatcher_;
+		}
+		win::IWindow& GetWindow()
+		{
+			return *pWindow_;
+		}
+		win::IKeyboardSource& GetKeyboard()
+		{
+			return *pKeyboard_;
+		}
+		void BeginFrame()
+		{
+			pPane_->BeginFrame();
+			pSpriteBatcher_->StartBatch(*pPane_);
+		}
+		void EndFrame()
+		{
+			pSpriteBatcher_->EndBatch(*pPane_);
+			pPane_->EndFrame();
+		}
+	private:
+		// functions
+		static void Boot_()
+		{
+			// boot logging system
+			log::Boot();
+			ioc::Get().Register<log::ISeverityLevelPolicy>([] {
+				return std::make_shared<log::SeverityLevelPolicy>(log::Level::Info);
+			});
+			// init COM
+			if (FAILED(CoInitializeEx(nullptr, COINIT_MULTITHREADED))) {
+				throw std::runtime_error{ "COM farked" };
+			}
+			// boot window system
+			win::Boot();
+			// boot d3d12 graphics system
+			gfx::d12::Boot();
+		}
+		// data
+		bool initialized_ = false;
+		std::shared_ptr<win::Keyboard> pKeyboard_;
+		std::shared_ptr<win::IWindow> pWindow_;
+		std::shared_ptr<gfx::IRenderPane> pPane_;
+		std::shared_ptr<gfx::ISpriteBatcher> pSpriteBatcher_;
+		std::shared_ptr<gfx::ISpriteCodex> pSpriteCodex_;
+		std::shared_ptr<gfx::IResourceLoader> pResourceLoader_;
+	};
+
+	void Init(const spa::DimensionsI& windowDims, std::wstring windowName)
+	{
+		SimpleContext::Init(windowDims, std::move(windowName));
+	}
+	std::shared_ptr<gfx::ISpriteCodex::Atlas> LoadAtlas(const std::wstring& path)
+	{
+		return SimpleContext::Get().LoadAtlas(path);
+	}
+	gfx::ISpriteBatcher& Batch()
+	{
+		return SimpleContext::Get().GetBatcher();
+	}
+	win::IWindow& Win()
+	{
+		return SimpleContext::Get().GetWindow();
+	}
+	win::IKeyboardSource& Kbd()
+	{
+		return SimpleContext::Get().GetKeyboard();
+	}
+	void Begin()
+	{
+		return SimpleContext::Get().BeginFrame();
+	}
+	void End()
+	{
+		return SimpleContext::Get().EndFrame();
+	}
+}

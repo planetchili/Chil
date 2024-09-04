@@ -26,6 +26,7 @@ namespace chil::gfx
 		// we need reference to the atlas (texture) anyways, so get dimensions from there I guess?
 		// we might want the flexibility of doing scale/rotate in the vertex shader, keep it in mind when placing things
 		spa::RectF frameInTexcoords_;
+		// relative to center of frame
 		spa::Vec2F pivotInPixelCoordinates_;
 		spa::DimensionsF atlasDimensions_;
 		std::shared_ptr<ISpriteCodex::Atlas> pAtlas_;

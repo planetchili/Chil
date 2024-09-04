@@ -55,11 +55,20 @@ namespace chil::win
 		}
 		void PutEvent(KeyEvent e) override
 		{
+			// prevent queue from growing out of control by dumping stale events
+			while (queue_.size_approx() >= capacityThreshold_ + bulkClearSize_) {
+				std::array<KeyEvent, bulkClearSize_> dumpEvents;
+				queue_.try_dequeue_bulk(dumpEvents.data(), dumpEvents.size());
+			}
+			// enqueue the new event
 			queue_.try_enqueue(e);
+			// update keystate
 			keys_[e.code] = e.type == KeyEvent::Type::Press;
 		}
 	private:
-		moodycamel::ConcurrentQueue<KeyEvent> queue_;
+		static constexpr size_t bulkClearSize_ = 16;
+		static constexpr size_t capacityThreshold_ = 768;
+		moodycamel::ConcurrentQueue<KeyEvent> queue_{};
 		std::array<std::atomic<bool>, 256> keys_{};
 	};
 }

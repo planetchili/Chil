@@ -22,7 +22,6 @@ namespace chil::gfx::d12
 		outputDims_{ (spa::DimensionsF)targetDimensions },
 		pSpriteCodex_{ std::dynamic_pointer_cast<decltype(pSpriteCodex_)::element_type>(std::move(pSpriteCodex)) },
 		maxInstances_{ maxSpriteCount },
-		cameraTransform_{ DirectX::XMMatrixIdentity() },
 		vertexBuffer_{ *pDevice_, std::vector<Vertex_>{
 			{ { -0.5f,  0.5f  } },
 			{ {  0.5f,  0.5f  } },
@@ -32,7 +31,7 @@ namespace chil::gfx::d12
 		indexBuffer_{ *pDevice_, std::vector<USHORT>{
 			0, 1, 2, 1, 3, 2,
 		} }
-	{		
+	{
 		auto pDeviceInterface = pDevice_->GetD3D12DeviceInterface();
 		// root signature
 		{
@@ -132,6 +131,8 @@ namespace chil::gfx::d12
 			};
 			pDeviceInterface->CreatePipelineState(&pipelineStateStreamDesc, IID_PPV_ARGS(&pPipelineState_)) >> chk;
 		}
+		// Initialize the camera to a neutral default
+		SetCamera({}, 0, 1.f);
 	}
 
 	void SpriteBatcher::StartBatch(gfx::IRenderPane& pane)

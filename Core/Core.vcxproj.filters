@@ -102,7 +102,7 @@
     <ClInclude Include="src\spa\Rect.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\win\Boot.h">
+    <ClInclude Include="src\win\BootWin.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\ccr\GenericTaskQueue.h">
@@ -183,7 +183,7 @@
     <ClInclude Include="src\gfx\ISpriteCodex.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\gfx\d12\Boot.h">
+    <ClInclude Include="src\gfx\d12\BootD12.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\gfx\d12\WrapD3DX.h">
@@ -202,6 +202,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\gfx\d12\Util.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\simp\SimpleContext.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\crn\RangeBits.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -257,7 +263,7 @@
     <ClCompile Include="src\win\Utilities.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\win\Boot.cpp">
+    <ClCompile Include="src\win\BootWin.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\ccr\GenericTaskQueue.cpp">
@@ -296,7 +302,7 @@
     <ClCompile Include="src\gfx\d12\SpriteCodex.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\gfx\d12\Boot2.cpp">
+    <ClCompile Include="src\gfx\d12\BootD12.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\gfx\d12\StaticBuffer.cpp">
