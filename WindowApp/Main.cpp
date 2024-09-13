@@ -49,7 +49,7 @@ void RunNormal()
 	// shortcut for ioc container
 	auto& C = ioc::Get();
 	// create sprite codex
-	auto pSpriteCodex = C.Resolve<gfx::ISpriteCodex>({ *opts.numSheets });
+	auto pSpriteCodex = C.Resolve<gfx::ISpriteCodex>({ 0 });
 	// create resource loader
 	auto pLoader = C.Resolve<gfx::IResourceLoader>();
 	// load sprite atlases (textures) into sprite codex
@@ -107,7 +107,16 @@ int WINAPI WinMain(
 			}
 			return *code;
 		}
-		RunSimp();
+		auto& opts = opt::Get();
+		if (*opts.runMode == RunMode::Normal) {
+			RunNormal();
+		}
+		else if (*opts.runMode == RunMode::Simple) {
+			RunSimp();
+		}
+		else {
+			chilog.error(L"Unhandled RunMode detected");
+		}
 	}
 	catch (const std::exception& e) {
 		chilog.error(L"Error caught at top level: " + utl::ToWide(e.what())).no_trace();

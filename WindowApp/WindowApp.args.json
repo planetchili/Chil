@@ -7,8 +7,20 @@
       "Command": "--help"
     },
     {
+      "Id": "8086ef56-e502-4003-8541-275026c0fee2",
+      "Command": "--run-mode normal"
+    },
+    {
+      "Id": "4a30bd99-95bf-4026-96b8-0e2370878d69",
+      "Command": "--run-mode simple"
+    },
+    {
+      "Id": "bcfe4dd0-dd4a-4b5c-9faf-8505ad163d01",
+      "Command": "--num-characters 2000"
+    },
+    {
       "Id": "dc8c2858-98a2-4900-82b0-4ce68a1b57a6",
-      "Command": "--num-windows 5"
+      "Command": "--num-windows 2"
     }
   ]
 }

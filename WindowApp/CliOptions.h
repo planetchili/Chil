@@ -3,16 +3,15 @@
 #include <cstdint>
 #include <utility>
 
+enum class RunMode
+{
+	Normal,
+	Simple,
+};
+
 namespace cli
 {
 	using namespace ::chil::cli;
-
-	enum class Dinkum
-	{
-		chart,
-		fart,
-		smart,
-	};
 
 	using DimsPair = std::pair<int, int>;
 	struct Options : public OptionsContainer<Options>
@@ -25,6 +24,7 @@ namespace cli
 		CHIL_CLI_OPT(numWindows, uint32_t, "Number of windows to run", 1);
 		CHIL_CLI_OPT(seed, uint32_t, "Value to seed random engine with", 42069);
 		CHIL_CLI_OPT(framesToRun, uint32_t, "Number of frames to run before automatic stop", 0);
+		CHIL_CLI_OPT(runMode, RunMode, "Mode to execute from main()", RunMode::Normal, cust::EnumMap<RunMode>());
 	private:
 		std::string GetDesc() const override { return "Pulling and pulling on my yellow leg"; };
 		rule::Dependency widDep_{ width, height };
