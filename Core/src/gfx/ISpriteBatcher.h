@@ -29,5 +29,9 @@ namespace chil::gfx
 			const float rot = 0.f,
 			const spa::DimensionsF& scale = { 1.f, 1.f }) = 0;
 		virtual void EndBatch(IRenderPane& pane) = 0;
+		virtual UINT GetDrawCount() const = 0;
+		virtual UINT GetCapacity() const = 0;
+		virtual void Reserve(UINT newCapacity) = 0;
+		virtual void CollectGarbage(const IRenderPane& pane) = 0;
 	};
 }

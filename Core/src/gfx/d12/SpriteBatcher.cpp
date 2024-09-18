@@ -149,7 +149,7 @@ namespace chil::gfx::d12
 		currentFrameResource_->pBuffer->Map(0, &mapReadRangeNone,
 			reinterpret_cast<void**>(&pInstanceUpload_)) >> chk;
 		// write index reset
-		nInstances_ = 0;
+		nDrawCount_ = 0;
 	}
 
 	void SpriteBatcher::SetCamera(const spa::Vec2F& pos, float rot, float scale)
@@ -178,7 +178,16 @@ namespace chil::gfx::d12
 	{
 		using namespace DirectX;
 
-		chilass(nInstances_ <= maxInstances_);
+		if constexpr (is_debug) {
+			if (nDrawCount_ == maxInstances_) {
+				chilog.warn(L"Instance capacity of sprite batcher is being exceeded");
+			}
+		}
+
+		const auto index = nDrawCount_++;
+		if (index >= maxInstances_) {
+			return;
+		}
 
 		// use a system memory cache for building instance struct before writing to UWCM
 		Instance_ instanceCache{
@@ -193,16 +202,15 @@ namespace chil::gfx::d12
 		};
 
 		// copy from system cache to write-combining memory
-		memcpy(&pInstanceUpload_[nInstances_], &instanceCache, sizeof(instanceCache));
-
-		// increment instance write index / count
-		nInstances_++;
+		memcpy(&pInstanceUpload_[index], &instanceCache, sizeof(instanceCache));
 	}
 
 	void SpriteBatcher::EndBatch(gfx::IRenderPane& pane)
 	{
 		chilass(cmd_.pCommandAllocator);
 		chilass(cmd_.pCommandList);
+
+		const auto nInstances = std::min(maxInstances_, nDrawCount_);
 
 		// fill index buffer if not already filled
 		if (!staticBuffersFilled_) {
@@ -220,7 +228,7 @@ namespace chil::gfx::d12
 		}
 		// unmap upload instance buffer
 		{
-			const auto mapWrittenRange = CD3DX12_RANGE{ 0, nInstances_ * sizeof(Instance_) };
+			const auto mapWrittenRange = CD3DX12_RANGE{ 0, nInstances * sizeof(Instance_) };
 			currentFrameResource_->pBuffer->Unmap(0, &mapWrittenRange);
 			pInstanceUpload_ = nullptr;
 		}
@@ -245,7 +253,7 @@ namespace chil::gfx::d12
 		// bind the camera transform matrix
 		cmd_.pCommandList->SetGraphicsRoot32BitConstants(1, sizeof(cameraTransform_) / 4, &cameraTransform_, 0);
 		// draw vertices
-		cmd_.pCommandList->DrawIndexedInstanced(6, nInstances_, 0, 0, 0);
+		cmd_.pCommandList->DrawIndexedInstanced(6, nInstances, 0, 0, 0);
 
 		// return frame resource to pool
 		frameResourcePool_.PutResource(std::move(*currentFrameResource_), frameFenceValue_);
@@ -287,5 +295,24 @@ namespace chil::gfx::d12
 		};
 
 		return fr;
+	}
+	UINT SpriteBatcher::GetDrawCount() const
+	{
+		return nDrawCount_;
+	}
+	UINT SpriteBatcher::GetCapacity() const
+	{
+		return maxInstances_;
+	}
+	void SpriteBatcher::Reserve(UINT newCapacity)
+	{
+		chilass(!currentFrameResource_);
+		frameResourcePool_.Clear();
+		maxInstances_ = newCapacity;
+	}
+	void SpriteBatcher::CollectGarbage(const gfx::IRenderPane& pane)
+	{
+		auto& d12pane = dynamic_cast<const d12::IRenderPane&>(pane);
+		frameResourcePool_.CollectGarbage(d12pane.GetSignalledFenceValue());
 	}
 }

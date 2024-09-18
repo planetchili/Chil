@@ -95,7 +95,7 @@ void ActiveWindow::Kernel_(int index, std::shared_ptr<gfx::ISpriteCodex> pSprite
 			return C.Resolve<gfx::ISpriteBatcher>(gfx::ISpriteBatcher::IocParams{
 				.targetDimensions = { *opts.width, *opts.height },
 				.pSpriteCodex = pSpriteCodex,
-				.maxSpriteCount = UINT(*opts.numCharacters / *opts.numBatches + 1)
+				.maxSpriteCount = UINT(*opts.numCharacters / (*opts.numBatches * 3) + 1)
 			});
 		}) | rn::to<std::vector>();
 		// make window
@@ -226,6 +226,14 @@ void ActiveWindow::Kernel_(int index, std::shared_ptr<gfx::ISpriteCodex> pSprite
 			// accumulate benching information
 			updates.Push(spriteUpdateMs);
 			draws.Push(spriteDrawMs);
+
+			// grow batchers' capacities if needed, also collect any ready garbage
+			for (auto& bat : batchers) {
+				bat->CollectGarbage(*pPane);
+				if (bat->GetDrawCount() > bat->GetCapacity()) {
+					bat->Reserve(UINT(float(bat->GetDrawCount()) * 1.5f));
+				}
+			}
 
 			if (opts.framesToRun && updates.GetCount() >= (int)*opts.framesToRun) {
 				break;

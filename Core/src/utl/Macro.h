@@ -12,6 +12,8 @@
 
 #ifdef NDEBUG
 #define DBG_TERN(rel, dbg) rel
+constexpr inline bool is_debug = false;
 #else
 #define DBG_TERN(rel, dbg) dbg
+constexpr inline bool is_debug = true;
 #endif

@@ -1,6 +1,7 @@
 #pragma once
 #include <optional>
 #include <deque>
+#include <ranges>
 
 namespace chil::gfx
 {
@@ -22,6 +23,15 @@ namespace chil::gfx
 		{
 			resourceEntryQueue_.push_back(ResourceEntry_{ frameFenceValue, std::move(resource) });
 		}
+		void Clear()
+		{
+			garbagePile_.append_range(resourceEntryQueue_ | std::views::as_rvalue);
+			resourceEntryQueue_.clear();
+		}
+		void CollectGarbage(uint64_t fenceValue)
+		{
+			std::erase_if(garbagePile_, [=](const ResourceEntry_& re) { return re.frameFenceValue <= fenceValue; });
+		}
 	private:
 		struct ResourceEntry_
 		{
@@ -29,5 +39,6 @@ namespace chil::gfx
 			T pResource;
 		};
 		std::deque<ResourceEntry_> resourceEntryQueue_;
+		std::vector<ResourceEntry_> garbagePile_;
 	};
 }

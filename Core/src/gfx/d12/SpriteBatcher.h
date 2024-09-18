@@ -31,6 +31,10 @@ namespace chil::gfx::d12
 			const float rot = 0.f,
 			const spa::DimensionsF& scale = { 1.f, 1.f }) override;
 		void EndBatch(gfx::IRenderPane& pane) override;
+		UINT GetDrawCount() const override;
+		UINT GetCapacity() const override;
+		void Reserve(UINT newCapacity) override;
+		void CollectGarbage(const gfx::IRenderPane& pane) override;
 	private:		
 		// types
 		struct Vertex_
@@ -59,7 +63,7 @@ namespace chil::gfx::d12
 		std::shared_ptr<d12::IDevice> pDevice_;
 		// vertex stuff
 		UINT maxInstances_;
-		UINT nInstances_ = 0;
+		UINT nDrawCount_ = 0;
 		Instance_* pInstanceUpload_ = nullptr;
 		std::optional<FrameResource_> currentFrameResource_;
 		FrameResourcePool<FrameResource_> frameResourcePool_;
