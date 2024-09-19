@@ -25,17 +25,6 @@ namespace rn = std::ranges;
 namespace vi = rn::views;
 
 
-void Boot()
-{
-	log::Boot();
-	ioc::Get().Register<log::ISeverityLevelPolicy>([] {
-		return std::make_shared<log::SeverityLevelPolicy>(log::Level::Info);
-	});
-
-	win::Boot();
-
-	gfx::d12::Boot();
-}
 
 void RunNormal()
 {
@@ -45,7 +34,9 @@ void RunNormal()
 		throw std::runtime_error{ "COM farked" };
 	}
 	// initialize services in ioc containers
-	Boot();
+	log::Boot();
+	win::Boot();
+	gfx::d12::Boot();
 	// shortcut for ioc container
 	auto& C = ioc::Get();
 	// create sprite codex
@@ -75,7 +66,8 @@ void RunNormal()
 
 void RunSimp()
 {
-	simp::Init({ 1280, 720 }, L"Weeeeeee Heeeeee");
+	auto& opts = opt::Get();
+	simp::Init({ 1280, 720 }, L"Weeeeeee Heeeeee", *opts.logLevel);
 	gfx::SpriteFrame frame{ {8, 4}, {0, 0}, simp::LoadAtlas(L"sprote-shiet-0.png") };
 	while (!simp::Win().IsClosing()) {
 		simp::Begin();

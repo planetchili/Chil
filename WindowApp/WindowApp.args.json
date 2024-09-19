@@ -21,6 +21,10 @@
     {
       "Id": "dc8c2858-98a2-4900-82b0-4ce68a1b57a6",
       "Command": "--num-windows 2"
+    },
+    {
+      "Id": "7acfe1d8-bfbc-44b4-8819-7f1a695eae10",
+      "Command": "--log-level debug"
     }
   ]
 }

@@ -180,7 +180,7 @@ namespace chil::gfx::d12
 
 		if constexpr (is_debug) {
 			if (nDrawCount_ == maxInstances_) {
-				chilog.warn(L"Instance capacity of sprite batcher is being exceeded");
+				chilog.debug(L"Instance capacity of sprite batcher is being exceeded");
 			}
 		}
 

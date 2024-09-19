@@ -19,11 +19,11 @@ namespace chil::simp
 	class SimpleContext
 	{
 	public:
-		static void Init(const spa::DimensionsI& windowDims, std::wstring windowName)
+		static void Init(const spa::DimensionsI& windowDims, std::wstring windowName, log::Level logLevel)
 		{
 			if (auto& simp = SimpleContext::Get(); !simp.initialized_) {
 				// boot ioc components
-				Boot_();
+				Boot_(logLevel);
 				// ioc container shortcut
 				auto& C = ioc::Get();
 				// make window
@@ -39,14 +39,14 @@ namespace chil::simp
 					.dims = windowDims,
 				});
 				// create sprite codex
-				simp.pSpriteCodex_ = C.Resolve<gfx::ISpriteCodex>({ 64 });
+				simp.pSpriteCodex_ = C.Resolve<gfx::ISpriteCodex>({ 32 });
 				// create resource loader
 				simp.pResourceLoader_ = C.Resolve<gfx::IResourceLoader>();
 				// make sprite batcher
 				simp.pSpriteBatcher_ = C.Resolve<gfx::ISpriteBatcher>(gfx::ISpriteBatcher::IocParams{
 					.targetDimensions = windowDims,
 					.pSpriteCodex = simp.pSpriteCodex_,
-					.maxSpriteCount = 10'000,
+					.maxSpriteCount = 10,
 				});
 				// we are done
 				simp.initialized_ = true;
@@ -92,15 +92,22 @@ namespace chil::simp
 		{
 			pSpriteBatcher_->EndBatch(*pPane_);
 			pPane_->EndFrame();
+			// grow batcher's capacities if needed, also collect any ready garbage
+			pSpriteBatcher_->CollectGarbage(*pPane_);
+			if (pSpriteBatcher_->GetDrawCount() > pSpriteBatcher_->GetCapacity()) {
+				const auto newCapacity = UINT(float(pSpriteBatcher_->GetDrawCount()) * 1.5f);
+				chilog.debug(std::format(L"Growing batcher {} => {}", pSpriteBatcher_->GetCapacity(), newCapacity));
+				pSpriteBatcher_->Reserve(UINT(float(pSpriteBatcher_->GetDrawCount()) * 1.5f));
+			}
 		}
 	private:
 		// functions
-		static void Boot_()
+		static void Boot_(log::Level logLevel)
 		{
 			// boot logging system
 			log::Boot();
-			ioc::Get().Register<log::ISeverityLevelPolicy>([] {
-				return std::make_shared<log::SeverityLevelPolicy>(log::Level::Info);
+			ioc::Get().Register<log::ISeverityLevelPolicy>([logLevel] {
+				return std::make_shared<log::SeverityLevelPolicy>(logLevel);
 			});
 			// init COM
 			if (FAILED(CoInitializeEx(nullptr, COINIT_MULTITHREADED))) {
@@ -121,9 +128,9 @@ namespace chil::simp
 		std::shared_ptr<gfx::IResourceLoader> pResourceLoader_;
 	};
 
-	void Init(const spa::DimensionsI& windowDims, std::wstring windowName)
+	void Init(const spa::DimensionsI& windowDims, std::wstring windowName, log::Level logLevel = log::Level::Error)
 	{
-		SimpleContext::Init(windowDims, std::move(windowName));
+		SimpleContext::Init(windowDims, std::move(windowName), logLevel);
 	}
 	std::shared_ptr<gfx::ISpriteCodex::Atlas> LoadAtlas(const std::wstring& path)
 	{
