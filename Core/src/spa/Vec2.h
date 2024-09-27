@@ -73,7 +73,7 @@ namespace chil::spa
         Vec2T GetClamped(float maxMag = 1.f) const
         {
             if (const auto mag = GetLength(); mag > maxMag) {
-                return *this / maxMag;
+                return *this / (mag / maxMag);
             }
             else {
                 return *this;

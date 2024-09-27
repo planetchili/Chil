@@ -38,4 +38,9 @@ namespace chil
 		spa::Vec2F dir_{ 0.f, 0.f };
 		float speed_ = 1.f;
 	};
+
+	void SendSpriteTo(Sprite& sprite, const spa::Vec2F& target)
+	{
+		sprite.SetDir(target - sprite.GetPos());
+	}
 }
