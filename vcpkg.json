@@ -6,6 +6,7 @@
     "directxtex",
     "concurrentqueue",
     "cli11",
-    "magic-enum"
+    "magic-enum",
+    "cppcoro"
   ]
 }

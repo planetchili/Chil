@@ -83,7 +83,10 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="CliOptions.cpp" />
-    <ClCompile Include="GeneratorCoroMode.cpp" />
+    <ClCompile Include="GeneratorCoroMode.cpp">
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">/await %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">/await %(AdditionalOptions)</AdditionalOptions>
+    </ClCompile>
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="StateMachineMode.cpp" />
   </ItemGroup>
