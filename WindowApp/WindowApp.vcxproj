@@ -83,6 +83,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="CliOptions.cpp" />
+    <ClCompile Include="GeneratorCoroMode.cpp" />
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="StateMachineMode.cpp" />
   </ItemGroup>
@@ -93,6 +94,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="CliOptions.h" />
+    <ClInclude Include="GeneratorCoroMode.h" />
     <ClInclude Include="Sprite.h" />
     <ClInclude Include="StateMachineMode.h" />
   </ItemGroup>

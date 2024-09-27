@@ -4,6 +4,7 @@
 #include <format>
 #include "CliOptions.h"
 #include "StateMachineMode.h"
+#include "GeneratorCoroMode.h"
 
 using namespace chil;
 
@@ -32,7 +33,7 @@ int WINAPI WinMain(
 			RunStateMachineMode();
 		}
 		else if (*opts.runMode == RunMode::GeneratorCoro) {
-			throw std::runtime_error{ "Unimplemented" };
+			RunGeneratorCoroMode();
 		}
 		else {
 			throw std::runtime_error{ "Unknown RunMode" };

@@ -128,31 +128,31 @@ namespace chil::simp
 		std::shared_ptr<gfx::IResourceLoader> pResourceLoader_;
 	};
 
-	void Init(const spa::DimensionsI& windowDims, std::wstring windowName, log::Level logLevel = log::Level::Error)
+	inline void Init(const spa::DimensionsI& windowDims, std::wstring windowName, log::Level logLevel = log::Level::Error)
 	{
 		SimpleContext::Init(windowDims, std::move(windowName), logLevel);
 	}
-	std::shared_ptr<gfx::ISpriteCodex::Atlas> LoadAtlas(const std::wstring& path)
+	inline std::shared_ptr<gfx::ISpriteCodex::Atlas> LoadAtlas(const std::wstring& path)
 	{
 		return SimpleContext::Get().LoadAtlas(path);
 	}
-	gfx::ISpriteBatcher& Batch()
+	inline gfx::ISpriteBatcher& Batch()
 	{
 		return SimpleContext::Get().GetBatcher();
 	}
-	win::IWindow& Win()
+	inline win::IWindow& Win()
 	{
 		return SimpleContext::Get().GetWindow();
 	}
-	win::IKeyboardSource& Kbd()
+	inline win::IKeyboardSource& Kbd()
 	{
 		return SimpleContext::Get().GetKeyboard();
 	}
-	void Begin()
+	inline void Begin()
 	{
 		return SimpleContext::Get().BeginFrame();
 	}
-	void End()
+	inline void End()
 	{
 		return SimpleContext::Get().EndFrame();
 	}
