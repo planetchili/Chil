@@ -18,24 +18,22 @@
     <ClCompile Include="Main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="ActiveWindow.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="CliOptions.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="Sprite.h">
+    <ClCompile Include="StateMachineMode.cpp">
       <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="ActiveWindow.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="CliOptions.h">
       <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Sprite.h">
+      <Filter>Resource Files\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="StateMachineMode.h">
+      <Filter>Resource Files\Header Files</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

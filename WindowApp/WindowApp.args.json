@@ -8,11 +8,11 @@
     },
     {
       "Id": "8086ef56-e502-4003-8541-275026c0fee2",
-      "Command": "--run-mode normal"
+      "Command": "--run-mode StateMachine"
     },
     {
       "Id": "4a30bd99-95bf-4026-96b8-0e2370878d69",
-      "Command": "--run-mode simple"
+      "Command": "--run-mode GeneratorCoro"
     },
     {
       "Id": "bcfe4dd0-dd4a-4b5c-9faf-8505ad163d01",

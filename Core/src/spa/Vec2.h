@@ -45,7 +45,7 @@ namespace chil::spa
         {
             return Vec2T{ x / rhs, y / rhs };
         }
-        Vec2T& operator/=(const T& rhs) const
+        Vec2T& operator/=(const T& rhs)
         {
             x /= rhs;
             y /= rhs;
@@ -69,6 +69,15 @@ namespace chil::spa
                 T((float)x * std::cos(theta) - (float)y * std::sin(theta)),
                 T((float)x * std::sin(theta) + (float)y * std::cos(theta)),
             };
+        }
+        Vec2T GetClamped(float maxMag = 1.f) const
+        {
+            if (const auto mag = GetLength(); mag > maxMag) {
+                return *this / maxMag;
+            }
+            else {
+                return *this;
+            }
         }
         // data 
         T x, y;
