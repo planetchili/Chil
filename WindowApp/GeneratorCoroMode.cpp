@@ -59,7 +59,9 @@ co::recursive_generator<int> Behavior(Sprite& sprite, int reps)
 	for (int i = 0; i < reps; i++) {
 		co_yield Triangulate(sprite, { 100.f, 100.f }, 200.f);
 		co_yield Triangulate(sprite, { -100.f, 100.f }, 100.f);
-		co_yield Triangulate(sprite, { -200.f, -200.f }, 50.f);
+		for (int i = 0; i < 4; i++) {
+			co_yield Triangulate(sprite, { -200.f, -200.f }, 50.f);
+		}
 		co_yield MoveSpriteTo(sprite, { -400.f, 300.f });
 		for (int j = 0; j < 3; j++) {
 			co_yield Serpentine(sprite, 200.f, 50.f);
@@ -73,6 +75,7 @@ void RunGeneratorCoroMode()
 	simp::Init({ *opts.width, *opts.height }, L"Generator Coro Behavior", *opts.logLevel);
 	Sprite s;
 	for (auto d : Behavior(s, 3)) {
+		if (simp::Win().IsClosing()) break;
 		s.Update();
 		simp::Begin();
 		s.Draw();
