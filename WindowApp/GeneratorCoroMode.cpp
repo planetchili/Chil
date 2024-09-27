@@ -41,12 +41,38 @@ co::recursive_generator<int> Triangulate(Sprite& sprite, const spa::Vec2F& cente
 	co_yield MoveSpriteTo(sprite, top);
 }
 
+co::recursive_generator<int> Serpentine(Sprite& sprite, float width, float height)
+{
+	const auto start = sprite.GetPos();
+	const auto a = start + spa::Vec2F{ width, 0.f };
+	const auto b = a - spa::Vec2F{ 0.f, height };
+	const auto c = b - spa::Vec2F{ width, 0.f };
+	const auto d = c - spa::Vec2F{ 0.f, height };
+	co_yield MoveSpriteTo(sprite, a);
+	co_yield MoveSpriteTo(sprite, b);
+	co_yield MoveSpriteTo(sprite, c);
+	co_yield MoveSpriteTo(sprite, d);
+}
+
+co::recursive_generator<int> Behavior(Sprite& sprite, int reps)
+{
+	for (int i = 0; i < reps; i++) {
+		co_yield Triangulate(sprite, { 100.f, 100.f }, 200.f);
+		co_yield Triangulate(sprite, { -100.f, 100.f }, 100.f);
+		co_yield Triangulate(sprite, { -200.f, -200.f }, 50.f);
+		co_yield MoveSpriteTo(sprite, { -400.f, 300.f });
+		for (int j = 0; j < 3; j++) {
+			co_yield Serpentine(sprite, 200.f, 50.f);
+		}
+	}
+}
+
 void RunGeneratorCoroMode()
 {
 	auto& opts = opt::Get();
 	simp::Init({ *opts.width, *opts.height }, L"Generator Coro Behavior", *opts.logLevel);
 	Sprite s;
-	for (auto d : Triangulate(s, {200.f, 200.f}, 100.f)) {
+	for (auto d : Behavior(s, 3)) {
 		s.Update();
 		simp::Begin();
 		s.Draw();

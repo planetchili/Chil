@@ -36,7 +36,7 @@ namespace chil
 		gfx::SpriteFrame frame_{ {1, 1}, {0, 0}, simp::LoadAtlas(L"frog.png") };
 		spa::Vec2F pos_{ 0.f, 0.f };
 		spa::Vec2F dir_{ 0.f, 0.f };
-		float speed_ = 1.f;
+		float speed_ = 2.f;
 	};
 
 	inline void SendSpriteTo(Sprite& sprite, const spa::Vec2F& target)
