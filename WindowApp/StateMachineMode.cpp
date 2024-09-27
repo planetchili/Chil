@@ -14,14 +14,12 @@ void RunStateMachineMode()
 {
 	auto& opts = opt::Get();
 	simp::Init({ *opts.width, *opts.height }, L"State Machine Behavior", *opts.logLevel);
-	gfx::SpriteFrame frame{ {1, 1}, {0, 0}, simp::LoadAtlas(L"frog.png") };
+	Sprite s;
+	s.SetDir({ 1.f, 0.f });
 	while (!simp::Win().IsClosing()) {
+		s.Update();
 		simp::Begin();
-		for (float x = -200.f; x <= 200.f; x += 60.f) {
-			for (float y = -200.f; y <= 200.f; y += 72.f) {
-				frame.DrawToBatch(simp::Batch(), { x, y });
-			}
-		}
+		s.Draw();
 		simp::End();
 	}
 }
