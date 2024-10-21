@@ -16,6 +16,33 @@ namespace chil::gfx::d12
 {
 	class ISpriteBatcher : public gfx::ISpriteBatcher {};
 
+	class ISpriteBatcherEffect
+	{
+	public:
+		virtual ~ISpriteBatcherEffect() = default;
+		virtual void Bind(ID3D12GraphicsCommandList& cmdList) = 0;
+	};
+
+	class SpriteBatcherEffectDefault : public ISpriteBatcherEffect
+	{
+	public:
+		SpriteBatcherEffectDefault(std::shared_ptr<IDevice> pDevice);
+		void Bind(ID3D12GraphicsCommandList& cmdList) override;
+	private:
+		Microsoft::WRL::ComPtr<ID3D12RootSignature> pRootSignature_;
+		Microsoft::WRL::ComPtr<ID3D12PipelineState> pPipelineState_;
+	};
+
+	class SpriteBatcherEffectBilin : public ISpriteBatcherEffect
+	{
+	public:
+		SpriteBatcherEffectBilin(std::shared_ptr<IDevice> pDevice);
+		void Bind(ID3D12GraphicsCommandList& cmdList) override;
+	private:
+		Microsoft::WRL::ComPtr<ID3D12RootSignature> pRootSignature_;
+		Microsoft::WRL::ComPtr<ID3D12PipelineState> pPipelineState_;
+	};
+
 	class SpriteBatcher : public ISpriteBatcher
 	{
 	public:
@@ -78,8 +105,7 @@ namespace chil::gfx::d12
 		uint64_t frameFenceValue_ = 0;
 		uint64_t signaledFenceValue_ = 0;
 		// pipey
-		Microsoft::WRL::ComPtr<ID3D12RootSignature> pRootSignature_;
-		Microsoft::WRL::ComPtr<ID3D12PipelineState> pPipelineState_;
+		std::shared_ptr<ISpriteBatcherEffect> pEffect_;
 		spa::DimensionsF outputDims_;
 		// camera
 		DirectX::XMMATRIX cameraTransform_;

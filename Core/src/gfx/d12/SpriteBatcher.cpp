@@ -32,105 +32,8 @@ namespace chil::gfx::d12
 			0, 1, 2, 1, 3, 2,
 		} }
 	{
-		auto pDeviceInterface = pDevice_->GetD3D12DeviceInterface();
-		// root signature
-		{
-			// define root signature a table of sprite atlas textures
-			// in future to reduce root signature binding this should just be merged into a global root descriptor
-			// might want to use a bounded range, in which case the root signature will need to be updated when atlases are added
-			CD3DX12_ROOT_PARAMETER rootParameters[2]{};
-			const CD3DX12_DESCRIPTOR_RANGE descRange{ D3D12_DESCRIPTOR_RANGE_TYPE_SRV, UINT_MAX, 0 };
-			// sprite codex
-			rootParameters[0].InitAsDescriptorTable(1, &descRange);
-			// camera transform
-			rootParameters[1].InitAsConstants(sizeof(DirectX::XMMATRIX) / sizeof(float), 0, 0, D3D12_SHADER_VISIBILITY_VERTEX);
-			// Allow input layout and vertex shader and deny unnecessary access to certain pipeline stages.
-			const D3D12_ROOT_SIGNATURE_FLAGS rootSignatureFlags =
-				D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT |
-				D3D12_ROOT_SIGNATURE_FLAG_DENY_MESH_SHADER_ROOT_ACCESS |
-				D3D12_ROOT_SIGNATURE_FLAG_DENY_AMPLIFICATION_SHADER_ROOT_ACCESS |
-				D3D12_ROOT_SIGNATURE_FLAG_DENY_HULL_SHADER_ROOT_ACCESS |
-				D3D12_ROOT_SIGNATURE_FLAG_DENY_DOMAIN_SHADER_ROOT_ACCESS |
-				D3D12_ROOT_SIGNATURE_FLAG_DENY_GEOMETRY_SHADER_ROOT_ACCESS;
-			// define static sampler
-			const CD3DX12_STATIC_SAMPLER_DESC staticSampler{ 0, D3D12_FILTER_MIN_MAG_MIP_POINT };
-			// define root signature with transformation matrix
-			CD3DX12_ROOT_SIGNATURE_DESC rootSignatureDesc;
-			rootSignatureDesc.Init(
-				(UINT)std::size(rootParameters), rootParameters,
-				1, &staticSampler,
-				rootSignatureFlags
-			);
-			// serialize root signature 
-			ComPtr<ID3DBlob> signatureBlob;
-			ComPtr<ID3DBlob> errorBlob;
-			if (const auto hr = D3D12SerializeRootSignature(
-				&rootSignatureDesc, D3D_ROOT_SIGNATURE_VERSION_1,
-				&signatureBlob, &errorBlob); FAILED(hr)) {
-				if (errorBlob) {
-					auto errorBufferPtr = static_cast<const char*>(errorBlob->GetBufferPointer());
-					chilog.error(utl::ToWide(errorBufferPtr)).no_trace();
-				}
-				hr >> chk;
-			}
-			// Create the root signature. 
-			pDeviceInterface->CreateRootSignature(0, signatureBlob->GetBufferPointer(),
-				signatureBlob->GetBufferSize(), IID_PPV_ARGS(&pRootSignature_)) >> chk;
-		}
-		// pso (with shaders)
-		{
-			// static declaration of pso stream structure 
-			struct PipelineStateStream
-			{
-				CD3DX12_PIPELINE_STATE_STREAM_ROOT_SIGNATURE RootSignature;
-				CD3DX12_PIPELINE_STATE_STREAM_INPUT_LAYOUT InputLayout;
-				CD3DX12_PIPELINE_STATE_STREAM_PRIMITIVE_TOPOLOGY PrimitiveTopologyType;
-				CD3DX12_PIPELINE_STATE_STREAM_VS VS;
-				CD3DX12_PIPELINE_STATE_STREAM_PS PS;
-				CD3DX12_PIPELINE_STATE_STREAM_RENDER_TARGET_FORMATS RTVFormats;
-				CD3DX12_PIPELINE_STATE_STREAM_DEPTH_STENCIL_FORMAT DSVFormat;
-			} pipelineStateStream;
-
-			// define the Vertex input layout 
-			const D3D12_INPUT_ELEMENT_DESC inputLayout[] = {
-				{ "POSITION",		0, DXGI_FORMAT_R32G32_FLOAT,		0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-
-				{ "TRANSLATION",	0, DXGI_FORMAT_R32G32_FLOAT,		1, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1 },
-				{ "ROTATION",		0, DXGI_FORMAT_R32_FLOAT,			1, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1 },
-				{ "SCALE",			0, DXGI_FORMAT_R32G32_FLOAT,		1, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1 },
-				{ "PIVOT",			0, DXGI_FORMAT_R32G32_FLOAT,		1, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1 },
-				{ "TEXPOS",			0, DXGI_FORMAT_R32G32_FLOAT,		1, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1 },
-				{ "TEXDIMS",		0, DXGI_FORMAT_R32G32_FLOAT,		1, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1 },
-				{ "DESTDIMS",		0, DXGI_FORMAT_R16G16_UINT,			1, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1 },
-				{ "ATLASINDEX",		0, DXGI_FORMAT_R16_UINT,			1, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1 },
-			};
-
-			// Load the vertex shader. 
-			ComPtr<ID3DBlob> pVertexShaderBlob;
-			D3DReadFileToBlob(L"VertexShader.cso", &pVertexShaderBlob) >> chk;
-
-			// Load the pixel shader. 
-			ComPtr<ID3DBlob> pPixelShaderBlob;
-			D3DReadFileToBlob(L"PixelShader.cso", &pPixelShaderBlob) >> chk;
-
-			// filling pso structure 
-			pipelineStateStream.RootSignature = pRootSignature_.Get();
-			pipelineStateStream.InputLayout = { inputLayout, (UINT)std::size(inputLayout) };
-			pipelineStateStream.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
-			pipelineStateStream.VS = CD3DX12_SHADER_BYTECODE(pVertexShaderBlob.Get());
-			pipelineStateStream.PS = CD3DX12_SHADER_BYTECODE(pPixelShaderBlob.Get());
-			pipelineStateStream.RTVFormats = {
-				.RTFormats{ DXGI_FORMAT_R8G8B8A8_UNORM },
-				.NumRenderTargets = 1,
-			};
-			pipelineStateStream.DSVFormat = DXGI_FORMAT_D32_FLOAT;
-
-			// building the pipeline state object 
-			const D3D12_PIPELINE_STATE_STREAM_DESC pipelineStateStreamDesc = {
-				sizeof(PipelineStateStream), &pipelineStateStream
-			};
-			pDeviceInterface->CreatePipelineState(&pipelineStateStreamDesc, IID_PPV_ARGS(&pPipelineState_)) >> chk;
-		}
+		// temporary construction of injected component
+		pEffect_ = std::make_shared<SpriteBatcherEffectDefault>(pDevice_);
 		// Initialize the camera to a neutral default
 		SetCamera({}, 0, 1.f);
 	}
@@ -233,9 +136,8 @@ namespace chil::gfx::d12
 			pInstanceUpload_ = nullptr;
 		}
 
-		// set pipeline state 
-		cmd_.pCommandList->SetPipelineState(pPipelineState_.Get());
-		cmd_.pCommandList->SetGraphicsRootSignature(pRootSignature_.Get());
+		// set pipeline state
+		pEffect_->Bind(*cmd_.pCommandList.Get());
 		// configure IA 
 		cmd_.pCommandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 		{
@@ -314,5 +216,228 @@ namespace chil::gfx::d12
 	{
 		auto& d12pane = dynamic_cast<const d12::IRenderPane&>(pane);
 		frameResourcePool_.CollectGarbage(d12pane.GetSignalledFenceValue());
+	}
+
+
+	// effects
+
+	SpriteBatcherEffectDefault::SpriteBatcherEffectDefault(std::shared_ptr<IDevice> pDevice)
+	{
+		auto pDeviceInterface = pDevice->GetD3D12DeviceInterface();
+		// root signature
+		{
+			// define root signature a table of sprite atlas textures
+			// in future to reduce root signature binding this should just be merged into a global root descriptor
+			// might want to use a bounded range, in which case the root signature will need to be updated when atlases are added
+			CD3DX12_ROOT_PARAMETER rootParameters[2]{};
+			const CD3DX12_DESCRIPTOR_RANGE descRange{ D3D12_DESCRIPTOR_RANGE_TYPE_SRV, UINT_MAX, 0 };
+			// sprite codex
+			rootParameters[0].InitAsDescriptorTable(1, &descRange);
+			// camera transform
+			rootParameters[1].InitAsConstants(sizeof(DirectX::XMMATRIX) / sizeof(float), 0, 0, D3D12_SHADER_VISIBILITY_VERTEX);
+			// Allow input layout and vertex shader and deny unnecessary access to certain pipeline stages.
+			const D3D12_ROOT_SIGNATURE_FLAGS rootSignatureFlags =
+				D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT |
+				D3D12_ROOT_SIGNATURE_FLAG_DENY_MESH_SHADER_ROOT_ACCESS |
+				D3D12_ROOT_SIGNATURE_FLAG_DENY_AMPLIFICATION_SHADER_ROOT_ACCESS |
+				D3D12_ROOT_SIGNATURE_FLAG_DENY_HULL_SHADER_ROOT_ACCESS |
+				D3D12_ROOT_SIGNATURE_FLAG_DENY_DOMAIN_SHADER_ROOT_ACCESS |
+				D3D12_ROOT_SIGNATURE_FLAG_DENY_GEOMETRY_SHADER_ROOT_ACCESS;
+			// define static sampler
+			const CD3DX12_STATIC_SAMPLER_DESC staticSampler{ 0, D3D12_FILTER_MIN_MAG_MIP_POINT };
+			// define root signature with transformation matrix
+			CD3DX12_ROOT_SIGNATURE_DESC rootSignatureDesc;
+			rootSignatureDesc.Init(
+				(UINT)std::size(rootParameters), rootParameters,
+				1, &staticSampler,
+				rootSignatureFlags
+			);
+			// serialize root signature 
+			ComPtr<ID3DBlob> signatureBlob;
+			ComPtr<ID3DBlob> errorBlob;
+			if (const auto hr = D3D12SerializeRootSignature(
+				&rootSignatureDesc, D3D_ROOT_SIGNATURE_VERSION_1,
+				&signatureBlob, &errorBlob); FAILED(hr)) {
+				if (errorBlob) {
+					auto errorBufferPtr = static_cast<const char*>(errorBlob->GetBufferPointer());
+					chilog.error(utl::ToWide(errorBufferPtr)).no_trace();
+				}
+				hr >> chk;
+			}
+			// Create the root signature. 
+			pDeviceInterface->CreateRootSignature(0, signatureBlob->GetBufferPointer(),
+				signatureBlob->GetBufferSize(), IID_PPV_ARGS(&pRootSignature_)) >> chk;
+		}
+		// pso (with shaders)
+		{
+			// static declaration of pso stream structure 
+			struct PipelineStateStream
+			{
+				CD3DX12_PIPELINE_STATE_STREAM_ROOT_SIGNATURE RootSignature;
+				CD3DX12_PIPELINE_STATE_STREAM_INPUT_LAYOUT InputLayout;
+				CD3DX12_PIPELINE_STATE_STREAM_PRIMITIVE_TOPOLOGY PrimitiveTopologyType;
+				CD3DX12_PIPELINE_STATE_STREAM_VS VS;
+				CD3DX12_PIPELINE_STATE_STREAM_PS PS;
+				CD3DX12_PIPELINE_STATE_STREAM_RENDER_TARGET_FORMATS RTVFormats;
+				CD3DX12_PIPELINE_STATE_STREAM_DEPTH_STENCIL_FORMAT DSVFormat;
+			} pipelineStateStream;
+
+			// define the Vertex input layout 
+			const D3D12_INPUT_ELEMENT_DESC inputLayout[] = {
+				{ "POSITION",		0, DXGI_FORMAT_R32G32_FLOAT,		0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+
+				{ "TRANSLATION",	0, DXGI_FORMAT_R32G32_FLOAT,		1, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1 },
+				{ "ROTATION",		0, DXGI_FORMAT_R32_FLOAT,			1, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1 },
+				{ "SCALE",			0, DXGI_FORMAT_R32G32_FLOAT,		1, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1 },
+				{ "PIVOT",			0, DXGI_FORMAT_R32G32_FLOAT,		1, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1 },
+				{ "TEXPOS",			0, DXGI_FORMAT_R32G32_FLOAT,		1, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1 },
+				{ "TEXDIMS",		0, DXGI_FORMAT_R32G32_FLOAT,		1, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1 },
+				{ "DESTDIMS",		0, DXGI_FORMAT_R16G16_UINT,			1, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1 },
+				{ "ATLASINDEX",		0, DXGI_FORMAT_R16_UINT,			1, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1 },
+			};
+
+			// Load the vertex shader. 
+			ComPtr<ID3DBlob> pVertexShaderBlob;
+			D3DReadFileToBlob(L"VertexShader.cso", &pVertexShaderBlob) >> chk;
+
+			// Load the pixel shader. 
+			ComPtr<ID3DBlob> pPixelShaderBlob;
+			D3DReadFileToBlob(L"PixelShader.cso", &pPixelShaderBlob) >> chk;
+
+			// filling pso structure 
+			pipelineStateStream.RootSignature = pRootSignature_.Get();
+			pipelineStateStream.InputLayout = { inputLayout, (UINT)std::size(inputLayout) };
+			pipelineStateStream.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+			pipelineStateStream.VS = CD3DX12_SHADER_BYTECODE(pVertexShaderBlob.Get());
+			pipelineStateStream.PS = CD3DX12_SHADER_BYTECODE(pPixelShaderBlob.Get());
+			pipelineStateStream.RTVFormats = {
+				.RTFormats{ DXGI_FORMAT_R8G8B8A8_UNORM },
+				.NumRenderTargets = 1,
+			};
+			pipelineStateStream.DSVFormat = DXGI_FORMAT_D32_FLOAT;
+
+			// building the pipeline state object 
+			const D3D12_PIPELINE_STATE_STREAM_DESC pipelineStateStreamDesc = {
+				sizeof(PipelineStateStream), &pipelineStateStream
+			};
+			pDeviceInterface->CreatePipelineState(&pipelineStateStreamDesc, IID_PPV_ARGS(&pPipelineState_)) >> chk;
+		}
+	}
+
+	void SpriteBatcherEffectDefault::Bind(ID3D12GraphicsCommandList& cmdList)
+	{
+		cmdList.SetPipelineState(pPipelineState_.Get());
+		cmdList.SetGraphicsRootSignature(pRootSignature_.Get());
+	}
+
+
+
+	SpriteBatcherEffectBilin::SpriteBatcherEffectBilin(std::shared_ptr<IDevice> pDevice)
+	{
+		auto pDeviceInterface = pDevice->GetD3D12DeviceInterface();
+		// root signature
+		{
+			// define root signature a table of sprite atlas textures
+			// in future to reduce root signature binding this should just be merged into a global root descriptor
+			// might want to use a bounded range, in which case the root signature will need to be updated when atlases are added
+			CD3DX12_ROOT_PARAMETER rootParameters[2]{};
+			const CD3DX12_DESCRIPTOR_RANGE descRange{ D3D12_DESCRIPTOR_RANGE_TYPE_SRV, UINT_MAX, 0 };
+			// sprite codex
+			rootParameters[0].InitAsDescriptorTable(1, &descRange);
+			// camera transform
+			rootParameters[1].InitAsConstants(sizeof(DirectX::XMMATRIX) / sizeof(float), 0, 0, D3D12_SHADER_VISIBILITY_VERTEX);
+			// Allow input layout and vertex shader and deny unnecessary access to certain pipeline stages.
+			const D3D12_ROOT_SIGNATURE_FLAGS rootSignatureFlags =
+				D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT |
+				D3D12_ROOT_SIGNATURE_FLAG_DENY_MESH_SHADER_ROOT_ACCESS |
+				D3D12_ROOT_SIGNATURE_FLAG_DENY_AMPLIFICATION_SHADER_ROOT_ACCESS |
+				D3D12_ROOT_SIGNATURE_FLAG_DENY_HULL_SHADER_ROOT_ACCESS |
+				D3D12_ROOT_SIGNATURE_FLAG_DENY_DOMAIN_SHADER_ROOT_ACCESS |
+				D3D12_ROOT_SIGNATURE_FLAG_DENY_GEOMETRY_SHADER_ROOT_ACCESS;
+			// define static sampler
+			const CD3DX12_STATIC_SAMPLER_DESC staticSampler{ 0, D3D12_FILTER_COMPARISON_MIN_MAG_MIP_LINEAR };
+			// define root signature with transformation matrix
+			CD3DX12_ROOT_SIGNATURE_DESC rootSignatureDesc;
+			rootSignatureDesc.Init(
+				(UINT)std::size(rootParameters), rootParameters,
+				1, &staticSampler,
+				rootSignatureFlags
+			);
+			// serialize root signature 
+			ComPtr<ID3DBlob> signatureBlob;
+			ComPtr<ID3DBlob> errorBlob;
+			if (const auto hr = D3D12SerializeRootSignature(
+				&rootSignatureDesc, D3D_ROOT_SIGNATURE_VERSION_1,
+				&signatureBlob, &errorBlob); FAILED(hr)) {
+				if (errorBlob) {
+					auto errorBufferPtr = static_cast<const char*>(errorBlob->GetBufferPointer());
+					chilog.error(utl::ToWide(errorBufferPtr)).no_trace();
+				}
+				hr >> chk;
+			}
+			// Create the root signature. 
+			pDeviceInterface->CreateRootSignature(0, signatureBlob->GetBufferPointer(),
+				signatureBlob->GetBufferSize(), IID_PPV_ARGS(&pRootSignature_)) >> chk;
+		}
+		// pso (with shaders)
+		{
+			// static declaration of pso stream structure 
+			struct PipelineStateStream
+			{
+				CD3DX12_PIPELINE_STATE_STREAM_ROOT_SIGNATURE RootSignature;
+				CD3DX12_PIPELINE_STATE_STREAM_INPUT_LAYOUT InputLayout;
+				CD3DX12_PIPELINE_STATE_STREAM_PRIMITIVE_TOPOLOGY PrimitiveTopologyType;
+				CD3DX12_PIPELINE_STATE_STREAM_VS VS;
+				CD3DX12_PIPELINE_STATE_STREAM_PS PS;
+				CD3DX12_PIPELINE_STATE_STREAM_RENDER_TARGET_FORMATS RTVFormats;
+				CD3DX12_PIPELINE_STATE_STREAM_DEPTH_STENCIL_FORMAT DSVFormat;
+			} pipelineStateStream;
+
+			// define the Vertex input layout 
+			const D3D12_INPUT_ELEMENT_DESC inputLayout[] = {
+				{ "POSITION",		0, DXGI_FORMAT_R32G32_FLOAT,		0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+
+				{ "TRANSLATION",	0, DXGI_FORMAT_R32G32_FLOAT,		1, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1 },
+				{ "ROTATION",		0, DXGI_FORMAT_R32_FLOAT,			1, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1 },
+				{ "SCALE",			0, DXGI_FORMAT_R32G32_FLOAT,		1, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1 },
+				{ "PIVOT",			0, DXGI_FORMAT_R32G32_FLOAT,		1, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1 },
+				{ "TEXPOS",			0, DXGI_FORMAT_R32G32_FLOAT,		1, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1 },
+				{ "TEXDIMS",		0, DXGI_FORMAT_R32G32_FLOAT,		1, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1 },
+				{ "DESTDIMS",		0, DXGI_FORMAT_R16G16_UINT,			1, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1 },
+				{ "ATLASINDEX",		0, DXGI_FORMAT_R16_UINT,			1, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1 },
+			};
+
+			// Load the vertex shader. 
+			ComPtr<ID3DBlob> pVertexShaderBlob;
+			D3DReadFileToBlob(L"VertexShader.cso", &pVertexShaderBlob) >> chk;
+
+			// Load the pixel shader. 
+			ComPtr<ID3DBlob> pPixelShaderBlob;
+			D3DReadFileToBlob(L"PixelShader.cso", &pPixelShaderBlob) >> chk;
+
+			// filling pso structure 
+			pipelineStateStream.RootSignature = pRootSignature_.Get();
+			pipelineStateStream.InputLayout = { inputLayout, (UINT)std::size(inputLayout) };
+			pipelineStateStream.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+			pipelineStateStream.VS = CD3DX12_SHADER_BYTECODE(pVertexShaderBlob.Get());
+			pipelineStateStream.PS = CD3DX12_SHADER_BYTECODE(pPixelShaderBlob.Get());
+			pipelineStateStream.RTVFormats = {
+				.RTFormats{ DXGI_FORMAT_R8G8B8A8_UNORM },
+				.NumRenderTargets = 1,
+			};
+			pipelineStateStream.DSVFormat = DXGI_FORMAT_D32_FLOAT;
+
+			// building the pipeline state object 
+			const D3D12_PIPELINE_STATE_STREAM_DESC pipelineStateStreamDesc = {
+				sizeof(PipelineStateStream), &pipelineStateStream
+			};
+			pDeviceInterface->CreatePipelineState(&pipelineStateStreamDesc, IID_PPV_ARGS(&pPipelineState_)) >> chk;
+		}
+	}
+
+	void SpriteBatcherEffectBilin::Bind(ID3D12GraphicsCommandList& cmdList)
+	{
+		cmdList.SetPipelineState(pPipelineState_.Get());
+		cmdList.SetGraphicsRootSignature(pRootSignature_.Get());
 	}
 }
