@@ -43,6 +43,16 @@ namespace chil::gfx::d12
 		Microsoft::WRL::ComPtr<ID3D12PipelineState> pPipelineState_;
 	};
 
+	class SpriteBatcherEffectAlpha : public ISpriteBatcherEffect
+	{
+	public:
+		SpriteBatcherEffectAlpha(std::shared_ptr<IDevice> pDevice);
+		void Bind(ID3D12GraphicsCommandList& cmdList) override;
+	private:
+		Microsoft::WRL::ComPtr<ID3D12RootSignature> pRootSignature_;
+		Microsoft::WRL::ComPtr<ID3D12PipelineState> pPipelineState_;
+	};
+
 	class SpriteBatcher : public ISpriteBatcher
 	{
 	public:

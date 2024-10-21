@@ -80,6 +80,30 @@ void RunSimp()
 	}
 }
 
+void RunBlown()
+{
+	auto& opts = opt::Get();
+	simp::Init({ 1280, 720 }, L"Chunbus", *opts.logLevel);
+	gfx::SpriteFrame frame{ {8, 4}, {0, 0}, simp::LoadAtlas(L"sprote-shiet-0.png") };
+	while (!simp::Win().IsClosing()) {
+		simp::Begin();
+		frame.DrawToBatch(simp::Batch(), { 0, 0 }, 0.f, { 4.f, 4.f });
+		simp::End();
+	}
+}
+
+void RunBubbles()
+{
+	auto& opts = opt::Get();
+	simp::Init({ 1280, 720 }, L"Bubbly", *opts.logLevel);
+	gfx::SpriteFrame frame{ {1, 1}, {0, 0}, simp::LoadAtlas(L"bubbles.png") };
+	while (!simp::Win().IsClosing()) {
+		simp::Begin();
+		frame.DrawToBatch(simp::Batch(), { 0, 0 });
+		simp::End();
+	}
+}
+
 int WINAPI WinMain(
 	HINSTANCE hInstance,
 	HINSTANCE hPrevInstance,
@@ -105,6 +129,12 @@ int WINAPI WinMain(
 		}
 		else if (*opts.runMode == RunMode::Simple) {
 			RunSimp();
+		}
+		else if (*opts.runMode == RunMode::Blown) {
+			RunBlown();
+		}
+		else if (*opts.runMode == RunMode::Bubbles) {
+			RunBubbles();
 		}
 		else {
 			chilog.error(L"Unhandled RunMode detected");

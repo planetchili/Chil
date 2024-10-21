@@ -8,6 +8,8 @@ enum class RunMode
 {
 	Normal,
 	Simple,
+	Blown,
+	Bubbles,
 };
 
 namespace cli
@@ -27,6 +29,7 @@ namespace cli
 		CHIL_CLI_OPT(framesToRun, uint32_t, "Number of frames to run before automatic stop", 0);
 		CHIL_CLI_OPT(runMode, RunMode, "Mode to execute from main()", RunMode::Normal, cust::EnumMap<RunMode>());
 		CHIL_CLI_OPT(logLevel, Level, "Severity to log at", Level::Error, cust::EnumMap<Level>());
+		CHIL_CLI_FLG(bilin, "b", "Use bilinear filtering for sprite batch");
 	private:
 		std::string GetDesc() const override { return "Pulling and pulling on my yellow leg"; };
 		rule::Dependency widDep_{ width, height };

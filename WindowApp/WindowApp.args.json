@@ -15,6 +15,14 @@
       "Command": "--run-mode simple"
     },
     {
+      "Id": "0b0df810-2b9d-41aa-9957-42af22f13961",
+      "Command": "--run-mode blown"
+    },
+    {
+      "Id": "d04bf26a-ad07-48f5-98b2-5381d6bbb784",
+      "Command": "--run-mode bubbles"
+    },
+    {
       "Id": "bcfe4dd0-dd4a-4b5c-9faf-8505ad163d01",
       "Command": "--num-characters 2000"
     },
