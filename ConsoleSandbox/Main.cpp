@@ -2,13 +2,11 @@
 #include <Core/src/log/Log.h>
 #include <Core/src/ioc/Container.h>
 #include <Core/src/log/SeverityLevelPolicy.h>
-#include <Core/src/utl/Assert.h>
-#include <Core/src/win/WindowClass.h>
-#include <Core/src/ccr/GenericTaskQueue.h>
-
+#include "Child.h"
+#include <thread>
 
 using namespace chil;
-using namespace std::string_literals;
+using namespace std::literals;
 
 void Boot()
 {
@@ -19,39 +17,13 @@ void Boot()
 	});
 }
 
-
-void f()
-{
-	chilog.error(L"oops!");
-}
-
 int main(int argc, const char** argv)
 {
 	Boot();
 
-	auto pWinClass = std::make_shared<win::WindowClass>();
+	auto child = IChild::Spawn();
 
-	chilog.error(L"look ma, no trace").no_trace().no_line();
-	chilog.info().trace();
-
-	ccr::GenericTaskQueue q;
-	q.Push([] {});
-
-	//chilog.fatal(L"Oh noes!");
-	//chilog.warn(L"huh");
-	//f();
-
-	int x = 0, y = 1;
-	//chilass(x > y).msg(L"butts").ass_watch(x, y, rand());
-
-	//chilchk(x > y);
-
-	try {
-		chilchk(x > y).ass_watch(x).ex();
-	}
-	catch (const std::exception& e) {
-		std::cout << e.what() << std::endl;
-	}
+	std::this_thread::sleep_for(2s);
 
 	return 0;
 }
