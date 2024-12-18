@@ -73,7 +73,12 @@ void RunGeneratorCoroMode()
 	std::vector<std::unique_ptr<Operation>> operationPtrs;
 	while (!simp::Win().IsClosing()) {
 		for (auto& cmd : pClient->ReceiveCommands()) {
-			operationPtrs.emplace_back(std::make_unique<Operation>(cmd));
+			if (auto pMove = std::get_if<net::MoveCommand>(&cmd)) {
+				operationPtrs.emplace_back(std::make_unique<Operation>(*pMove));
+			}
+			else if (auto pTit = std::get_if<net::TitleCommand>(&cmd)) {
+				simp::Win().SetTitle(utl::ToWide(pTit->title));
+			}
 		}
 		for (auto& op : operationPtrs) {
 			op->Update();
