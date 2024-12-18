@@ -18,7 +18,7 @@ co::recursive_generator<int> WaitNextFrame()
 	co_yield 0;
 }
 
-co::recursive_generator<int> MoveSpriteTo(Sprite& sprite, const spa::Vec2F& target)
+co::recursive_generator<int> MoveSpriteTo(Sprite& sprite, spa::Vec2F target)
 {
 	while (true) {
 		if (auto offset = target - sprite.GetPos(); offset.GetLength() >= 1.f) {
@@ -38,11 +38,12 @@ public:
 		:
 		sprite_{ cmd.start },
 		coro_{ MoveSpriteTo(sprite_, cmd.end) },
-		it_{ coro_.begin() }
+		it_{ coro_.begin() },
+		end_{ coro_.end() }
 	{}
 	void Update()
 	{
-		if (it_ != coro_.end()) {
+		if (!IsDone()) {
 			it_++;
 		}
 		sprite_.Update();
@@ -51,10 +52,15 @@ public:
 	{
 		sprite_.Draw();
 	}
+	bool IsDone() const
+	{
+		return it_ == end_;
+	}
 private:
 	Sprite sprite_;
 	co::recursive_generator<int> coro_;
 	co::recursive_generator<int>::iterator it_;
+	co::recursive_generator<int>::iterator end_;
 };
 
 void RunGeneratorCoroMode()
@@ -77,5 +83,6 @@ void RunGeneratorCoroMode()
 			op->Draw();
 		}
 		simp::End();
+		std::erase_if(operationPtrs, [](auto& p) { return p->IsDone(); });
 	}
 }

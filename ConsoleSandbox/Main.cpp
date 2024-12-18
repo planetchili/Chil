@@ -31,7 +31,7 @@ int main(int argc, const char** argv)
 	pServer->SendCommand({ .start = {100.f, 100.f}, .end = {-100.f, -100.f} });
 	std::cout << "Command sent!\n";
 
-	std::this_thread::sleep_for(2s);
+	std::this_thread::sleep_for(20s);
 
 	return 0;
 }
