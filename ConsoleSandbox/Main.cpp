@@ -28,6 +28,9 @@ int main(int argc, const char** argv)
 	auto pServer = net::IServer::Make();
 	std::cout << "Child connected!\n";
 
+	pServer->SendCommand({ .start = {100.f, 100.f}, .end = {-100.f, -100.f} });
+	std::cout << "Command sent!\n";
+
 	std::this_thread::sleep_for(2s);
 
 	return 0;

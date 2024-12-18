@@ -31,44 +31,31 @@ co::recursive_generator<int> MoveSpriteTo(Sprite& sprite, const spa::Vec2F& targ
 	}
 }
 
-co::recursive_generator<int> Triangulate(Sprite& sprite, const spa::Vec2F& center, float scale)
+class Operation
 {
-	const auto top = center + spa::Vec2F{ 0.f, .5f } * scale;
-	const auto right = center + spa::Vec2F{ .5f, -.5f } * scale;
-	const auto left = center + spa::Vec2F{ -.5f, -.5f } * scale;
-	co_yield MoveSpriteTo(sprite, top);
-	co_yield MoveSpriteTo(sprite, right);
-	co_yield MoveSpriteTo(sprite, left);
-	co_yield MoveSpriteTo(sprite, top);
-}
-
-co::recursive_generator<int> Serpentine(Sprite& sprite, float width, float height)
-{
-	const auto start = sprite.GetPos();
-	const auto a = start + spa::Vec2F{ width, 0.f };
-	const auto b = a - spa::Vec2F{ 0.f, height };
-	const auto c = b - spa::Vec2F{ width, 0.f };
-	const auto d = c - spa::Vec2F{ 0.f, height };
-	co_yield MoveSpriteTo(sprite, a);
-	co_yield MoveSpriteTo(sprite, b);
-	co_yield MoveSpriteTo(sprite, c);
-	co_yield MoveSpriteTo(sprite, d);
-}
-
-co::recursive_generator<int> Behavior(Sprite& sprite, int reps)
-{
-	for (int i = 0; i < reps; i++) {
-		co_yield Triangulate(sprite, { 100.f, 100.f }, 200.f);
-		co_yield Triangulate(sprite, { -100.f, 100.f }, 100.f);
-		for (int i = 0; i < 4; i++) {
-			co_yield Triangulate(sprite, { -200.f, -200.f }, 50.f);
+public:
+	Operation(const net::MoveCommand& cmd)
+		:
+		sprite_{ cmd.start },
+		coro_{ MoveSpriteTo(sprite_, cmd.end) },
+		it_{ coro_.begin() }
+	{}
+	void Update()
+	{
+		if (it_ != coro_.end()) {
+			it_++;
 		}
-		co_yield MoveSpriteTo(sprite, { -400.f, 300.f });
-		for (int j = 0; j < 3; j++) {
-			co_yield Serpentine(sprite, 200.f, 50.f);
-		}
+		sprite_.Update();
 	}
-}
+	void Draw()
+	{
+		sprite_.Draw();
+	}
+private:
+	Sprite sprite_;
+	co::recursive_generator<int> coro_;
+	co::recursive_generator<int>::iterator it_;
+};
 
 void RunGeneratorCoroMode()
 {
@@ -76,12 +63,19 @@ void RunGeneratorCoroMode()
 
 	auto& opts = opt::Get();
 	simp::Init({ *opts.width, *opts.height }, L"Generator Coro Behavior", *opts.logLevel);
-	Sprite s;
-	for (auto d : Behavior(s, 3)) {
-		if (simp::Win().IsClosing()) break;
-		s.Update();
+	
+	std::vector<std::unique_ptr<Operation>> operationPtrs;
+	while (!simp::Win().IsClosing()) {
+		for (auto& cmd : pClient->ReceiveCommands()) {
+			operationPtrs.emplace_back(std::make_unique<Operation>(cmd));
+		}
+		for (auto& op : operationPtrs) {
+			op->Update();
+		}
 		simp::Begin();
-		s.Draw();
+		for (auto& op : operationPtrs) {
+			op->Draw();
+		}
 		simp::End();
 	}
 }
