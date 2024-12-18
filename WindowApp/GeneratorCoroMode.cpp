@@ -8,6 +8,7 @@
 #include "CliOptions.h"
 #include "Sprite.h"
 #include <cppcoro/recursive_generator.hpp>
+#include <Core/src/net/Net.h>
 
 using namespace chil;
 namespace co = cppcoro;
@@ -71,6 +72,8 @@ co::recursive_generator<int> Behavior(Sprite& sprite, int reps)
 
 void RunGeneratorCoroMode()
 {
+	auto pClient = net::IClient::Make();
+
 	auto& opts = opt::Get();
 	simp::Init({ *opts.width, *opts.height }, L"Generator Coro Behavior", *opts.logLevel);
 	Sprite s;

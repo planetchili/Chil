@@ -210,6 +210,12 @@
     <ClInclude Include="src\crn\RangeBits.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\net\Net.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\net\WrapAsio.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\ioc\Container.cpp">
@@ -306,6 +312,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\gfx\d12\StaticBuffer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\net\Net.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

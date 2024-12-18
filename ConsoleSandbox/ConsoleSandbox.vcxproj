@@ -92,6 +92,9 @@
     <ProjectReference Include="..\Core\Core.vcxproj">
       <Project>{ffccb5b8-a401-40d4-bc09-a95c681b66a7}</Project>
     </ProjectReference>
+    <ProjectReference Include="..\WindowApp\WindowApp.vcxproj">
+      <Project>{a9d6eb69-a3e6-45a3-9f75-c7be8f8ab771}</Project>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Child.h" />

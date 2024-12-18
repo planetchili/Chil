@@ -55,6 +55,8 @@
     <ClInclude Include="src\log\SeverityLevelPolicy.h" />
     <ClInclude Include="src\log\SimpleFileDriver.h" />
     <ClInclude Include="src\log\TextFormatter.h" />
+    <ClInclude Include="src\net\Net.h" />
+    <ClInclude Include="src\net\WrapAsio.h" />
     <ClInclude Include="src\simp\SimpleContext.h" />
     <ClInclude Include="src\spa\Dimensions.h" />
     <ClInclude Include="src\spa\Rect.h" />
@@ -100,6 +102,7 @@
     <ClCompile Include="src\log\SeverityLevelPolicy.cpp" />
     <ClCompile Include="src\log\SimpleFileDriver.cpp" />
     <ClCompile Include="src\log\TextFormatter.cpp" />
+    <ClCompile Include="src\net\Net.cpp" />
     <ClCompile Include="src\utl\Assert.cpp" />
     <ClCompile Include="src\utl\Exception.cpp" />
     <ClCompile Include="src\utl\HrChecker.cpp" />

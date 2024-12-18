@@ -2,6 +2,7 @@
 #include <Core/src/log/Log.h>
 #include <Core/src/ioc/Container.h>
 #include <Core/src/log/SeverityLevelPolicy.h>
+#include <Core/src/net/Net.h>
 #include "Child.h"
 #include <thread>
 
@@ -21,7 +22,11 @@ int main(int argc, const char** argv)
 {
 	Boot();
 
-	auto child = IChild::Spawn();
+	auto pChild = IChild::Spawn();
+	std::cout << "Child spawned!\n";
+
+	auto pServer = net::IServer::Make();
+	std::cout << "Child connected!\n";
 
 	std::this_thread::sleep_for(2s);
 
