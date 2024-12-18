@@ -5,6 +5,7 @@
 #include <Core/src/net/Net.h>
 #include "Child.h"
 #include <thread>
+#include <regex>
 
 using namespace chil;
 using namespace std::literals;
@@ -28,10 +29,26 @@ int main(int argc, const char** argv)
 	auto pServer = net::IServer::Make();
 	std::cout << "Child connected!\n";
 
-	pServer->SendCommand({ .start = {100.f, 100.f}, .end = {-100.f, -100.f} });
-	std::cout << "Command sent!\n";
+	std::cout << "> ";
+	for (std::string line; std::getline(std::cin, line);) {
+		if (line == "exit") break;
 
-	std::this_thread::sleep_for(20s);
+		std::regex pattern(R"(\s*([+-]?\d*\.?\d+),([+-]?\d*\.?\d+)\s+([+-]?\d*\.?\d+),([+-]?\d*\.?\d+))");
+		std::smatch matches;
+		if (std::regex_match(line, matches, pattern)) {
+			// Extract the 4 float values from the match groups 
+			const auto x1 = std::stof(matches[1].str());
+			const auto y1 = std::stof(matches[2].str());
+			const auto x2 = std::stof(matches[3].str());
+			const auto y2 = std::stof(matches[4].str());
+			// create the command and send that bad boi
+			pServer->SendCommand(net::MoveCommand{ {x1, y1}, {x2, y2} });
+		}
+		else {
+			std::cout << "You done screwed up!\n";
+		}
+		std::cout << "> ";
+	}
 
 	return 0;
 }
