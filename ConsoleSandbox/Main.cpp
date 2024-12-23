@@ -61,7 +61,14 @@ int main(int argc, const char** argv)
 			}
 		}
 		else if (command == "tit") {
-			pServer->SendCommand(net::TitleCommand{ .title = std::move(argstring) });
+			std::regex pattern(R"(^\s*(\w+)\s*(.*)$)");
+			std::smatch match;
+			if (std::regex_match(argstring, match, pattern)) {
+				pServer->SendCommand(net::TitleCommand{ .title = match[1].str(), .shmitle = match[2].str() });
+			}
+			else {
+				std::cout << "Bad arguments for command [tit]" << std::endl;
+			}
 		}
 		else {
 			std::cout << "Unknown command: " << command << std::endl;

@@ -53,8 +53,13 @@ namespace chil::net
 					}
 					else if (hdr.type == CommandType::Title) {
 						TitleCommand cmd;
-						cmd.title.resize(hdr.payloadSize);
-						co_await as::async_read(socket_, as::buffer(cmd.title), as::use_awaitable);
+						std::vector<char> buffer(hdr.payloadSize);
+						co_await as::async_read(socket_, as::buffer(buffer), as::use_awaitable);
+						cmd.title.resize(reinterpret_cast<uint16_t*>(buffer.data())[0]);
+						cmd.shmitle.resize(reinterpret_cast<uint16_t*>(buffer.data())[1]);
+						const auto dataStartOffset = sizeof(uint16_t) * 2;
+						std::copy_n(buffer.begin() + dataStartOffset, cmd.title.size(), cmd.title.begin());
+						std::copy_n(buffer.begin() + dataStartOffset + cmd.title.size(), cmd.shmitle.size(), cmd.shmitle.begin());
 						receivedCommands_.push_back(std::move(cmd));
 					}
 					else {

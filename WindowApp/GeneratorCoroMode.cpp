@@ -77,7 +77,9 @@ void RunGeneratorCoroMode()
 				operationPtrs.emplace_back(std::make_unique<Operation>(*pMove));
 			}
 			else if (auto pTit = std::get_if<net::TitleCommand>(&cmd)) {
-				simp::Win().SetTitle(utl::ToWide(pTit->title));
+				simp::Win().SetTitle(utl::ToWide(
+					std::format("[{}] 8====D [{}]", pTit->title, pTit->shmitle)
+				));
 			}
 		}
 		for (auto& op : operationPtrs) {
