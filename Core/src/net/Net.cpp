@@ -23,7 +23,7 @@ namespace cereal
 	template<class Archive>
 	void serialize(Archive& archive, chil::net::MoveCommand& s)
 	{
-		archive(s.waypoints);
+		archive(s.speed, s.waypoints);
 	}
 
 	template<class Archive>

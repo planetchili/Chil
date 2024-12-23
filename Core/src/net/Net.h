@@ -12,6 +12,7 @@ namespace chil::net
 {
 	struct MoveCommand
 	{
+		float speed = 0.f;
 		std::vector<spa::Vec2F> waypoints;
 	};
 

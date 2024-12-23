@@ -24,7 +24,7 @@ co::recursive_generator<int> WaitNextFrame()
 co::recursive_generator<int> MoveSpriteTo(Sprite& sprite, spa::Vec2F target)
 {
 	while (true) {
-		if (auto offset = target - sprite.GetPos(); offset.GetLength() >= 1.f) {
+		if (auto offset = target - sprite.GetPos(); offset.GetLength() >= sprite.GetSpeed()) {
 			SendSpriteTo(sprite, target);
 			co_yield WaitNextFrame();
 		}
@@ -46,7 +46,7 @@ class Operation
 public:
 	Operation(const net::MoveCommand& cmd)
 		:
-		sprite_{ cmd.waypoints.front() },
+		sprite_{ cmd.waypoints.front(), cmd.speed },
 		coro_{ MoveSpriteAlong(sprite_, cmd.waypoints | vi::drop(1) | rn::to<std::vector>()) },
 		it_{ coro_.begin() },
 		end_{ coro_.end() }

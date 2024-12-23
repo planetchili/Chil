@@ -8,9 +8,10 @@ namespace chil
 	class Sprite
 	{
 	public:
-		Sprite(spa::Vec2F pos = { 0.f, 0.f })
+		Sprite(spa::Vec2F pos = { 0.f, 0.f }, float speed = 2.f)
 			:
-			pos_{ pos }
+			pos_{ pos },
+			speed_{ speed }
 		{}
 		float GetSpeed() const
 		{

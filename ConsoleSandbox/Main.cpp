@@ -45,17 +45,26 @@ int main(int argc, const char** argv)
 			break;
 		}
 		else if (command == "mv") {
-			std::regex pattern(R"(\s*([+-]?\d*\.?\d+),([+-]?\d*\.?\d+)(.*?))");
-			std::smatch matches;
-			net::MoveCommand mv;
-			while (std::regex_match(argstring, matches, pattern)) {
-				const auto x = std::stof(matches[1].str());
-				const auto y = std::stof(matches[2].str());
-				mv.waypoints.emplace_back(x, y);
-				argstring = matches[3].str();
-			}
-			if (mv.waypoints.size() >= 2) {
-				pServer->SendCommand(std::move(mv));
+			std::regex patternSingle(R"(\s*([+-]?\d*\.?\d+)(.*?))");
+			std::smatch match;
+			if (std::regex_match(argstring, match, patternSingle)) {
+				net::MoveCommand mv;
+				mv.speed = std::stof(match[1].str());
+				argstring = match[2].str();
+				std::regex pattern(R"(\s*([+-]?\d*\.?\d+),([+-]?\d*\.?\d+)(.*?))");
+				std::smatch matches;
+				while (std::regex_match(argstring, matches, pattern)) {
+					const auto x = std::stof(matches[1].str());
+					const auto y = std::stof(matches[2].str());
+					mv.waypoints.emplace_back(x, y);
+					argstring = matches[3].str();
+				}
+				if (mv.waypoints.size() >= 2) {
+					pServer->SendCommand(std::move(mv));
+				}
+				else {
+					std::cout << "Bad format for command [mv]" << std::endl;
+				}
 			}
 			else {
 				std::cout << "Bad format for command [mv]" << std::endl;
