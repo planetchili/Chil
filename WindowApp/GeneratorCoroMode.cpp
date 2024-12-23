@@ -2,6 +2,7 @@
 #include <ranges>
 #include <chrono>
 #include <format>
+#include <ranges>
 #include <Core/src/log/Log.h> 
 #include <Core/src/simp/SimpleContext.h>
 #include <Core/src/gfx/SpriteFrame.h>
@@ -12,6 +13,8 @@
 
 using namespace chil;
 namespace co = cppcoro;
+namespace rn = std::ranges;
+namespace vi = std::views;
 
 co::recursive_generator<int> WaitNextFrame()
 {
@@ -31,13 +34,20 @@ co::recursive_generator<int> MoveSpriteTo(Sprite& sprite, spa::Vec2F target)
 	}
 }
 
+co::recursive_generator<int> MoveSpriteAlong(Sprite& sprite, std::vector<spa::Vec2F> waypoints)
+{
+	for (auto& pt : waypoints) {
+		co_yield MoveSpriteTo(sprite, pt);
+	}
+}
+
 class Operation
 {
 public:
 	Operation(const net::MoveCommand& cmd)
 		:
-		sprite_{ cmd.start },
-		coro_{ MoveSpriteTo(sprite_, cmd.end) },
+		sprite_{ cmd.waypoints.front() },
+		coro_{ MoveSpriteAlong(sprite_, cmd.waypoints | vi::drop(1) | rn::to<std::vector>()) },
 		it_{ coro_.begin() },
 		end_{ coro_.end() }
 	{}

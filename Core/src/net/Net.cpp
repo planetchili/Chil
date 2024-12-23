@@ -4,6 +4,7 @@
 #include <cereal/cereal.hpp>
 #include <cereal/types/string.hpp>
 #include <cereal/types/variant.hpp>
+#include <cereal/types/vector.hpp>
 #include <cereal/archives/binary.hpp>
 #include <sstream>
 
@@ -22,7 +23,7 @@ namespace cereal
 	template<class Archive>
 	void serialize(Archive& archive, chil::net::MoveCommand& s)
 	{
-		archive(s.start, s.end);
+		archive(s.waypoints);
 	}
 
 	template<class Archive>

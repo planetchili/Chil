@@ -45,19 +45,20 @@ int main(int argc, const char** argv)
 			break;
 		}
 		else if (command == "mv") {
-			std::regex pattern(R"(\s*([+-]?\d*\.?\d+),([+-]?\d*\.?\d+)\s+([+-]?\d*\.?\d+),([+-]?\d*\.?\d+))");
+			std::regex pattern(R"(\s*([+-]?\d*\.?\d+),([+-]?\d*\.?\d+)(.*?))");
 			std::smatch matches;
-			if (std::regex_match(argstring, matches, pattern)) {
-				// Extract the 4 float values from the match groups 
-				const auto x1 = std::stof(matches[1].str());
-				const auto y1 = std::stof(matches[2].str());
-				const auto x2 = std::stof(matches[3].str());
-				const auto y2 = std::stof(matches[4].str());
-				// create the command and send that bad boi
-				pServer->SendCommand(net::MoveCommand{ {x1, y1}, {x2, y2} });
+			net::MoveCommand mv;
+			while (std::regex_match(argstring, matches, pattern)) {
+				const auto x = std::stof(matches[1].str());
+				const auto y = std::stof(matches[2].str());
+				mv.waypoints.emplace_back(x, y);
+				argstring = matches[3].str();
+			}
+			if (mv.waypoints.size() >= 2) {
+				pServer->SendCommand(std::move(mv));
 			}
 			else {
-				std::cout << "Bad argument for move command!\n";
+				std::cout << "Bad format for command [mv]" << std::endl;
 			}
 		}
 		else if (command == "tit") {

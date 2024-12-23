@@ -12,8 +12,7 @@ namespace chil::net
 {
 	struct MoveCommand
 	{
-		spa::Vec2F start;
-		spa::Vec2F end;
+		std::vector<spa::Vec2F> waypoints;
 	};
 
 	struct TitleCommand
