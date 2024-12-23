@@ -10,18 +10,6 @@
 
 namespace chil::net
 {
-	enum class CommandType
-	{
-		Move,
-		Title,
-	};
-
-	struct Header
-	{
-		uint32_t payloadSize;
-		CommandType type;
-	};
-
 	struct MoveCommand
 	{
 		spa::Vec2F start;
@@ -40,28 +28,7 @@ namespace chil::net
 	{
 	public:
 		virtual ~IServer() = default;
-		template<class T>
-		void SendCommand(const T& command)
-		{
-			namespace rn = std::ranges;
-
-			if constexpr (std::same_as<T, MoveCommand>) {
-				SendCommand(CommandType::Move, std::span{ reinterpret_cast<const char*>(&command), sizeof(command) });
-			}
-			if constexpr (std::same_as<T, TitleCommand>) {
-				const TitleCommand& titCommand = command;
-				std::vector<char> data;
-				// sizeN (2) == sizeM (2) == title (N) == shmitle (M)
-				data.resize(sizeof(uint16_t) * 2 + titCommand.title.size() + titCommand.shmitle.size());
-				reinterpret_cast<uint16_t*>(data.data())[0] = (uint16_t)titCommand.title.size();
-				reinterpret_cast<uint16_t*>(data.data())[1] = (uint16_t)titCommand.shmitle.size();
-				const auto dataStartOffset = sizeof(uint16_t) * 2;
-				rn::copy(titCommand.title, data.data() + dataStartOffset);
-				rn::copy(titCommand.shmitle, data.begin() + dataStartOffset + titCommand.title.size());
-				SendCommand(CommandType::Title, data);
-			}
-		}
-		virtual void SendCommand(CommandType type, std::span<const char> commandBytes) = 0;
+		virtual void SendCommand(const Command& cmd) = 0;
 		static std::unique_ptr<IServer> Make();
 	};
 
