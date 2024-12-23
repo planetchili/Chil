@@ -32,7 +32,7 @@ int main(int argc, const char** argv)
 	std::cout << "> ";
 	for (std::string line; std::getline(std::cin, line);) {
 		// split into command and arguments
-		std::regex pattern(R"(^\s*(\w+)\s*(.*?)(?:\s*;?\s*)$)");
+		std::regex pattern(R"(^\s*(\w+)\s*(.*?)$)");
 		std::smatch match;
 		if (!std::regex_match(line, match, pattern)) {
 			std::cout << "Unknown command format\n> ";

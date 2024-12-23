@@ -54,7 +54,7 @@ namespace chil::net
 					else if (hdr.type == CommandType::Title) {
 						TitleCommand cmd;
 						cmd.title.resize(hdr.payloadSize);
-						co_await as::async_read(socket_, as::buffer(cmd.title.data(), hdr.payloadSize), as::use_awaitable);
+						co_await as::async_read(socket_, as::buffer(cmd.title), as::use_awaitable);
 						receivedCommands_.push_back(std::move(cmd));
 					}
 					else {
