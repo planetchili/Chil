@@ -7,29 +7,38 @@
 #include <cereal/types/vector.hpp>
 #include <cereal/archives/binary.hpp>
 #include <sstream>
+#include "../../third/reflect.hpp"
 
 namespace as = boost::asio;
 using as::ip::tcp;
 using namespace std::literals;
 
+template <typename T, typename = void> struct IsMemberOfStd : std::false_type {};
+template <typename T> struct IsMemberOfStd<T, decltype(AdlIsMemberOfStd_impl_(std::declval<T>()))> : std::true_type {};
+
+// technically bad mojo
+namespace std
+{
+	template <typename T>
+	auto AdlIsMemberOfStd_impl_(T&&) -> void;
+}
+
 namespace cereal
 {
-	template<class Archive>
-	void serialize(Archive& archive, chil::spa::Vec2F& s)
-	{
-		archive(s.x, s.y);
-	}
+	template <typename T, typename = void> struct IsMemberOfCereal : std::false_type {};
+	template <typename T> struct IsMemberOfCereal<T, decltype(AdlIsMemberOfCereal_impl_(std::declval<T>()))> : std::true_type {};
+	template <typename T>
+	auto AdlIsMemberOfCereal_impl_(T&&) -> void;
 
-	template<class Archive>
-	void serialize(Archive& archive, chil::net::MoveCommand& s)
-	{
-		archive(s.speed, s.waypoints);
-	}
+	template<class S>
+	concept IsNotNativelySerializable = std::is_class_v<S> && !IsMemberOfStd<S>::value && !IsMemberOfCereal<S>::value;
 
-	template<class Archive>
-	void serialize(Archive& archive, chil::net::TitleCommand& s)
+	template<class Archive, IsNotNativelySerializable S>
+	void serialize(Archive& archive, S& s)
 	{
-		archive(s.title, s.shmitle);
+		reflect::for_each([&](const auto I) {
+			archive(reflect::get<I>(s));
+		}, s);
 	}
 }
 

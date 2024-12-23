@@ -216,6 +216,9 @@
     <ClInclude Include="src\net\WrapAsio.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="third\reflect.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\ioc\Container.cpp">

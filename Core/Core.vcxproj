@@ -78,6 +78,7 @@
     <ClInclude Include="src\win\Window.h" />
     <ClInclude Include="src\win\WindowClass.h" />
     <ClInclude Include="third\backward.hpp" />
+    <ClInclude Include="third\reflect.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\ccr\GenericTaskQueue.cpp" />
