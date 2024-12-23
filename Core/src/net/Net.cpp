@@ -37,6 +37,40 @@ namespace chil::net
 {
 	class Server : public IServer
 	{
+	private:
+		class VectorPacketStreambuf_ : public std::streambuf
+		{
+		public:
+			VectorPacketStreambuf_()
+			{
+				reset();
+			}
+			void reset()
+			{
+				buffer_.resize(sizeof(uint32_t));
+			}
+			as::const_buffer yield()
+			{
+				*reinterpret_cast<uint32_t*>(buffer_.data()) = uint32_t(buffer_.size() - sizeof(uint32_t));
+				return as::buffer(buffer_);
+			}
+		protected:
+			std::streamsize xsputn(const char* data, std::streamsize size) override
+			{
+				buffer_.insert(buffer_.end(), data, data + size);
+				return size;
+			}
+			int overflow(int ch) override
+			{
+				if (ch != EOF) {
+					buffer_.push_back(static_cast<uint8_t>(ch));
+					return ch;
+				}
+				return EOF;
+			}
+		private:
+			std::vector<uint8_t> buffer_;
+		};
 	public:
 		Server()
 		{
@@ -45,17 +79,16 @@ namespace chil::net
 		}
 		void SendCommand(const Command& cmd) override
 		{
-			std::ostringstream oss;
-			cereal::BinaryOutputArchive archive{ oss };
-			archive(cmd);
-			const auto buf = oss.str();
-			const auto size = (uint32_t)buf.size();
-			socket_.send(as::buffer(&size, sizeof(size)));
-			socket_.send(as::buffer(buf));
+			writeArchive_(cmd);
+			socket_.send(writeBuffer_.yield());
+			writeBuffer_.reset();
 		}
 	private:
 		as::io_context ioctx_;
 		tcp::socket socket_{ ioctx_ };
+		VectorPacketStreambuf_ writeBuffer_;
+		std::ostream writeStream_{ &writeBuffer_ };
+		cereal::BinaryOutputArchive writeArchive_{ writeStream_ };
 	};
 
 	std::unique_ptr<IServer> IServer::Make()
