@@ -45,10 +45,11 @@ namespace chil::gfx
 		};
 	}
 
-	void SpriteFrame::DrawToBatch(ISpriteBatcher& batch, const spa::Vec2F& pos, float rotation, const spa::DimensionsF& scale) const
+	void SpriteFrame::DrawToBatch(ISpriteBatcher& batch, const spa::Vec2F& pos, float rotation,
+		const spa::DimensionsF& scale, const Color8& tint) const
 	{
 		// deriving dest in pixel coordinates from texcoord source frame and source atlas dimensions
 		const auto destPixelDims = frameInTexcoords_.GetDimensions() * atlasDimensions_;
-		batch.Draw(pAtlas_->index, pivotInPixelCoordinates_, frameInTexcoords_, destPixelDims, pos, rotation, scale);
+		batch.Draw(pAtlas_->index, pivotInPixelCoordinates_, frameInTexcoords_, destPixelDims, pos, rotation, scale, tint);
 	}
 }

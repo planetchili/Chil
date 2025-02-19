@@ -15,6 +15,10 @@
       "Command": "--run-mode simple"
     },
     {
+      "Id": "20d6802e-adab-4468-8da2-04fc50a90ec7",
+      "Command": "--tint 255 255 255 128"
+    },
+    {
       "Id": "0b0df810-2b9d-41aa-9957-42af22f13961",
       "Command": "--run-mode blown"
     },

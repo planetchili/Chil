@@ -9,7 +9,8 @@ namespace chil::gfx
 	{
 	public:
 		virtual ~ISpriteFrame() = default;
-		virtual void DrawToBatch(ISpriteBatcher& batch, const spa::Vec2F& pos, float rotation = 0.f, const spa::DimensionsF& scale = { 1.f, 1.f }) const = 0;
+		virtual void DrawToBatch(ISpriteBatcher& batch, const spa::Vec2F& pos, float rotation = 0.f,
+			const spa::DimensionsF& scale = { 1.f, 1.f }, const Color8& tint = Color8::White()) const = 0;
 	};
 
 	class SpriteFrame : public ISpriteFrame
@@ -17,7 +18,8 @@ namespace chil::gfx
 	public:
 		SpriteFrame(const spa::RectF& frameInPixels, std::shared_ptr<ISpriteCodex::Atlas> pAtlas);
 		SpriteFrame(const spa::DimensionsI& cellDimension, const spa::Vec2I& cellCoordinates, std::shared_ptr<ISpriteCodex::Atlas> pAtlas);
-		void DrawToBatch(ISpriteBatcher& batch, const spa::Vec2F& pos, float rotation = 0.f, const spa::DimensionsF& scale = { 1.f, 1.f }) const override;
+		void DrawToBatch(ISpriteBatcher& batch, const spa::Vec2F& pos, float rotation = 0.f,
+			const spa::DimensionsF& scale = { 1.f, 1.f }, const Color8& tint = Color8::White()) const override;
 	private:
 		// we want to preserve pixels from src to dst
 		// we can then draw to dest using src and position ONLY (and optionally scale/rotate)

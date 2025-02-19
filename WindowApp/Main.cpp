@@ -69,11 +69,16 @@ void RunSimp()
 	auto& opts = opt::Get();
 	simp::Init({ 1280, 720 }, L"Weeeeeee Heeeeee", *opts.logLevel);
 	gfx::SpriteFrame frame{ {8, 4}, {0, 0}, simp::LoadAtlas(L"sprote-shiet-0.png") };
+	gfx::Color8 tint = gfx::Color8::White();
+	if (opts.tint) {
+		auto c = *opts.tint;
+		tint = { c[0], c[1], c[2], c[3] };
+	}
 	while (!simp::Win().IsClosing()) {
 		simp::Begin();
 		for (float x = -200.f; x <= 200.f; x += 10.f) {
 			for (float y = -200.f; y <= 200.f; y += 20.f) {
-				frame.DrawToBatch(simp::Batch(), {x, y});
+				frame.DrawToBatch(simp::Batch(), {x, y}, 0.f, {1.f, 1.f}, tint);
 			}
 		}
 		simp::End();
@@ -96,10 +101,15 @@ void RunBubbles()
 {
 	auto& opts = opt::Get();
 	simp::Init({ 1280, 720 }, L"Bubbly", *opts.logLevel);
+	gfx::Color8 tint = gfx::Color8::White();
+	if (opts.tint) {
+		auto c = *opts.tint;
+		tint = { c[0], c[1], c[2], c[3] };
+	}
 	gfx::SpriteFrame frame{ {1, 1}, {0, 0}, simp::LoadAtlas(L"bubbles.png") };
 	while (!simp::Win().IsClosing()) {
 		simp::Begin();
-		frame.DrawToBatch(simp::Batch(), { 0, 0 });
+		frame.DrawToBatch(simp::Batch(), { 0, 0 }, 0, {}, tint);
 		simp::End();
 	}
 }

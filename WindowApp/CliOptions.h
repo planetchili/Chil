@@ -3,6 +3,7 @@
 #include <Core/src/log/Level.h>
 #include <cstdint>
 #include <utility>
+#include <array>
 
 enum class RunMode
 {
@@ -30,6 +31,7 @@ namespace cli
 		CHIL_CLI_OPT(runMode, RunMode, "Mode to execute from main()", RunMode::Normal, cust::EnumMap<RunMode>());
 		CHIL_CLI_OPT(logLevel, Level, "Severity to log at", Level::Error, cust::EnumMap<Level>());
 		CHIL_CLI_FLG(bilin, "b", "Use bilinear filtering for sprite batch");
+		CHIL_CLI_OPT(tint, std::vector<uint8_t>, "Tint color to use for sprite batch drawing");
 	private:
 		std::string GetDesc() const override { return "Pulling and pulling on my yellow leg"; };
 		rule::Dependency widDep_{ width, height };

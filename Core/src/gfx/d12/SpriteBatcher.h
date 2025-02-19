@@ -53,6 +53,16 @@ namespace chil::gfx::d12
 		Microsoft::WRL::ComPtr<ID3D12PipelineState> pPipelineState_;
 	};
 
+	class SpriteBatcherEffectAlphaTinto : public ISpriteBatcherEffect
+	{
+	public:
+		SpriteBatcherEffectAlphaTinto(std::shared_ptr<IDevice> pDevice);
+		void Bind(ID3D12GraphicsCommandList& cmdList) override;
+	private:
+		Microsoft::WRL::ComPtr<ID3D12RootSignature> pRootSignature_;
+		Microsoft::WRL::ComPtr<ID3D12PipelineState> pPipelineState_;
+	};
+
 	class SpriteBatcher : public ISpriteBatcher
 	{
 	public:
@@ -66,7 +76,8 @@ namespace chil::gfx::d12
 			const spa::DimensionsF& destPixelDims,
 			const spa::Vec2F& pos,
 			const float rot = 0.f,
-			const spa::DimensionsF& scale = { 1.f, 1.f }) override;
+			const spa::DimensionsF& scale = { 1.f, 1.f },
+			const Color8& tint = Color8::White()) override;
 		void EndBatch(gfx::IRenderPane& pane) override;
 		UINT GetDrawCount() const override;
 		UINT GetCapacity() const override;
@@ -83,6 +94,7 @@ namespace chil::gfx::d12
 			spa::Vec2F translation;
 			float rotation;
 			spa::DimensionsF scale;
+			Color8 tint;
 			spa::Vec2F pivotPixelCoords;
 			spa::Vec2F frameTexPos;
 			spa::DimensionsF frameTexDims;

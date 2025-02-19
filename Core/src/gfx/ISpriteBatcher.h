@@ -2,6 +2,7 @@
 #include <memory>
 #include "IRenderPane.h"
 #include "ISpriteCodex.h"
+#include "Color.h"
 #include <Core/src/spa/Vec2.h>
 #include <Core/src/spa/Rect.h>
 
@@ -27,7 +28,8 @@ namespace chil::gfx
 			const spa::DimensionsF& destPixelDims,
 			const spa::Vec2F& pos,
 			const float rot = 0.f,
-			const spa::DimensionsF& scale = { 1.f, 1.f }) = 0;
+			const spa::DimensionsF& scale = { 1.f, 1.f },
+			const Color8& tint = Color8::White()) = 0;
 		virtual void EndBatch(IRenderPane& pane) = 0;
 		virtual UINT GetDrawCount() const = 0;
 		virtual UINT GetCapacity() const = 0;
