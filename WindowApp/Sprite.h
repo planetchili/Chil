@@ -105,6 +105,7 @@ namespace chil
 	public:
 		virtual void Draw(gfx::ISpriteBatcher&) const = 0;
 		virtual void Update(float dt, std::minstd_rand0& rng) = 0;
+		virtual spa::Vec2F GetPos() const = 0;
 		virtual ~ISpriteInstance() = default;
 	};
 
@@ -112,17 +113,18 @@ namespace chil
 	{
 	public:
 		SpriteInstance(std::shared_ptr<ISpriteBlueprint> pBlueprint,
-			const spa::Vec2F& pos, const spa::Vec2F& vel)
+			const spa::Vec2F& pos, const spa::Vec2F& vel, const gfx::Color8& tint)
 			:
 			pBlueprint_{ std::move(pBlueprint) },
 			pos_{ pos },
-			vel_{ vel }
+			vel_{ vel },
+			tint_{ tint }
 		{
 			pBlueprint_->ChangeDirection(animationState_, vel_);
 		}
 		void Draw(gfx::ISpriteBatcher& batcher) const override
 		{
-			pBlueprint_->GetFrame(animationState_).DrawToBatch(batcher, pos_);
+			pBlueprint_->GetFrame(animationState_).DrawToBatch(batcher, pos_, 0.f, { 1.f, 1.f }, tint_);
 		}
 		void Update(float dt, std::minstd_rand0& rng) override
 		{
@@ -140,12 +142,17 @@ namespace chil
 				pos_ += vel_ * dt;
 			}
 		}
+		spa::Vec2F GetPos() const override
+		{
+			return pos_;
+		}
 	private:
 		constexpr static float directionChangePeriod_ = 1.f;
 		std::shared_ptr<ISpriteBlueprint> pBlueprint_;
 		ISpriteBlueprint::State animationState_{};
 		spa::Vec2F pos_;
 		spa::Vec2F vel_;
+		gfx::Color8 tint_;
 		float timeUntilChangeDirection_ = directionChangePeriod_;
 	};
 }

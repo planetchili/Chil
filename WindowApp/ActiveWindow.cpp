@@ -6,6 +6,7 @@
 #include <ranges>
 #include <numbers>
 #include <numeric>
+#include <execution>
 #include "Sprite.h"
 #include "CliOptions.h"
 
@@ -121,7 +122,7 @@ void ActiveWindow::Kernel_(int index, std::shared_ptr<gfx::ISpriteCodex> pSprite
 			blueprints.push_back(std::make_shared<SpriteBlueprint>(pAtlas, 8, 4));
 		}
 		// sprite instances
-		const auto characters =
+		auto characters =
 			vi::iota(0u, *opts.numCharacters) |
 			vi::transform([
 				&opts,
@@ -129,11 +130,13 @@ void ActiveWindow::Kernel_(int index, std::shared_ptr<gfx::ISpriteCodex> pSprite
 				&rne,
 				posDist = std::uniform_real_distribution<float>{ -360.f, 360.f },
 				speedDist = std::uniform_real_distribution<float>{ 240.f, 600.f },
-				angleDist = std::uniform_real_distribution<float>{ 0.f, 2.f * std::numbers::pi_v<float> }
+				angleDist = std::uniform_real_distribution<float>{ 0.f, 2.f * std::numbers::pi_v<float> },
+				alphaDist = std::normal_distribution<float>{ 255.f, 128.f }
 			] (uint32_t i) mutable -> std::unique_ptr<ISpriteInstance> {
 			return std::make_unique<SpriteInstance>(blueprints[i % *opts.numSheets],
 				spa::Vec2F{ posDist(rne), posDist(rne) },
-				spa::Vec2F{ 1.f, 0.f }.GetRotated(angleDist(rne)) * speedDist(rne)
+				spa::Vec2F{ 1.f, 0.f }.GetRotated(angleDist(rne)) * speedDist(rne),
+				gfx::Color8{ 255, 255, 255, (uint8_t)std::clamp((int)alphaDist(rne), 0, 255) }
 			);
 		}) | rn::to<std::vector>();
 
@@ -141,8 +144,6 @@ void ActiveWindow::Kernel_(int index, std::shared_ptr<gfx::ISpriteCodex> pSprite
 		spa::Vec2F pos{};
 		float rot = 0.f;
 		float scale = 1.f;
-		// pair batchers together with a set of characters to draw to each batch
-		auto batches = vi::zip(batchers, characters | vi::chunk(characters.size() / batchers.size() + 1));
 
 		// do render loop while window not closing
 		while (!pWindow->IsClosing()) {
@@ -184,6 +185,9 @@ void ActiveWindow::Kernel_(int index, std::shared_ptr<gfx::ISpriteCodex> pSprite
 			// update sprites
 			const auto markStartSpriteUpdate = hrclock::now();
 			{
+				// pair batchers together with a set of characters to draw to each batch
+				auto batches = vi::zip(batchers, characters | vi::chunk(characters.size() / batchers.size() + 1));
+
 				auto drawFutures = batches | vi::transform([&](auto&& batch) {
 					return std::async([&](auto&& batch) {
 						auto&& [pBatcher, spritePtrRange] = batch;
@@ -193,8 +197,19 @@ void ActiveWindow::Kernel_(int index, std::shared_ptr<gfx::ISpriteCodex> pSprite
 					}, batch);
 				}) | rn::to<std::vector>();
 			}
+
+			// sort sprites
+			std::sort(std::execution::par_unseq, characters.begin(), characters.end(), [](
+				const decltype(characters)::value_type& lhs,
+				const decltype(characters)::value_type& rhs) {
+				return lhs->GetPos().y > rhs->GetPos().y;
+			});
+
 			const auto durationSpriteUpdate = hrclock::now() - markStartSpriteUpdate;
 			const auto spriteUpdateMs = std::chrono::duration<float, std::milli>(durationSpriteUpdate).count();
+
+			// pair batchers together with a set of characters to draw to each batch
+			auto batches = vi::zip(batchers, characters | vi::chunk(characters.size() / batchers.size() + 1));
 
 			// begin frame
 			pPane->BeginFrame();
