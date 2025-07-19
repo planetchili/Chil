@@ -14,14 +14,14 @@ namespace chil::gfx::d12
 	{
 	public:
 		template<typename T>
-		StaticBufferBase_(IDevice& device, const std::vector<T>& data)
+		StaticBufferBase_(IDevice& device, std::span<const T> data)
 			:
 			StaticBufferBase_{ device, data.size() * sizeof(T) }
 		{
 			FillUploadBuffer(data);
 		}
 		template<typename T>
-		void FillUploadBuffer(const std::vector<T>& data)
+		void FillUploadBuffer(std::span<const T> data)
 		{
 			FillUploadBuffer_(std::span{ reinterpret_cast<const char*>(data.data()), data.size() * sizeof(T) });
 		}
@@ -61,7 +61,7 @@ namespace chil::gfx::d12
 	{
 	public:
 		template<typename T>
-		StaticCpuBuffer(IDevice& device, const std::vector<T>& data)
+		StaticCpuBuffer(IDevice& device, std::span<const T> data)
 			:
 			StaticBufferBase_{ device, data }
 		{

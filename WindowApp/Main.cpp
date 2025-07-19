@@ -16,6 +16,8 @@
 #include "CliOptions.h"
 #include <Core/src/simp/SimpleContext.h>
 #include <Core/src/gfx/SpriteFrame.h>
+#include <Core/src/gfx/d12/TileMap2.h>
+#include <span>
 
 using namespace chil;
 using namespace std::string_literals;
@@ -114,6 +116,42 @@ void RunBubbles()
 	}
 }
 
+void RunTiles()
+{
+	auto& opts = opt::Get();
+	// init COM
+	if (FAILED(CoInitializeEx(nullptr, COINIT_MULTITHREADED))) {
+		throw std::runtime_error{ "COM farked" };
+	}
+	// initialize services in ioc containers
+	log::Boot();
+	win::Boot();
+	gfx::d12::Boot();
+	// shortcut for ioc container
+	auto& C = ioc::Get();
+	// create sprite codex
+	auto pSpriteCodex = C.Resolve<gfx::ISpriteCodex>({ 0 });
+	// create resource loader
+	auto pLoader = C.Resolve<gfx::IResourceLoader>();
+	// init simp layer for convenience of window/pane
+	simp::Init({ 1280, 720 }, L"Tile me up", *opts.logLevel);
+	// get the device and pane
+	auto pDevice = C.Resolve<gfx::d12::IDevice>();
+	auto pPane = simp::SimpleContext::Get().GetPane();
+	// make the tile batcher
+	gfx::d12::TileMapBatcher batcher({ 16, 16 }, 16, 256, pDevice, pSpriteCodex);
+	// load a tileset atlas
+	pSpriteCodex->AddAtlas(pLoader->LoadTexture(L"metex-256.jpg").get());
+	// create a tilemap
+	std::vector<gfx::Tile> tiles(1024, { 0, 0 });
+	gfx::StaticTileMap tileMap(tiles, { 32, 32 }, { 16, 16 }, { 0, 0 }, { 16, 16 }, pSpriteCodex, pDevice, pPane);
+	while (!simp::Win().IsClosing()) {
+		simp::Begin();
+		tileMap.DrawToBatch(batcher, *pPane);
+		simp::End();
+	}
+}
+
 int WINAPI WinMain(
 	HINSTANCE hInstance,
 	HINSTANCE hPrevInstance,
@@ -133,21 +171,14 @@ int WINAPI WinMain(
 			}
 			return *code;
 		}
-		auto& opts = opt::Get();
-		if (*opts.runMode == RunMode::Normal) {
-			RunNormal();
-		}
-		else if (*opts.runMode == RunMode::Simple) {
-			RunSimp();
-		}
-		else if (*opts.runMode == RunMode::Blown) {
-			RunBlown();
-		}
-		else if (*opts.runMode == RunMode::Bubbles) {
-			RunBubbles();
-		}
-		else {
-			chilog.error(L"Unhandled RunMode detected");
+		// execute the requested run mode
+		switch (*opt::Get().runMode) {
+		case RunMode::Normal: RunNormal(); break;
+		case RunMode::Simple: RunSimp(); break;
+		case RunMode::Blown: RunBlown(); break;
+		case RunMode::Bubbles: RunBubbles(); break;
+		case RunMode::Tiles: RunTiles(); break;
+		default: chilog.error(L"Unhandled RunMode detected");
 		}
 	}
 	catch (const std::exception& e) {

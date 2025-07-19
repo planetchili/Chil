@@ -8,6 +8,7 @@
 #include <Core/src/utl/HrChecker.h>
 #include <d3dcompiler.h>
 #include <Core/src/utl/Assert.h>
+#include <Core/src/crn/RangeBits.h>
 
 namespace chil::gfx::d12
 {
@@ -22,15 +23,15 @@ namespace chil::gfx::d12
 		outputDims_{ (spa::DimensionsF)targetDimensions },
 		pSpriteCodex_{ std::dynamic_pointer_cast<decltype(pSpriteCodex_)::element_type>(std::move(pSpriteCodex)) },
 		maxInstances_{ maxSpriteCount },
-		vertexBuffer_{ *pDevice_, std::vector<Vertex_>{
+		vertexBuffer_{ *pDevice_, crn::SpanTemp(std::vector<Vertex_>{
 			{ { -0.5f,  0.5f  } },
 			{ {  0.5f,  0.5f  } },
 			{ { -0.5f, -0.5f  } },
 			{ {  0.5f, -0.5f  } },
-		} },
-		indexBuffer_{ *pDevice_, std::vector<USHORT>{
+		}) },
+		indexBuffer_{ *pDevice_, crn::SpanTemp(std::vector<USHORT>{
 			0, 1, 2, 1, 3, 2,
-		} }
+		}) }
 	{
 		// temporary construction of injected component
 		pEffect_ = std::make_shared<SpriteBatcherEffectAlphaTinto>(pDevice_);

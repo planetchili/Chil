@@ -11,6 +11,7 @@ enum class RunMode
 	Simple,
 	Blown,
 	Bubbles,
+	Tiles,
 };
 
 namespace cli

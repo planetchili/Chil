@@ -83,6 +83,10 @@ namespace chil::simp
 		{
 			return *pKeyboard_;
 		}
+		std::shared_ptr<gfx::IRenderPane> GetPane() const
+		{
+			return pPane_;
+		}
 		void BeginFrame()
 		{
 			pPane_->BeginFrame();

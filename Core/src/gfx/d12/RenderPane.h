@@ -33,11 +33,6 @@ namespace chil::gfx::d12
 		void EndFrame() override;
 		void FlushQueues() const override;
 	private:
-		struct Vertex
-		{
-			DirectX::XMFLOAT3 position;
-			DirectX::XMFLOAT2 tc;
-		};
 		// data
 		spa::DimensionsI dims_;
 		std::shared_ptr<IDevice> pDevice_;

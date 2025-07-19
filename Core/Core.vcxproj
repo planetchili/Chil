@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|x64">
@@ -24,6 +24,7 @@
     <ClInclude Include="src\gfx\d12\d3dx12.h" />
     <ClInclude Include="src\gfx\d12\Device.h" />
     <ClInclude Include="src\gfx\d12\StaticBuffer.h" />
+    <ClInclude Include="src\gfx\d12\TileMap2.h" />
     <ClInclude Include="src\gfx\d12\Util.h" />
     <ClInclude Include="src\gfx\d12\WrapD3D.h" />
     <ClInclude Include="src\gfx\d12\WrapD3DX.h" />
@@ -42,6 +43,7 @@
     <ClInclude Include="src\gfx\IDevice.h" />
     <ClInclude Include="src\gfx\IRenderPane.h" />
     <ClInclude Include="src\gfx\ISpriteBatcher.h" />
+    <ClInclude Include="src\gfx\TileMap.h" />
     <ClInclude Include="src\ioc\Container.h" />
     <ClInclude Include="src\ioc\Exception.h" />
     <ClInclude Include="src\ioc\Singletons.h" />
@@ -89,8 +91,10 @@
     <ClCompile Include="src\gfx\d12\SpriteBatcher.cpp" />
     <ClCompile Include="src\gfx\d12\SpriteCodex.cpp" />
     <ClCompile Include="src\gfx\d12\StaticBuffer.cpp" />
+    <ClCompile Include="src\gfx\d12\TileMap2.cpp" />
     <ClCompile Include="src\gfx\SpriteFrame.cpp" />
     <ClCompile Include="src\gfx\d12\Texture.cpp" />
+    <ClCompile Include="src\gfx\TileMap.cpp" />
     <ClCompile Include="src\ioc\Container.cpp" />
     <ClCompile Include="src\ioc\Singletons.cpp" />
     <ClCompile Include="src\log\Channel.cpp" />
@@ -129,6 +133,22 @@
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">5.1</ShaderModel>
       <EnableUnboundedDescriptorTables Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</EnableUnboundedDescriptorTables>
     </FxCompile>
+    <FxCompile Include="shaders\TilePS.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">5.1</ShaderModel>
+      <EnableUnboundedDescriptorTables Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</EnableUnboundedDescriptorTables>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.1</ShaderModel>
+      <EnableUnboundedDescriptorTables Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</EnableUnboundedDescriptorTables>
+    </FxCompile>
+    <FxCompile Include="shaders\TileVS.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Vertex</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">5.1</ShaderModel>
+      <EnableUnboundedDescriptorTables Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</EnableUnboundedDescriptorTables>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Vertex</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.1</ShaderModel>
+      <EnableUnboundedDescriptorTables Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</EnableUnboundedDescriptorTables>
+    </FxCompile>
     <FxCompile Include="shaders\VertexShader.hlsl">
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.1</ShaderModel>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">5.1</ShaderModel>
@@ -141,6 +161,9 @@
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Vertex</ShaderType>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">5.1</ShaderModel>
     </FxCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="shaders\Util.hlsli" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>

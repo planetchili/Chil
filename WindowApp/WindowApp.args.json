@@ -8,7 +8,7 @@
     },
     {
       "Id": "8086ef56-e502-4003-8541-275026c0fee2",
-      "Command": "--run-mode normal"
+      "Command": "--run-mode tiles"
     },
     {
       "Id": "4a30bd99-95bf-4026-96b8-0e2370878d69",

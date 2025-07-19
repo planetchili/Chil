@@ -213,6 +213,12 @@
     <ClInclude Include="src\gfx\Color.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\gfx\TileMap.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\gfx\d12\TileMap2.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\ioc\Container.cpp">
@@ -311,11 +317,22 @@
     <ClCompile Include="src\gfx\d12\StaticBuffer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\gfx\d12\TileMap2.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\gfx\TileMap.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="shaders\VertexShader.hlsl" />
     <FxCompile Include="shaders\PixelShader.hlsl" />
     <FxCompile Include="shaders\PixelShader2.hlsl" />
     <FxCompile Include="shaders\VertexShader2.hlsl" />
+    <FxCompile Include="shaders\TilePS.hlsl" />
+    <FxCompile Include="shaders\TileVS.hlsl" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="shaders\Util.hlsli" />
   </ItemGroup>
 </Project>
